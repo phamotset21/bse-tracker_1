@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BSE Portfolio & Dividend Tracker</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body class="min-h-full flex flex-col bg-slate-900 text-slate-100 antialiased selection:bg-emerald-500 selection:text-white pb-12">
+
+  <!-- Header Banner -->
+  <header class="bg-slate-800/90 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-30 px-4 py-3.5 sm:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+        <div class="flex items-center space-x-3">
+          <div class="p-2.5 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-xl shadow-lg shadow-emerald-900/30">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              BSE Portfolio
+              <span class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">BWP Tracker</span>
+            </h1>
+            <p class="text-xs text-slate-400">Botswana Stock Exchange Holdings & Dividends</p>
+          </div>
+        </div>
+
+        <!-- Status Indicator -->
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Saved Locally
+        </span>
+      </div>
+
+      <!-- Action Tools -->
+      <div class="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-700/50">
+        <button id="btnLoadDemo" onclick="loadDemoData()" class="px-3 py-1.5 text-xs font-medium bg-slate-700/60 hover:bg-slate-700 active:bg-slate-800 text-slate-200 border border-slate-600/50 rounded-xl transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+          Demo Holdings
+        </button>
+        <button id="btnExportCSV" onclick="exportToCSV()" class="px-3 py-1.5 text-xs font-medium bg-slate-700/60 hover:bg-slate-700 text-slate-200 border border-slate-600/50 rounded-xl transition-all flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          Export
+        </button>
+        <label class="px-3 py-1.5 text-xs font-medium bg-slate-700/60 hover:bg-slate-700 text-slate-200 border border-slate-600/50 rounded-xl transition-all cursor-pointer flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          Import
+          <input type="file" id="csvFileInput" accept=".csv" onchange="importFromCSV(event)" class="hidden">
+        </label>
+        <button id="btnClearData" onclick="clearPortfolio()" class="px-3 py-1.5 text-xs font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 rounded-xl transition-all">
+          Clear
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto w-full px-4 sm:px-8 pt-6 space-y-6 flex-grow">
+
+    <!-- KPI Metric Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <!-- Total Value -->
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-5 relative overflow-hidden shadow-lg">
+        <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Portfolio Value</p>
+        <h3 id="statTotalValue" class="text-xl sm:text-3xl font-extrabold text-white mt-1 sm:mt-2">BWP 0.00</h3>
+        <p id="statPositionCount" class="text-xs text-slate-400 mt-1">0 Positions</p>
+      </div>
+
+      <!-- Capital Invested -->
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-5 shadow-lg">
+        <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Total Invested</p>
+        <h3 id="statTotalInvested" class="text-xl sm:text-3xl font-extrabold text-slate-200 mt-1 sm:mt-2">BWP 0.00</h3>
+        <p class="text-xs text-slate-400 mt-1">Cost Basis</p>
+      </div>
+
+      <!-- Gain / Loss -->
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-5 shadow-lg">
+        <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Unrealized P/L</p>
+        <h3 id="statTotalPL" class="text-xl sm:text-3xl font-extrabold text-slate-200 mt-1 sm:mt-2">BWP 0.00</h3>
+        <p id="statTotalPLPercent" class="text-xs font-bold text-slate-400 mt-1">0.00%</p>
+      </div>
+
+      <!-- Annual Dividend Income -->
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-5 shadow-lg relative overflow-hidden">
+        <p class="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">Est. Dividends</p>
+        <h3 id="statAnnualDividend" class="text-xl sm:text-3xl font-extrabold text-teal-400 mt-1 sm:mt-2">BWP 0.00</h3>
+        <p id="statAvgYield" class="text-xs font-semibold text-teal-300/90 mt-1">Avg Yield: 0.00%</p>
+      </div>
+    </section>
+
+    <!-- INLINE ADD / EDIT FORM -->
+    <section class="bg-slate-800/90 border border-emerald-500/30 rounded-2xl p-4 sm:p-6 shadow-xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700/60 mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="flex h-3 w-3 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+          <h2 id="formTitle" class="text-base sm:text-lg font-bold text-white">Add Position to Portfolio</h2>
+        </div>
+        <span class="text-xs text-emerald-400/80 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">Saved to phone</span>
+      </div>
+
+      <form id="inlineHoldingForm" onsubmit="savePositionInline(event)" class="space-y-4">
+        <input type="hidden" id="editPositionIndex" value="-1">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          
+          <!-- Live Ticker Autocomplete -->
+          <div class="sm:col-span-2 relative">
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Stock Ticker / Company <span class="text-emerald-400">*</span></label>
+            <input 
+              type="text" 
+              id="tickerInput" 
+              placeholder="Search e.g. TURN, PRIM, FNBB, CHOBE..." 
+              required 
+              autocomplete="off"
+              oninput="handleTickerSearch(this.value)"
+              onfocus="handleTickerSearch(this.value)"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            >
+            <div id="tickerDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto z-50 divide-y divide-slate-700/60"></div>
+          </div>
+
+          <!-- Shares Owned -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Shares Owned <span class="text-emerald-400">*</span></label>
+            <input 
+              type="number" 
+              id="sharesInput" 
+              min="1" 
+              step="1" 
+              placeholder="e.g. 1000" 
+              required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            >
+          </div>
+
+          <!-- Buy Price -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Avg Buy Price (BWP) <span class="text-emerald-400">*</span></label>
+            <input 
+              type="number" 
+              id="buyPriceInput" 
+              min="0.001" 
+              step="0.001" 
+              placeholder="e.g. 2.50" 
+              required
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            >
+          </div>
+
+          <!-- Current Market Price -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Current Price (BWP)</label>
+            <input 
+              type="number" 
+              id="currentPriceInput" 
+              min="0.001" 
+              step="0.001" 
+              placeholder="Auto-filled" 
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            >
+          </div>
+        </div>
+
+        <!-- Dividend Parameters Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-1">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Div Yield (%)</label>
+            <input 
+              type="number" 
+              id="yieldInput" 
+              min="0" 
+              max="100" 
+              step="0.01" 
+              placeholder="e.g. 6.5" 
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Div Per Share (DPS in BWP)</label>
+            <input 
+              type="number" 
+              id="dpsInput" 
+              min="0" 
+              step="0.001" 
+              placeholder="e.g. 0.18" 
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            >
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Payout Frequency</label>
+            <select 
+              id="payoutFreqSelect"
+              class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+            >
+              <option value="Semi-Annual">Semi-Annual (2x/yr)</option>
+              <option value="Annual">Annual (1x/yr)</option>
+              <option value="Quarterly">Quarterly (4x/yr)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Submit & Cancel Buttons -->
+        <div class="flex items-center justify-end space-x-3 pt-2">
+          <button 
+            type="button" 
+            id="btnCancelEdit" 
+            onclick="resetFormInline()" 
+            class="hidden px-4 py-2.5 text-xs font-semibold text-slate-300 bg-slate-700 hover:bg-slate-600 rounded-xl transition-all"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            id="btnSavePosition" 
+            class="w-full sm:w-auto px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 rounded-xl shadow-lg shadow-emerald-900/40 transition-all flex items-center justify-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <span id="btnSaveText">Save Position</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Visual Charts -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
+            Asset Weight Allocation
+          </h3>
+          <span class="text-xs text-slate-400">% Value</span>
+        </div>
+        <div class="relative w-full h-60 flex items-center justify-center">
+          <canvas id="allocationChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <svg class="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            Monthly Dividend Schedule (Estimated)
+          </h3>
+          <span class="text-xs text-slate-400">Cash Flow (BWP)</span>
+        </div>
+        <div class="relative w-full h-60 flex items-center justify-center">
+          <canvas id="dividendChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stock Holdings Table -->
+    <section class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 sm:p-5 shadow-lg overflow-hidden">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700/60 mb-3">
+        <div>
+          <h3 class="text-base font-bold text-white">Stock Holdings</h3>
+          <p class="text-xs text-slate-400">Your saved BSE equity holdings</p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-700/60">
+            <tr>
+              <th class="py-3 px-3 font-semibold">Security</th>
+              <th class="py-3 px-3 font-semibold text-right">Shares</th>
+              <th class="py-3 px-3 font-semibold text-right">Avg Cost</th>
+              <th class="py-3 px-3 font-semibold text-right">Mkt Price</th>
+              <th class="py-3 px-3 font-semibold text-right">Value</th>
+              <th class="py-3 px-3 font-semibold text-right">Unrealized P/L</th>
+              <th class="py-3 px-3 font-semibold text-right">Yield</th>
+              <th class="py-3 px-3 font-semibold text-right">Ann. Div</th>
+              <th class="py-3 px-3 font-semibold text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="holdingsTableBody" class="divide-y divide-slate-700/40 text-slate-200">
+            <!-- Dynamic JS Rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Master BSE Counter Dataset
+    const MASTER_BSE_STOCKS = [
+      { ticker: "TURN", name: "Turnstar Holdings Limited", price: 1.85, yield: 6.2, dps: 0.115, months: [5, 11] },
+      { ticker: "PRIM", name: "PrimeTime Property Holdings", price: 1.95, yield: 7.1, dps: 0.138, months: [3, 9] },
+      { ticker: "FNBB", name: "First National Bank Botswana", price: 4.85, yield: 8.5, dps: 0.412, months: [4, 10] },
+      { ticker: "ABSA", name: "Absa Bank Botswana", price: 6.20, yield: 7.8, dps: 0.483, months: [5, 11] },
+      { ticker: "SEFALANA", name: "Sefalana Holding Company", price: 10.75, yield: 6.0, dps: 0.645, months: [2, 12] },
+      { ticker: "CHOBE", name: "Chobe Holdings Limited", price: 14.50, yield: 4.8, dps: 0.696, months: [7] },
+      { ticker: "SECHABA", name: "Sechaba Brewery Holdings", price: 22.10, yield: 6.8, dps: 1.502, months: [4, 11] },
+      { ticker: "BTCL", name: "Botswana Telecommunications Corp", price: 0.90, yield: 9.2, dps: 0.082, months: [1, 8] },
+      { ticker: "NAP", name: "New African Properties", price: 3.95, yield: 7.4, dps: 0.292, months: [1, 7] },
+      { ticker: "LETSHEGO", name: "Letshego Holdings Limited", price: 1.35, yield: 8.0, dps: 0.108, months: [5, 11] },
+      { ticker: "CHOPPIES", name: "Choppies Enterprises Limited", price: 0.65, yield: 3.5, dps: 0.022, months: [10] },
+      { ticker: "CASALES", name: "CA Sales Holdings Limited", price: 6.80, yield: 4.2, dps: 0.285, months: [6, 12] },
+      { ticker: "SEEDCO", name: "Seed Co International", price: 2.80, yield: 2.5, dps: 0.070, months: [9] },
+      { ticker: "G4S", name: "G4S Botswana Limited", price: 3.10, yield: 5.5, dps: 0.170, months: [5, 11] },
+      { ticker: "BBS", name: "BBS Bank Limited", price: 0.50, yield: 0.0, dps: 0.000, months: [] },
+      { ticker: "MINERGY", name: "Minergy Limited", price: 0.45, yield: 0.0, dps: 0.000, months: [] },
+      { ticker: "TLOU", name: "Tlou Energy Limited", price: 0.35, yield: 0.0, dps: 0.000, months: [] }
+    ];
+
+    let portfolio = [];
+    let allocationChartInstance = null;
+    let dividendChartInstance = null;
+    const STORAGE_KEY = "bse_mobile_portfolio_v1";
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadSavedPortfolio();
+      initCharts();
+      renderPortfolio();
+
+      document.addEventListener("click", (e) => {
+        const dropdown = document.getElementById("tickerDropdown");
+        const tickerInput = document.getElementById("tickerInput");
+        if (!tickerInput.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.add("hidden");
+        }
+      });
+    });
+
+    // Save and Load from localStorage
+    function loadSavedPortfolio() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          portfolio = JSON.parse(saved);
+        } else {
+          portfolio = [];
+        }
+      } catch (err) {
+        portfolio = [];
+      }
+    }
+
+    function savePortfolio() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolio));
+      } catch (err) {
+        console.error("Failed to save to localStorage", err);
+      }
+    }
+
+    function handleTickerSearch(query) {
+      const dropdown = document.getElementById("tickerDropdown");
+      const cleanQuery = query.trim().toUpperCase();
+
+      if (!cleanQuery) {
+        dropdown.classList.add("hidden");
+        return;
+      }
+
+      const matches = MASTER_BSE_STOCKS.filter(s => 
+        s.ticker.includes(cleanQuery) || s.name.toUpperCase().includes(cleanQuery)
+      );
+
+      let html = "";
+      if (matches.length > 0) {
+        matches.forEach(s => {
+          html += `
+            <div 
+              onclick="selectTicker('${s.ticker}', ${s.price}, ${s.yield}, ${s.dps})"
+              class="px-4 py-2.5 hover:bg-slate-700/80 cursor-pointer transition-colors flex items-center justify-between"
+            >
+              <div>
+                <span class="font-bold text-emerald-400 text-sm">${s.ticker}</span>
+                <span class="text-xs text-slate-300 ml-2">${s.name}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-semibold text-slate-200">P ${s.price.toFixed(2)}</span>
+                <span class="text-[10px] block text-teal-400">Yield: ${s.yield}%</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      const exactMatch = MASTER_BSE_STOCKS.some(s => s.ticker === cleanQuery);
+      if (!exactMatch) {
+        html += `
+          <div 
+            onclick="selectCustomTicker('${cleanQuery}')"
+            class="px-4 py-2.5 bg-slate-800 hover:bg-emerald-900/30 cursor-pointer border-t border-slate-700 text-emerald-400 text-xs font-semibold flex items-center gap-1.5"
+          >
+            + Add Custom Ticker: "${cleanQuery}"
+          </div>
+        `;
+      }
+
+      dropdown.innerHTML = html;
+      dropdown.classList.remove("hidden");
+    }
+
+    function selectTicker(ticker, price, yieldVal, dpsVal) {
+      document.getElementById("tickerInput").value = ticker;
+      document.getElementById("currentPriceInput").value = price;
+      document.getElementById("buyPriceInput").value = price;
+      document.getElementById("yieldInput").value = yieldVal;
+      document.getElementById("dpsInput").value = dpsVal;
+      document.getElementById("tickerDropdown").classList.add("hidden");
+    }
+
+    function selectCustomTicker(ticker) {
+      document.getElementById("tickerInput").value = ticker;
+      document.getElementById("tickerDropdown").classList.add("hidden");
+    }
+
+    function savePositionInline(e) {
+      e.preventDefault();
+
+      const ticker = document.getElementById("tickerInput").value.trim().toUpperCase();
+      const shares = parseInt(document.getElementById("sharesInput").value);
+      const buyPrice = parseFloat(document.getElementById("buyPriceInput").value);
+      let currentPrice = parseFloat(document.getElementById("currentPriceInput").value);
+      let divYield = parseFloat(document.getElementById("yieldInput").value);
+      let dps = parseFloat(document.getElementById("dpsInput").value);
+      const freq = document.getElementById("payoutFreqSelect").value;
+      const editIndex = parseInt(document.getElementById("editPositionIndex").value);
+
+      if (!ticker || isNaN(shares) || isNaN(buyPrice) || shares <= 0 || buyPrice <= 0) {
+        alert("Please enter a valid Ticker, Shares, and Price.");
+        return;
+      }
+
+      if (isNaN(currentPrice) || currentPrice <= 0) currentPrice = buyPrice;
+      if (isNaN(divYield)) divYield = 0;
+      if (isNaN(dps)) dps = (currentPrice * (divYield / 100));
+
+      const positionData = { ticker, shares, buyPrice, currentPrice, divYield, dps, payoutFreq: freq };
+
+      if (editIndex >= 0 && editIndex < portfolio.length) {
+        portfolio[editIndex] = positionData;
+      } else {
+        const existingIdx = portfolio.findIndex(p => p.ticker === ticker);
+        if (existingIdx >= 0) {
+          const existing = portfolio[existingIdx];
+          const totalShares = existing.shares + shares;
+          const avgBuyPrice = ((existing.shares * existing.buyPrice) + (shares * buyPrice)) / totalShares;
+          portfolio[existingIdx] = { ...positionData, shares: totalShares, buyPrice: avgBuyPrice };
+        } else {
+          portfolio.push(positionData);
+        }
+      }
+
+      savePortfolio();
+      renderPortfolio();
+      resetFormInline();
+    }
+
+    function editPosition(index) {
+      if (index < 0 || index >= portfolio.length) return;
+      const pos = portfolio[index];
+
+      document.getElementById("editPositionIndex").value = index;
+      document.getElementById("tickerInput").value = pos.ticker;
+      document.getElementById("sharesInput").value = pos.shares;
+      document.getElementById("buyPriceInput").value = pos.buyPrice.toFixed(3);
+      document.getElementById("currentPriceInput").value = pos.currentPrice.toFixed(3);
+      document.getElementById("yieldInput").value = pos.divYield ? pos.divYield.toFixed(2) : "";
+      document.getElementById("dpsInput").value = pos.dps ? pos.dps.toFixed(3) : "";
+      document.getElementById("payoutFreqSelect").value = pos.payoutFreq || "Semi-Annual";
+
+      document.getElementById("formTitle").innerText = `Edit Position: ${pos.ticker}`;
+      document.getElementById("btnSaveText").innerText = "Update";
+      document.getElementById("btnCancelEdit").classList.remove("hidden");
+      document.getElementById("inlineHoldingForm").scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function deletePosition(index) {
+      if (confirm(`Remove ${portfolio[index].ticker} from your portfolio?`)) {
+        portfolio.splice(index, 1);
+        savePortfolio();
+        renderPortfolio();
+        resetFormInline();
+      }
+    }
+
+    function resetFormInline() {
+      document.getElementById("inlineHoldingForm").reset();
+      document.getElementById("editPositionIndex").value = "-1";
+      document.getElementById("formTitle").innerText = "Add Position to Portfolio";
+      document.getElementById("btnSaveText").innerText = "Save Position";
+      document.getElementById("btnCancelEdit").classList.add("hidden");
+      document.getElementById("tickerDropdown").classList.add("hidden");
+    }
+
+    function renderPortfolio() {
+      const tbody = document.getElementById("holdingsTableBody");
+      tbody.innerHTML = "";
+
+      let totalValue = 0;
+      let totalInvested = 0;
+      let totalAnnualDividends = 0;
+
+      if (portfolio.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="py-8 text-center text-slate-500 italic">
+              No holdings saved yet. Enter a stock above or tap "Demo Holdings".
+            </td>
+          </tr>
+        `;
+      } else {
+        portfolio.forEach((pos, idx) => {
+          const currentVal = pos.shares * pos.currentPrice;
+          const investedVal = pos.shares * pos.buyPrice;
+          const plVal = currentVal - investedVal;
+          const plPercent = investedVal > 0 ? (plVal / investedVal) * 100 : 0;
+          const annualDiv = pos.dps ? (pos.shares * pos.dps) : (currentVal * (pos.divYield / 100));
+
+          totalValue += currentVal;
+          totalInvested += investedVal;
+          totalAnnualDividends += annualDiv;
+
+          const isGain = plVal >= 0;
+
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-800/40 transition-colors";
+          tr.innerHTML = `
+            <td class="py-3 px-3 font-bold text-emerald-400">
+              ${pos.ticker}
+              <span class="block text-[10px] text-slate-400 font-normal">${pos.payoutFreq || 'Semi-Annual'}</span>
+            </td>
+            <td class="py-3 px-3 text-right font-medium text-slate-200">${pos.shares.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-slate-300">P ${pos.buyPrice.toFixed(2)}</td>
+            <td class="py-3 px-3 text-right text-slate-200 font-semibold">P ${pos.currentPrice.toFixed(2)}</td>
+            <td class="py-3 px-3 text-right font-bold text-white">P ${currentVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td class="py-3 px-3 text-right font-semibold ${isGain ? 'text-emerald-400' : 'text-rose-400'}">
+              ${isGain ? '+' : ''}P ${plVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+              <span class="block text-[10px]">${isGain ? '+' : ''}${plPercent.toFixed(2)}%</span>
+            </td>
+            <td class="py-3 px-3 text-right text-teal-400 font-medium">${pos.divYield ? pos.divYield.toFixed(2) + '%' : '-'}</td>
+            <td class="py-3 px-3 text-right text-teal-300 font-semibold">P ${annualDiv.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td class="py-3 px-3 text-center">
+              <div class="flex items-center justify-center space-x-1">
+                <button onclick="editPosition(${idx})" class="p-1.5 text-slate-400 hover:text-sky-400 transition-colors" title="Edit">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                </button>
+                <button onclick="deletePosition(${idx})" class="p-1.5 text-slate-400 hover:text-rose-400 transition-colors" title="Delete">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      const totalPL = totalValue - totalInvested;
+      const totalPLPercent = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
+      const avgYield = totalValue > 0 ? (totalAnnualDividends / totalValue) * 100 : 0;
+
+      document.getElementById("statTotalValue").innerText = `BWP ${totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById("statPositionCount").innerText = `${portfolio.length} Holdings Saved`;
+
+      document.getElementById("statTotalInvested").innerText = `BWP ${totalInvested.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const plEl = document.getElementById("statTotalPL");
+      const plPctEl = document.getElementById("statTotalPLPercent");
+      plEl.innerText = `${totalPL >= 0 ? '+' : ''}BWP ${totalPL.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      plPctEl.innerText = `${totalPL >= 0 ? '+' : ''}${totalPLPercent.toFixed(2)}% Return`;
+      
+      if (totalPL >= 0) {
+        plEl.className = "text-xl sm:text-3xl font-extrabold text-emerald-400 mt-1 sm:mt-2";
+        plPctEl.className = "text-xs font-bold text-emerald-400 mt-1";
+      } else {
+        plEl.className = "text-xl sm:text-3xl font-extrabold text-rose-400 mt-1 sm:mt-2";
+        plPctEl.className = "text-xs font-bold text-rose-400 mt-1";
+      }
+
+      document.getElementById("statAnnualDividend").innerText = `BWP ${totalAnnualDividends.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById("statAvgYield").innerText = `Avg Yield: ${avgYield.toFixed(2)}%`;
+
+      updateCharts();
+    }
+
+    function initCharts() {
+      const ctxAlloc = document.getElementById("allocationChart").getContext("2d");
+      allocationChartInstance = new Chart(ctxAlloc, {
+        type: 'doughnut',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            backgroundColor: ['#10b981', '#14b8a6', '#06b6d4', '#0284c7', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'],
+            borderWidth: 2,
+            borderColor: '#1e293b'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { color: '#94a3b8', font: { family: 'Inter', size: 10 } } }
+          }
+        }
+      });
+
+      const ctxDiv = document.getElementById("dividendChart").getContext("2d");
+      dividendChartInstance = new Chart(ctxDiv, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          datasets: [{
+            label: 'Cashflow (BWP)',
+            data: Array(12).fill(0),
+            backgroundColor: '#14b8a6',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } }, grid: { color: '#334155' } },
+            x: { ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } }, grid: { display: false } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function updateCharts() {
+      if (!allocationChartInstance || !dividendChartInstance) return;
+
+      allocationChartInstance.data.labels = portfolio.map(p => p.ticker);
+      allocationChartInstance.data.datasets[0].data = portfolio.map(p => p.shares * p.currentPrice);
+      allocationChartInstance.update();
+
+      const monthlyProjections = Array(12).fill(0);
+      portfolio.forEach(pos => {
+        const annualDiv = pos.dps ? (pos.shares * pos.dps) : ((pos.shares * pos.currentPrice) * (pos.divYield / 100));
+        const stockInfo = MASTER_BSE_STOCKS.find(s => s.ticker === pos.ticker);
+        let months = stockInfo && stockInfo.months.length > 0 ? stockInfo.months : [5, 11];
+
+        if (months.length > 0) {
+          const divPerPayout = annualDiv / months.length;
+          months.forEach(m => { monthlyProjections[m - 1] += divPerPayout; });
+        }
+      });
+
+      dividendChartInstance.data.datasets[0].data = monthlyProjections;
+      dividendChartInstance.update();
+    }
+
+    function loadDemoData() {
+      portfolio = [
+        { ticker: "FNBB", shares: 2500, buyPrice: 4.20, currentPrice: 4.85, divYield: 8.5, dps: 0.412, payoutFreq: "Semi-Annual" },
+        { ticker: "TURN", shares: 5000, buyPrice: 1.70, currentPrice: 1.85, divYield: 6.2, dps: 0.115, payoutFreq: "Semi-Annual" },
+        { ticker: "PRIM", shares: 3500, buyPrice: 1.80, currentPrice: 1.95, divYield: 7.1, dps: 0.138, payoutFreq: "Semi-Annual" },
+        { ticker: "SEFALANA", shares: 800, buyPrice: 9.80, currentPrice: 10.75, divYield: 6.0, dps: 0.645, payoutFreq: "Semi-Annual" }
+      ];
+      savePortfolio();
+      renderPortfolio();
+      resetFormInline();
+    }
+
+    function clearPortfolio() {
+      if (confirm("Clear all holdings from phone memory?")) {
+        portfolio = [];
+        savePortfolio();
+        renderPortfolio();
+        resetFormInline();
+      }
+    }
+
+    function exportToCSV() {
+      if (portfolio.length === 0) return alert("No holdings to export.");
+      let csv = "Ticker,Shares,BuyPrice,CurrentPrice,DivYield,DPS,PayoutFreq\n";
+      portfolio.forEach(p => {
+        csv += `${p.ticker},${p.shares},${p.buyPrice},${p.currentPrice},${p.divYield},${p.dps},${p.payoutFreq}\n`;
+      });
+      const blob = new Blob([csv], { type: "text/csv;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `bse_portfolio_backup.csv`;
+      link.click();
+    }
+
+    function importFromCSV(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const lines = evt.target.result.split('\n');
+        const imported = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',');
+          if (cols.length >= 4) {
+            imported.push({
+              ticker: cols[0].trim().toUpperCase(),
+              shares: parseInt(cols[1]),
+              buyPrice: parseFloat(cols[2]),
+              currentPrice: parseFloat(cols[3]),
+              divYield: parseFloat(cols[4]) || 0,
+              dps: parseFloat(cols[5]) || 0,
+              payoutFreq: cols[6] ? cols[6].trim() : "Semi-Annual"
+            });
+          }
+        }
+        if (imported.length > 0) {
+          portfolio = imported;
+          savePortfolio();
+          renderPortfolio();
+          alert(`Successfully imported ${imported.length} holdings!`);
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
