@@ -213,13 +213,13 @@
 
     <!-- Add Asset Form -->
     <div class="card">
-        <h2>Add Holding</h2>
+        <h2>Add / Update Holding</h2>
         <div class="form-group">
-            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., BTCL, FNBB, ADBF)..." oninput="autoFillPrice()">
+            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., TURNSTAR, BTCL, ADBF)..." oninput="autoFillPrice()">
             <datalist id="bse-list"></datalist>
             
-            <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
-            <input type="number" id="asset-price" placeholder="Current / Buy Price (P / $)" step="any">
+            <input type="number" id="asset-qty" placeholder="Shares / Units Quantity to Add" step="any">
+            <input type="number" id="asset-price" placeholder="Buy Price per Share (P / $)" step="any">
             <button onclick="addHolding()">Add to Portfolio</button>
         </div>
     </div>
@@ -273,7 +273,7 @@
     </div>
 
     <script>
-        // BSE Equities, ETFs, and Tracked Assets Dataset with Current Market Share Prices (BWP/USD) and Dividend Yields
+        // BSE Equities, ETFs, and Tracked Assets Dataset
         const bseAssets = [
             { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Equity", price: 1.46, divYield: 0.08 },
             { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.09 },
@@ -332,9 +332,8 @@
             let chartData = [];
 
             holdings.forEach((item, index) => {
-                // If item doesn't have a price or has old stored price, fallback to current dataset price
                 const meta = getAssetMeta(item.symbol);
-                const currentPrice = meta.price > 0 ? meta.price : item.price;
+                const currentPrice = item.price > 0 ? item.price : meta.price;
                 const itemVal = item.qty * currentPrice;
                 totalVal += itemVal;
 
@@ -416,7 +415,26 @@
                 return;
             }
 
-            holdings.push({ symbol: symbolInput, qty: qtyInput, price: priceInput });
+            // Check if holding already exists in portfolio
+            const existingIndex = holdings.findIndex(item => item.symbol === symbolInput);
+
+            if (existingIndex !== -1) {
+                // Auto-merge quantity and calculate weighted average price
+                const existing = holdings[existingIndex];
+                const totalQty = existing.qty + qtyInput;
+                const totalCost = (existing.qty * existing.price) + (qtyInput * priceInput);
+                const avgPrice = totalCost / totalQty;
+
+                holdings[existingIndex] = {
+                    symbol: symbolInput,
+                    qty: totalQty,
+                    price: avgPrice
+                };
+            } else {
+                // Add new holding
+                holdings.push({ symbol: symbolInput, qty: qtyInput, price: priceInput });
+            }
+
             document.getElementById('asset-search').value = '';
             document.getElementById('asset-qty').value = '';
             document.getElementById('asset-price').value = '';
