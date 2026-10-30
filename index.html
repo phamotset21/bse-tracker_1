@@ -121,7 +121,7 @@
     <div class="card">
         <h2>Add Holding</h2>
         <div class="form-group">
-            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker or Name (e.g., ADBF, SHUMBA)...">
+            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker or Name (e.g., BTCL, ADBF)...">
             <datalist id="bse-list"></datalist>
             
             <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
@@ -151,11 +151,11 @@
     <script>
         // BSE Equities, ETFs, and Tracked Assets Dataset
         const bseAssets = [
+            { symbol: "BTCL", name: "Botswana Telecommunications Corporation Ltd", type: "Equity" },
             { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity" },
             { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity" },
             { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity" },
             { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity" },
-            { symbol: "BTCL", name: "Botswana Telecommunitions Limited", type: "Equity"},
             { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity" },
             { symbol: "NAP", name: "New African Properties Limited", type: "Equity" },
             { symbol: "BIHL", name: "Botswana Insurance Holdings Ltd", type: "Equity" },
