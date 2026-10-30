@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSE Portfolio & Dividend Tracker</title>
+    <title>BSE Portfolio & Market Tracker</title>
     
     <!-- Custom Web App Icons -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/line-chart.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/line-chart.png">
 
-    <!-- Chart.js for Portfolio & Dividend Graphs -->
+    <!-- Chart.js for Portfolio Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -150,12 +150,28 @@
             width: 100%;
             margin-top: 10px;
         }
+
+        .news-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 0.85rem;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-date {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>BSE Portfolio & Dividend Tracker</h1>
+        <h1>BSE Portfolio & Market Tracker</h1>
     </div>
 
     <!-- Summary & Dividend Metrics -->
@@ -188,11 +204,11 @@
     <div class="card">
         <h2>Add Holding</h2>
         <div class="form-group">
-            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., BTCL, FNBB, ADBF)...">
+            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., BTCL, FNBB, ADBF)..." oninput="autoFillPrice()">
             <datalist id="bse-list"></datalist>
             
             <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
-            <input type="number" id="asset-price" placeholder="Buy Price per Share (BWP / USD)" step="any">
+            <input type="number" id="asset-price" placeholder="Price per Share (BWP / USD)" step="any">
             <button onclick="addHolding()">Add to Portfolio</button>
         </div>
     </div>
@@ -218,26 +234,49 @@
         </div>
     </div>
 
+    <!-- Market News / Announcements Summary Section -->
+    <div class="card">
+        <h2>BSE Market News & Disclosures</h2>
+        <div id="news-container">
+            <div class="news-item">
+                <div><strong>Renewal of Cautionary Announcements</strong></div>
+                <div class="news-date">2026-10-26</div>
+            </div>
+            <div class="news-item">
+                <div><strong>Trading & Cautionary Updates</strong></div>
+                <div class="news-date">2026-10-26</div>
+            </div>
+            <div class="news-item">
+                <div><strong>Notice of AGM & Shareholder Circular</strong></div>
+                <div class="news-date">2026-10-21</div>
+            </div>
+            <div class="news-item">
+                <div><strong>Q3 Production & Financial Statements Filings</strong></div>
+                <div class="news-date">2026-10-20</div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // BSE Equities, ETFs, and Tracked Assets Dataset with Estimated Dividend Yields (%)
+        // BSE Equities, ETFs, and Tracked Assets Dataset with Current Market Share Prices (BWP/USD) and Dividend Yields
         const bseAssets = [
-            { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Equity", divYield: 0.08 },
-            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", divYield: 0.09 },
-            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity", divYield: 0.085 },
-            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity", divYield: 0.065 },
-            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity", divYield: 0.05 },
-            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity", divYield: 0.07 },
-            { symbol: "NAP", name: "New African Properties Limited", type: "Equity", divYield: 0.075 },
-            { symbol: "BIHL", name: "Botswana Insurance Holdings Ltd", type: "Equity", divYield: 0.06 },
-            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity", divYield: 0.055 },
-            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", divYield: 0.06 },
-            { symbol: "LUCARA", name: "Lucara Diamond Corp", type: "Equity", divYield: 0.00 },
-            { symbol: "ANGLO", name: "Anglo American Plc", type: "Equity", divYield: 0.035 },
-            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Equity", divYield: 0.00 },
-            { symbol: "ADBF", name: "African Domestic Bond Fund ETF", type: "ETF", divYield: 0.07 },
-            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", divYield: 0.00 },
-            { symbol: "NEWPALL", name: "NewGold Palladium ETF", type: "ETF", divYield: 0.00 },
-            { symbol: "O", name: "Realty Income Corporation", type: "US REIT", divYield: 0.056 }
+            { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Equity", price: 1.46, divYield: 0.08 },
+            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.09 },
+            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity", price: 1.90, divYield: 0.085 },
+            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity", price: 5.75, divYield: 0.065 },
+            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity", price: 16.00, divYield: 0.05 },
+            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity", price: 40.50, divYield: 0.07 },
+            { symbol: "NAP", name: "New African Properties Limited", type: "Equity", price: 4.06, divYield: 0.075 },
+            { symbol: "BIHL", name: "Botswana Insurance Holdings Ltd", type: "Equity", price: 23.76, divYield: 0.06 },
+            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity", price: 18.70, divYield: 0.055 },
+            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", price: 14.25, divYield: 0.06 },
+            { symbol: "LUCARA", name: "Lucara Diamond Corp", type: "Equity", price: 1.70, divYield: 0.00 },
+            { symbol: "ANGLO", name: "Anglo American Plc", type: "Equity", price: 769.95, divYield: 0.035 },
+            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Equity", price: 0.81, divYield: 0.00 },
+            { symbol: "ADBF", name: "African Domestic Bond Fund ETF", type: "ETF", price: 102.53, divYield: 0.07 },
+            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.00 },
+            { symbol: "NEWPALL", name: "NewGold Palladium ETF", type: "ETF", price: 179.77, divYield: 0.00 },
+            { symbol: "O", name: "Realty Income Corporation", type: "US REIT", price: 57.20, divYield: 0.056 }
         ];
 
         let holdings = JSON.parse(localStorage.getItem('bse_portfolio')) || [];
@@ -249,13 +288,21 @@
             bseAssets.forEach(asset => {
                 const opt = document.createElement('option');
                 opt.value = asset.symbol;
-                opt.label = `${asset.name} (${asset.type})`;
+                opt.label = `${asset.name} - P${asset.price.toFixed(2)} (${asset.type})`;
                 list.appendChild(opt);
             });
         }
 
+        function autoFillPrice() {
+            const symbolInput = document.getElementById('asset-search').value.trim().toUpperCase();
+            const asset = bseAssets.find(a => a.symbol === symbolInput);
+            if (asset) {
+                document.getElementById('asset-price').value = asset.price;
+            }
+        }
+
         function getAssetMeta(symbol) {
-            return bseAssets.find(a => a.symbol === symbol) || { divYield: 0.05 };
+            return bseAssets.find(a => a.symbol === symbol) || { price: 0.00, divYield: 0.05 };
         }
 
         function saveAndRender() {
@@ -274,7 +321,6 @@
                 totalVal += itemVal;
 
                 const meta = getAssetMeta(item.symbol);
-                // Estimate annual dividend based on current position value * yield
                 const itemDiv = itemVal * meta.divYield;
                 totalAnnualDiv += itemDiv;
 
