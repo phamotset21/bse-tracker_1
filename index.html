@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSE Portfolio Tracker</title>
+    <title>BSE Portfolio & Dividend Tracker</title>
     
     <!-- Custom Web App Icons -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/line-chart.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/line-chart.png">
+
+    <!-- Chart.js for Portfolio & Dividend Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -17,6 +20,7 @@
             --accent-color: #00e676;
             --border-color: #333333;
             --input-bg: #2a2a2a;
+            --danger-color: #ff5252;
         }
 
         body {
@@ -25,6 +29,9 @@
             color: var(--text-color);
             margin: 0;
             padding: 16px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .header {
@@ -33,7 +40,7 @@
         }
 
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             margin: 0;
             color: var(--accent-color);
         }
@@ -44,21 +51,49 @@
             padding: 16px;
             margin-bottom: 16px;
             border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
 
         .card h2 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-top: 0;
             margin-bottom: 12px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .metric-box {
+            background-color: var(--input-bg);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-box span {
+            font-size: 0.8rem;
+            color: #888;
+            display: block;
+        }
+
+        .metric-box strong {
+            font-size: 1.1rem;
+            color: var(--accent-color);
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 12px;
         }
 
         input, select, button {
@@ -67,7 +102,7 @@
             border: 1px solid var(--border-color);
             background-color: var(--input-bg);
             color: var(--text-color);
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         button {
@@ -76,52 +111,84 @@
             font-weight: bold;
             border: none;
             cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:active {
+            opacity: 0.8;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         th, td {
             text-align: left;
-            padding: 10px 6px;
+            padding: 10px 4px;
             border-bottom: 1px solid var(--border-color);
         }
 
         th {
             color: #888;
+            font-weight: 600;
         }
 
         .delete-btn {
-            background-color: #ff5252;
+            background-color: var(--danger-color);
             color: white;
             border: none;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 4px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>BSE Portfolio Tracker</h1>
+        <h1>BSE Portfolio & Dividend Tracker</h1>
     </div>
 
-    <!-- Summary Widget View -->
+    <!-- Summary & Dividend Metrics -->
     <div class="card">
         <h2>Portfolio Overview</h2>
-        <div>Total Value: <strong id="total-val">P0.00</strong></div>
-        <div style="margin-top: 6px;">Total Holdings: <span id="total-count">0</span> assets</div>
+        <div class="metrics-grid">
+            <div class="metric-box">
+                <span>Total Value</span>
+                <strong id="total-val">P0.00</strong>
+            </div>
+            <div class="metric-box">
+                <span>Est. Annual Dividends</span>
+                <strong id="total-div" style="color: #64ffda;">P0.00</strong>
+            </div>
+        </div>
+        <div style="font-size: 0.85rem; color: #aaa; text-align: center; margin-top: 8px;">
+            Total Holdings: <span id="total-count">0</span> assets
+        </div>
+    </div>
+
+    <!-- Visual Charts Card -->
+    <div class="card">
+        <h2>Asset Allocation & Growth</h2>
+        <div class="chart-container">
+            <canvas id="portfolioChart"></canvas>
+        </div>
     </div>
 
     <!-- Add Asset Form -->
     <div class="card">
         <h2>Add Holding</h2>
         <div class="form-group">
-            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker or Name (e.g., BTCL, ADBF)...">
+            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., BTCL, FNBB, ADBF)...">
             <datalist id="bse-list"></datalist>
             
             <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
@@ -132,45 +199,49 @@
 
     <!-- Holdings Table -->
     <div class="card">
-        <h2>Holdings</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Ticker</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Value</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="holdings-list">
-            </tbody>
-        </table>
+        <h2>Holdings & Dividends</h2>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Asset</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Value</th>
+                        <th>Est. Div/Yr</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="holdings-list">
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
-        // BSE Equities, ETFs, and Tracked Assets Dataset
+        // BSE Equities, ETFs, and Tracked Assets Dataset with Estimated Dividend Yields (%)
         const bseAssets = [
-            { symbol: "BTCL", name: "Botswana Telecommunications Corporation Ltd", type: "Equity" },
-            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity" },
-            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity" },
-            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity" },
-            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity" },
-            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity" },
-            { symbol: "NAP", name: "New African Properties Limited", type: "Equity" },
-            { symbol: "BIHL", name: "Botswana Insurance Holdings Ltd", type: "Equity" },
-            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity" },
-            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity" },
-            { symbol: "LUCARA", name: "Lucara Diamond Corp", type: "Equity" },
-            { symbol: "ANGLO", name: "Anglo American Plc", type: "Equity" },
-            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Equity" },
-            { symbol: "ADBF", name: "African Domestic Bond Fund ETF", type: "ETF" },
-            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF" },
-            { symbol: "NEWPALL", name: "NewGold Palladium ETF", type: "ETF" },
-            { symbol: "O", name: "Realty Income Corporation", type: "US REIT" }
+            { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Equity", divYield: 0.08 },
+            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", divYield: 0.09 },
+            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity", divYield: 0.085 },
+            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity", divYield: 0.065 },
+            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity", divYield: 0.05 },
+            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity", divYield: 0.07 },
+            { symbol: "NAP", name: "New African Properties Limited", type: "Equity", divYield: 0.075 },
+            { symbol: "BIHL", name: "Botswana Insurance Holdings Ltd", type: "Equity", divYield: 0.06 },
+            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity", divYield: 0.055 },
+            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", divYield: 0.06 },
+            { symbol: "LUCARA", name: "Lucara Diamond Corp", type: "Equity", divYield: 0.00 },
+            { symbol: "ANGLO", name: "Anglo American Plc", type: "Equity", divYield: 0.035 },
+            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Equity", divYield: 0.00 },
+            { symbol: "ADBF", name: "African Domestic Bond Fund ETF", type: "ETF", divYield: 0.07 },
+            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", divYield: 0.00 },
+            { symbol: "NEWPALL", name: "NewGold Palladium ETF", type: "ETF", divYield: 0.00 },
+            { symbol: "O", name: "Realty Income Corporation", type: "US REIT", divYield: 0.056 }
         ];
 
         let holdings = JSON.parse(localStorage.getItem('bse_portfolio')) || [];
+        let portfolioChart = null;
 
         function initDatalist() {
             const list = document.getElementById('bse-list');
@@ -183,16 +254,32 @@
             });
         }
 
+        function getAssetMeta(symbol) {
+            return bseAssets.find(a => a.symbol === symbol) || { divYield: 0.05 };
+        }
+
         function saveAndRender() {
             localStorage.setItem('bse_portfolio', JSON.stringify(holdings));
             const tbody = document.getElementById('holdings-list');
             tbody.innerHTML = '';
 
             let totalVal = 0;
+            let totalAnnualDiv = 0;
+            
+            let chartLabels = [];
+            let chartData = [];
 
             holdings.forEach((item, index) => {
                 const itemVal = item.qty * item.price;
                 totalVal += itemVal;
+
+                const meta = getAssetMeta(item.symbol);
+                // Estimate annual dividend based on current position value * yield
+                const itemDiv = itemVal * meta.divYield;
+                totalAnnualDiv += itemDiv;
+
+                chartLabels.push(item.symbol);
+                chartData.push(itemVal);
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -200,13 +287,60 @@
                     <td>${item.qty}</td>
                     <td>${item.price.toFixed(2)}</td>
                     <td>${itemVal.toFixed(2)}</td>
-                    <td><button class="delete-btn" onclick="removeHolding(${index})">X</button></td>
+                    <td style="color: #64ffda;">+${itemDiv.toFixed(2)}</td>
+                    <td><button class="delete-btn" onclick="removeHolding(${index})">✕</button></td>
                 `;
                 tbody.appendChild(row);
             });
 
             document.getElementById('total-val').innerText = 'P' + totalVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('total-div').innerText = 'P' + totalAnnualDiv.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('total-count').innerText = holdings.length;
+
+            updateChart(chartLabels, chartData);
+        }
+
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('portfolioChart').getContext('2d');
+            
+            if (portfolioChart) {
+                portfolioChart.destroy();
+            }
+
+            if (labels.length === 0) {
+                labels = ['No Assets Added'];
+                data = [1];
+            }
+
+            portfolioChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#00e676', '#64ffda', '#00b0ff', '#7c4dff', 
+                            '#ffea00', '#ff9100', '#ff5252', '#f50057'
+                        ],
+                        borderWidth: 1,
+                        borderColor: '#1e1e1e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#e0e0e0',
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function addHolding() {
