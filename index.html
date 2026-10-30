@@ -152,13 +152,24 @@
         }
 
         .news-item {
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #2a2a2a;
             font-size: 0.85rem;
         }
 
         .news-item:last-child {
             border-bottom: none;
+        }
+
+        .news-tag {
+            display: inline-block;
+            background-color: #263238;
+            color: #64ffda;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 4px;
         }
 
         .news-date {
@@ -208,7 +219,7 @@
             <datalist id="bse-list"></datalist>
             
             <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
-            <input type="number" id="asset-price" placeholder="Price per Share (BWP / USD)" step="any">
+            <input type="number" id="asset-price" placeholder="Current / Buy Price (P / $)" step="any">
             <button onclick="addHolding()">Add to Portfolio</button>
         </div>
     </div>
@@ -239,19 +250,23 @@
         <h2>BSE Market News & Disclosures</h2>
         <div id="news-container">
             <div class="news-item">
+                <span class="news-tag">SHUMBA</span>
                 <div><strong>Renewal of Cautionary Announcements</strong></div>
                 <div class="news-date">2026-10-26</div>
             </div>
             <div class="news-item">
-                <div><strong>Trading & Cautionary Updates</strong></div>
+                <span class="news-tag">LUCARA</span>
+                <div><strong>Q3 Diamond Production & Operational Results</strong></div>
                 <div class="news-date">2026-10-26</div>
             </div>
             <div class="news-item">
-                <div><strong>Notice of AGM & Shareholder Circular</strong></div>
+                <span class="news-tag">BTCL</span>
+                <div><strong>Notice of Annual General Meeting (AGM)</strong></div>
                 <div class="news-date">2026-10-21</div>
             </div>
             <div class="news-item">
-                <div><strong>Q3 Production & Financial Statements Filings</strong></div>
+                <span class="news-tag">FNBB / BIHL</span>
+                <div><strong>Financial Statements & Interim Filings Update</strong></div>
                 <div class="news-date">2026-10-20</div>
             </div>
         </div>
@@ -317,10 +332,12 @@
             let chartData = [];
 
             holdings.forEach((item, index) => {
-                const itemVal = item.qty * item.price;
+                // If item doesn't have a price or has old stored price, fallback to current dataset price
+                const meta = getAssetMeta(item.symbol);
+                const currentPrice = meta.price > 0 ? meta.price : item.price;
+                const itemVal = item.qty * currentPrice;
                 totalVal += itemVal;
 
-                const meta = getAssetMeta(item.symbol);
                 const itemDiv = itemVal * meta.divYield;
                 totalAnnualDiv += itemDiv;
 
@@ -331,7 +348,7 @@
                 row.innerHTML = `
                     <td><strong>${item.symbol}</strong></td>
                     <td>${item.qty}</td>
-                    <td>${item.price.toFixed(2)}</td>
+                    <td>${currentPrice.toFixed(2)}</td>
                     <td>${itemVal.toFixed(2)}</td>
                     <td style="color: #64ffda;">+${itemDiv.toFixed(2)}</td>
                     <td><button class="delete-btn" onclick="removeHolding(${index})">✕</button></td>
@@ -395,7 +412,7 @@
             const priceInput = parseFloat(document.getElementById('asset-price').value);
 
             if (!symbolInput || isNaN(qtyInput) || isNaN(priceInput)) {
-                alert("Please fill in a valid ticker, quantity, and buy price.");
+                alert("Please fill in a valid ticker, quantity, and price.");
                 return;
             }
 
