@@ -215,11 +215,11 @@
     <div class="card">
         <h2>Add / Update Holding</h2>
         <div class="form-group">
-            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., TURNSTAR, BTCL, ADBF)..." oninput="autoFillPrice()">
+            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., BTCL, TURNSTAR, ADBF)..." oninput="autoFillPrice()" onchange="autoFillPrice()">
             <datalist id="bse-list"></datalist>
             
-            <input type="number" id="asset-qty" placeholder="Shares / Units Quantity to Add" step="any">
-            <input type="number" id="asset-price" placeholder="Buy Price per Share (P / $)" step="any">
+            <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
+            <input type="number" id="asset-price" placeholder="Current Market Price (P / $)" step="any">
             <button onclick="addHolding()">Add to Portfolio</button>
         </div>
     </div>
@@ -273,7 +273,7 @@
     </div>
 
     <script>
-        // BSE Equities, ETFs, and Tracked Assets Dataset
+        // Comprehensive BSE Equities, ETFs, and Tracked Assets Dataset
         const bseAssets = [
             { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Equity", price: 1.46, divYield: 0.08 },
             { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.09 },
@@ -317,7 +317,7 @@
         }
 
         function getAssetMeta(symbol) {
-            return bseAssets.find(a => a.symbol === symbol) || { price: 0.00, divYield: 0.05 };
+            return bseAssets.find(a => a.symbol === symbol) || { price: 1.00, divYield: 0.05 };
         }
 
         function saveAndRender() {
@@ -333,7 +333,8 @@
 
             holdings.forEach((item, index) => {
                 const meta = getAssetMeta(item.symbol);
-                const currentPrice = item.price > 0 ? item.price : meta.price;
+                // Always sync with current live market price if available
+                const currentPrice = meta.price ? meta.price : item.price;
                 const itemVal = item.qty * currentPrice;
                 totalVal += itemVal;
 
@@ -408,18 +409,17 @@
         function addHolding() {
             const symbolInput = document.getElementById('asset-search').value.trim().toUpperCase();
             const qtyInput = parseFloat(document.getElementById('asset-qty').value);
-            const priceInput = parseFloat(document.getElementById('asset-price').value);
+            const meta = getAssetMeta(symbolInput);
+            const priceInput = parseFloat(document.getElementById('asset-price').value) || meta.price;
 
-            if (!symbolInput || isNaN(qtyInput) || isNaN(priceInput)) {
-                alert("Please fill in a valid ticker, quantity, and price.");
+            if (!symbolInput || isNaN(qtyInput)) {
+                alert("Please select a valid ticker and enter a quantity.");
                 return;
             }
 
-            // Check if holding already exists in portfolio
             const existingIndex = holdings.findIndex(item => item.symbol === symbolInput);
 
             if (existingIndex !== -1) {
-                // Auto-merge quantity and calculate weighted average price
                 const existing = holdings[existingIndex];
                 const totalQty = existing.qty + qtyInput;
                 const totalCost = (existing.qty * existing.price) + (qtyInput * priceInput);
@@ -431,7 +431,6 @@
                     price: avgPrice
                 };
             } else {
-                // Add new holding
                 holdings.push({ symbol: symbolInput, qty: qtyInput, price: priceInput });
             }
 
