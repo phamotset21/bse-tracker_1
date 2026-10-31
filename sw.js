@@ -3,5 +3,5 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Pass-through fetch to allow PWA installation
+  // Service Worker active for PWA compliance
 });
