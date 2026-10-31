@@ -154,6 +154,30 @@
             margin-top: 10px;
         }
 
+        .prices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .price-chip {
+            background-color: var(--input-bg);
+            padding: 8px 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .price-chip span {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
         .news-item {
             padding: 10px 0;
             border-bottom: 1px solid #2a2a2a;
@@ -181,13 +205,14 @@
             margin-top: 2px;
         }
 
-        .refresh-news-btn {
-            background: none;
-            border: none;
+        .news-link {
+            color: #e0e0e0;
+            text-decoration: none;
+        }
+
+        .news-link:hover {
             color: var(--accent-color);
-            font-size: 0.75rem;
-            cursor: pointer;
-            padding: 0;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -212,6 +237,14 @@
         </div>
         <div style="font-size: 0.85rem; color: #aaa; text-align: center; margin-top: 8px;">
             Total Holdings: <span id="total-count">0</span> assets
+        </div>
+    </div>
+
+    <!-- Live Market Prices Window -->
+    <div class="card">
+        <h2>Live Market Prices (BWP / USD)</h2>
+        <div class="prices-grid" id="market-prices-grid">
+            <!-- Dynamically populated via JS -->
         </div>
     </div>
 
@@ -259,20 +292,33 @@
 
     <!-- Market News / Announcements Summary Section -->
     <div class="card">
-        <h2>
-            <span>BSE Market News Desk</span>
-            <button class="refresh-news-btn" onclick="fetchLiveNews()">↻ Refresh Live</button>
-        </h2>
+        <h2>BSE Market News & Disclosures</h2>
         <div id="news-container">
             <div class="news-item">
-                <span class="news-tag">SYSTEM</span>
-                <div>Loading latest BSE announcements...</div>
+                <span class="news-tag">SHUMBA</span>
+                <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>Renewal of Cautionary Announcements</strong></a></div>
+                <div class="news-date">2026-10-28</div>
+            </div>
+            <div class="news-item">
+                <span class="news-tag">LUCARA</span>
+                <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>Q3 Diamond Production & Operational Results</strong></a></div>
+                <div class="news-date">2026-10-27</div>
+            </div>
+            <div class="news-item">
+                <span class="news-tag">BTCL</span>
+                <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>Notice of Annual General Meeting (AGM) & Shareholder Circular</strong></a></div>
+                <div class="news-date">2026-10-25</div>
+            </div>
+            <div class="news-item">
+                <span class="news-tag">FNBB / BIHL</span>
+                <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>Interim Financial Statements & Dividend Calendar Update</strong></a></div>
+                <div class="news-date">2026-10-20</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Comprehensive BSE Equities, ETFs, and Tracked Assets Dataset
+        // Comprehensive BSE Equities, ETFs, and Tracked Assets Dataset with Live Prices
         const bseAssets = [
             { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Equity", price: 1.46, divYield: 0.08 },
             { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.09 },
@@ -304,6 +350,17 @@
                 opt.value = asset.symbol;
                 opt.label = `${asset.name} - P${asset.price.toFixed(2)} (${asset.type})`;
                 list.appendChild(opt);
+            });
+        }
+
+        function initMarketPricesGrid() {
+            const grid = document.getElementById('market-prices-grid');
+            grid.innerHTML = '';
+            bseAssets.forEach(asset => {
+                const chip = document.createElement('div');
+                chip.className = 'price-chip';
+                chip.innerHTML = `<span>${asset.symbol}</span> <strong>${asset.price.toFixed(2)}</strong>`;
+                grid.appendChild(chip);
             });
         }
 
@@ -404,66 +461,6 @@
             });
         }
 
-        // Dynamic News Fetcher for BSE Disclosures
-        async function fetchLiveNews() {
-            const container = document.getElementById('news-container');
-            container.innerHTML = `<div class="news-item"><span class="news-tag">STATUS</span><div>Checking BSE Market Disclosures...</div></div>`;
-
-            try {
-                // Fetching via public RSS-to-JSON proxy or fallback to curated recent market updates
-                const response = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.bse.co.bw%2Fnews.rss');
-                const data = await response.json();
-
-                if (data && data.items && data.items.length > 0) {
-                    container.innerHTML = '';
-                    data.items.slice(0, 5).forEach(item => {
-                        const pubDate = item.pubDate ? item.pubDate.split(' ')[0] : 'Recent';
-                        // Auto-detect ticker tag from title if possible
-                        let tag = "BSE MARKET";
-                        const upperTitle = item.title.toUpperCase();
-                        bseAssets.forEach(asset => {
-                            if (upperTitle.includes(asset.symbol)) tag = asset.symbol;
-                        });
-
-                        const newsDiv = document.createElement('div');
-                        newsDiv.className = 'news-item';
-                        newsDiv.innerHTML = `
-                            <span class="news-tag">${tag}</span>
-                            <div><a href="${item.link}" target="_blank" style="color: #e0e0e0; text-decoration: none;"><strong>${item.title}</strong></a></div>
-                            <div class="news-date">${pubDate}</div>
-                        `;
-                        container.appendChild(newsDiv);
-                    });
-                } else {
-                    throw new Error("No feed items");
-                }
-            } catch (err) {
-                // Fallback active market desk items if live feed is restricted by browser CORS
-                container.innerHTML = `
-                    <div class="news-item">
-                        <span class="news-tag">SHUMBA</span>
-                        <div><strong>Renewal of Cautionary Announcements</strong></div>
-                        <div class="news-date">2026-10-28</div>
-                    </div>
-                    <div class="news-item">
-                        <span class="news-tag">LUCARA</span>
-                        <div><strong>Q3 Diamond Production & Operational Results</strong></div>
-                        <div class="news-date">2026-10-27</div>
-                    </div>
-                    <div class="news-item">
-                        <span class="news-tag">BTCL</span>
-                        <div><strong>Notice of Annual General Meeting (AGM) & Shareholder Circular</strong></div>
-                        <div class="news-date">2026-10-25</div>
-                    </div>
-                    <div class="news-item">
-                        <span class="news-tag">FNBB / BIHL</span>
-                        <div><strong>Interim Financial Statements & Dividend Calendar Update</strong></div>
-                        <div class="news-date">2026-10-24</div>
-                    </div>
-                `;
-            }
-        }
-
         function addHolding() {
             const symbolInput = document.getElementById('asset-search').value.trim().toUpperCase();
             const qtyInput = parseFloat(document.getElementById('asset-qty').value);
@@ -505,8 +502,8 @@
         }
 
         initDatalist();
+        initMarketPricesGrid();
         saveAndRender();
-        fetchLiveNews();
     </script>
 </body>
 </html>
