@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BSE Portfolio & Market Tracker</title>
     
+    <!-- PWA Manifest & App Styling -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BSE Tracker">
+    
     <!-- Custom Web App Icons -->
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/line-chart.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/line-chart.png">
@@ -320,7 +327,6 @@
     <script>
         // Full BSE Dataset Across All Boards
         const bseAssets = [
-            // 1. Domestic Main Board (Local Equities)
             { symbol: "ABSAB", name: "ABSA Bank Botswana Limited", type: "Equity", price: 6.85, divYield: 0.065 },
             { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Equity", price: 2.15, divYield: 0.045 },
             { symbol: "BIHL", name: "Botswana Insurance Holdings Limited", type: "Equity", price: 23.76, divYield: 0.060 },
@@ -344,7 +350,6 @@
             { symbol: "STANCHART", name: "Standard Chartered Bank Botswana Ltd", type: "Equity", price: 3.10, divYield: 0.060 },
             { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.090 },
 
-            // 2. Foreign Main & Venture Capital Board
             { symbol: "ANGLO", name: "Anglo American plc", type: "Dual Equity", price: 769.95, divYield: 0.035 },
             { symbol: "BOTALA", name: "Botala Energy Limited", type: "Venture Equity", price: 0.95, divYield: 0.000 },
             { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Dual Equity", price: 6.80, divYield: 0.040 },
@@ -354,7 +359,6 @@
             { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Dual Equity", price: 0.81, divYield: 0.000 },
             { symbol: "TLOU", name: "Tlou Energy Limited", type: "Dual Equity", price: 0.50, divYield: 0.000 },
 
-            // 3. Exchange-Traded Funds (ETF Board) & International Holdings
             { symbol: "ADFB", name: "African Domestic Bond Fund ETF", type: "ETF", price: 102.53, divYield: 0.070 },
             { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000 },
             { symbol: "NEWPALL", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000 },
