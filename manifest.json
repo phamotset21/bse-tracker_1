@@ -7,9 +7,9 @@
   "theme_color": "#07090e",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/512/line-chart.png",
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23d4af37'><rect width='512' height='512' rx='100' fill='%2307090e'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23d4af37' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
