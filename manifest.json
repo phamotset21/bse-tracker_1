@@ -1,13 +1,13 @@
 {
-  "name": "BSE Portfolio Tracker",
+  "name": "Financial Markets Online - BSE Tracker",
   "short_name": "BSE Tracker",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#00e676",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/512/line-chart.png",
+      "src": "https://i.ibb.co/6Z09789/bull-logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
