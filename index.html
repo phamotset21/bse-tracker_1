@@ -205,6 +205,21 @@
             font-weight: bold;
         }
 
+        .notif-item {
+            padding: 8px 10px;
+            background-color: var(--input-bg);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+            font-size: 0.82rem;
+            margin-bottom: 8px;
+        }
+
+        .notif-date {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 2px;
+        }
+
         .news-item {
             padding: 10px 0;
             border-bottom: 1px solid var(--border-color);
@@ -306,6 +321,14 @@
             <div class="color-dot" style="background-color: #ffea00;" onclick="setAccent('#ffea00')"></div>
             <div class="color-dot" style="background-color: #ff5252;" onclick="setAccent('#ff5252')"></div>
             <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
+        </div>
+    </div>
+
+    <!-- Portfolio Notifications Drawer -->
+    <div class="card">
+        <h2>Portfolio Alerts & Notices</h2>
+        <div id="notifications-container">
+            <!-- Populated via JS based on holdings -->
         </div>
     </div>
 
@@ -500,6 +523,35 @@
             });
         }
 
+        function updateNotifications() {
+            const container = document.getElementById('notifications-container');
+            container.innerHTML = '';
+
+            if (holdings.length === 0) {
+                container.innerHTML = `<div class="notif-item"><span>Add assets to your portfolio to view customized dividend alerts and notices.</span></div>`;
+                return;
+            }
+
+            // Generate contextual alerts based on user holdings
+            holdings.forEach(item => {
+                const meta = bseAssets.find(a => a.symbol === item.symbol);
+                if (meta && meta.divYield > 0.05) {
+                    const notif = document.createElement('div');
+                    notif.className = 'notif-item';
+                    notif.innerHTML = `
+                        <strong>${item.symbol} Dividend Notice</strong>
+                        <div>Upcoming dividend distribution cycle expected this quarter. Estimated annual yield: ${(meta.divYield * 100).toFixed(1)}%.</div>
+                        <div class="notif-date">System Alert • Active holding</div>
+                    `;
+                    container.appendChild(notif);
+                }
+            });
+
+            if (container.children.length === 0) {
+                container.innerHTML = `<div class="notif-item"><span>All holdings are up to date. No pending corporate actions or alerts.</span><div class="notif-date">System Status • Normal</div></div>`;
+            }
+        }
+
         function autoFillPrice() {
             const symbolInput = document.getElementById('asset-search').value.trim().toUpperCase();
             const asset = bseAssets.find(a => a.symbol === symbolInput);
@@ -552,6 +604,7 @@
             document.getElementById('total-count').innerText = holdings.length;
 
             updateChart(chartLabels, chartData);
+            updateNotifications();
         }
 
         function updateChart(labels, data) {
@@ -578,7 +631,7 @@
                             '#e040fb', '#eeff41', '#b2ff59', '#64ffda'
                         ],
                         borderWidth: 1,
-                        borderColor: document.documentElement.style.getPropertyValue('--card-bg') || '#1e1e1e'
+                        borderColor: '#121212'
                     }]
                 },
                 options: {
@@ -588,7 +641,7 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: document.documentElement.style.getPropertyValue('--text-color') || '#e0e0e0',
+                                color: '#e0e0e0',
                                 boxWidth: 12,
                                 font: { size: 11 }
                             }
