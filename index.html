@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-accent="#00e676">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,7 @@
     
     <!-- PWA Manifest & App Styling -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#121212">
+    <meta name="theme-color" content="#121212" id="meta-theme-color">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BSE Tracker">
@@ -30,6 +30,24 @@
             --danger-color: #ff5252;
         }
 
+        [data-theme="light"] {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --accent-color: #00c853;
+            --border-color: #e0e0e0;
+            --input-bg: #f1f3f5;
+        }
+
+        [data-theme="oled"] {
+            --bg-color: #000000;
+            --card-bg: #0a0a0a;
+            --text-color: #ffffff;
+            --accent-color: #00e676;
+            --border-color: #222222;
+            --input-bg: #141414;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -39,6 +57,7 @@
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .header {
@@ -58,7 +77,8 @@
             padding: 16px;
             margin-bottom: 16px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .card h2 {
@@ -187,7 +207,7 @@
 
         .news-item {
             padding: 10px 0;
-            border-bottom: 1px solid #2a2a2a;
+            border-bottom: 1px solid var(--border-color);
             font-size: 0.85rem;
         }
 
@@ -197,13 +217,14 @@
 
         .news-tag {
             display: inline-block;
-            background-color: #263238;
-            color: #64ffda;
+            background-color: var(--input-bg);
+            color: var(--accent-color);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.75rem;
             font-weight: bold;
             margin-bottom: 4px;
+            border: 1px solid var(--border-color);
         }
 
         .news-date {
@@ -213,7 +234,7 @@
         }
 
         .news-link {
-            color: #e0e0e0;
+            color: var(--text-color);
             text-decoration: none;
         }
 
@@ -221,12 +242,71 @@
             color: var(--accent-color);
             text-decoration: underline;
         }
+
+        .theme-options {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .theme-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.85rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .theme-btn.active {
+            border-color: var(--accent-color);
+            background-color: var(--border-color);
+        }
+
+        .color-pickers {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .color-dot.selected {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>BSE Portfolio & Market Tracker</h1>
+    </div>
+
+    <!-- Theme & Display Customizer Card -->
+    <div class="card">
+        <h2>Display & Theme Settings</h2>
+        <div style="font-size: 0.85rem; margin-bottom: 6px; color: #888;">Select Theme Mode:</div>
+        <div class="theme-options">
+            <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">Dark</button>
+            <button class="theme-btn" onclick="setTheme('oled')" id="btn-oled">OLED Black</button>
+            <button class="theme-btn" onclick="setTheme('light')" id="btn-light">Light</button>
+        </div>
+        <div style="font-size: 0.85rem; margin-bottom: 6px; color: #888;">Accent Color:</div>
+        <div class="color-pickers">
+            <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
+            <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
+            <div class="color-dot" style="background-color: #ffea00;" onclick="setAccent('#ffea00')"></div>
+            <div class="color-dot" style="background-color: #ff5252;" onclick="setAccent('#ff5252')"></div>
+            <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
+        </div>
     </div>
 
     <!-- Summary & Dividend Metrics -->
@@ -239,7 +319,7 @@
             </div>
             <div class="metric-box">
                 <span>Est. Annual Dividends</span>
-                <strong id="total-div" style="color: #64ffda;">P0.00</strong>
+                <strong id="total-div" style="color: var(--accent-color);">P0.00</strong>
             </div>
         </div>
         <div style="font-size: 0.85rem; color: #aaa; text-align: center; margin-top: 8px;">
@@ -373,6 +453,31 @@
         let holdings = JSON.parse(localStorage.getItem('bse_portfolio')) || [];
         let portfolioChart = null;
 
+        // Theme and Display Logic
+        function setTheme(mode) {
+            document.documentElement.setAttribute('data-theme', mode);
+            localStorage.setItem('bse_theme', mode);
+            
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+
+            const metaTheme = mode === 'light' ? '#f4f6f9' : (mode === 'oled' ? '#000000' : '#121212');
+            document.getElementById('meta-theme-color').setAttribute('content', metaTheme);
+        }
+
+        function setAccent(color) {
+            document.documentElement.style.setProperty('--accent-color', color);
+            localStorage.setItem('bse_accent', color);
+        }
+
+        function loadPreferences() {
+            const savedTheme = localStorage.getItem('bse_theme') || 'dark';
+            setTheme(savedTheme);
+
+            const savedAccent = localStorage.getItem('bse_accent') || '#00e676';
+            setAccent(savedAccent);
+        }
+
         function initDatalist() {
             const list = document.getElementById('bse-list');
             list.innerHTML = '';
@@ -436,7 +541,7 @@
                     <td>${item.qty}</td>
                     <td>${currentPrice.toFixed(2)}</td>
                     <td>${itemVal.toFixed(2)}</td>
-                    <td style="color: #64ffda;">+${itemDiv.toFixed(2)}</td>
+                    <td style="color: var(--accent-color);">+${itemDiv.toFixed(2)}</td>
                     <td><button class="delete-btn" onclick="removeHolding(${index})">✕</button></td>
                 `;
                 tbody.appendChild(row);
@@ -468,12 +573,12 @@
                     datasets: [{
                         data: data,
                         backgroundColor: [
-                            '#00e676', '#64ffda', '#00b0ff', '#7c4dff', 
-                            '#ffea00', '#ff9100', '#ff5252', '#f50057',
-                            '#18ffff', '#e040fb', '#eeff41', '#b2ff59'
+                            '#00e676', '#00b0ff', '#7c4dff', '#ffea00', 
+                            '#ff9100', '#ff5252', '#f50057', '#18ffff', 
+                            '#e040fb', '#eeff41', '#b2ff59', '#64ffda'
                         ],
                         borderWidth: 1,
-                        borderColor: '#1e1e1e'
+                        borderColor: document.documentElement.style.getPropertyValue('--card-bg') || '#1e1e1e'
                     }]
                 },
                 options: {
@@ -483,7 +588,7 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: '#e0e0e0',
+                                color: document.documentElement.style.getPropertyValue('--text-color') || '#e0e0e0',
                                 boxWidth: 12,
                                 font: { size: 11 }
                             }
@@ -533,6 +638,7 @@
             saveAndRender();
         }
 
+        loadPreferences();
         initDatalist();
         initMarketPricesGrid();
         saveAndRender();
