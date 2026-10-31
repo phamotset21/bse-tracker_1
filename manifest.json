@@ -7,9 +7,10 @@
   "theme_color": "#07090e",
   "icons": [
     {
-      "src": "https://i.ibb.co/6Z09789/bull-logo.png",
+      "src": "https://img.icons8.com/color/512/line-chart.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
