@@ -1,51 +1,57 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" data-accent="#00e676">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSE Portfolio & Market Tracker</title>
+    <title>Financial Markets Online - BSE Tracker</title>
     
     <!-- PWA Manifest & App Styling -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#121212" id="meta-theme-color">
+    <meta name="theme-color" content="#07090e" id="meta-theme-color">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BSE Tracker">
     
-    <!-- Custom Web App Icons -->
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/line-chart.png">
-    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/line-chart.png">
+    <!-- Custom App Icon (Gold Bull Emblem) -->
+    <link rel="apple-touch-icon" href="https://i.ibb.co/6Z09789/bull-logo.png">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/6Z09789/bull-logo.png">
 
     <!-- Chart.js for Portfolio Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --accent-color: #00e676;
-            --border-color: #333333;
-            --input-bg: #2a2a2a;
-            --danger-color: #ff5252;
+            --bg-color: #07090e;
+            --card-bg: linear-gradient(145deg, #121824, #0d121b);
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-color: #d4af37; /* Gold Bull Theme */
+            --accent-glow: rgba(212, 175, 55, 0.2);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --input-bg: #161f30;
+            --danger-color: #ef4444;
         }
 
         [data-theme="light"] {
             --bg-color: #f4f6f9;
             --card-bg: #ffffff;
-            --text-color: #2c3e50;
-            --accent-color: #00c853;
-            --border-color: #e0e0e0;
-            --input-bg: #f1f3f5;
+            --text-color: #1f2937;
+            --text-muted: #6b7280;
+            --accent-color: #b8860b;
+            --accent-glow: rgba(184, 134, 11, 0.15);
+            --border-color: #e5e7eb;
+            --input-bg: #f9fafb;
         }
 
         [data-theme="oled"] {
             --bg-color: #000000;
-            --card-bg: #0a0a0a;
+            --card-bg: #0a0e17;
             --text-color: #ffffff;
-            --accent-color: #00e676;
-            --border-color: #222222;
-            --input-bg: #141414;
+            --text-muted: #888888;
+            --accent-color: #d4af37;
+            --accent-glow: rgba(212, 175, 55, 0.25);
+            --border-color: #1f2937;
+            --input-bg: #111827;
         }
 
         body {
@@ -54,6 +60,7 @@
             color: var(--text-color);
             margin: 0;
             padding: 16px;
+            padding-bottom: 90px; /* Space for bottom nav */
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
@@ -61,35 +68,58 @@
         }
 
         .header {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 20px;
+            padding: 0 4px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
         }
 
         .header h1 {
-            font-size: 1.4rem;
+            font-size: 1.15rem;
             margin: 0;
             color: var(--accent-color);
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
         .card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 16px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 18px;
             margin-bottom: 16px;
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: background-color 0.3s, border-color 0.3s;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(212, 175, 55, 0.3);
         }
 
         .card h2 {
-            font-size: 1rem;
+            font-size: 0.9rem;
             margin-top: 0;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
-            color: #b0b0b0;
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -99,53 +129,62 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 10px;
         }
 
         .metric-box {
             background-color: var(--input-bg);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 12px;
             text-align: center;
+            border: 1px solid var(--border-color);
         }
 
         .metric-box span {
-            font-size: 0.8rem;
-            color: #888;
+            font-size: 0.75rem;
+            color: var(--text-muted);
             display: block;
+            margin-bottom: 4px;
         }
 
         .metric-box strong {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             color: var(--accent-color);
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         input, select, button {
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             border: 1px solid var(--border-color);
             background-color: var(--input-bg);
             color: var(--text-color);
             font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
         button {
-            background-color: var(--accent-color);
-            color: #000;
+            background: linear-gradient(135deg, #d4af37, #aa820a);
+            color: #07090e;
             font-weight: bold;
             border: none;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.1s;
         }
 
         button:active {
-            opacity: 0.8;
+            transform: scale(0.98);
+            opacity: 0.9;
         }
 
         table {
@@ -156,21 +195,23 @@
 
         th, td {
             text-align: left;
-            padding: 10px 4px;
+            padding: 12px 6px;
             border-bottom: 1px solid var(--border-color);
         }
 
         th {
-            color: #888;
+            color: var(--text-muted);
             font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
         }
 
         .delete-btn {
-            background-color: var(--danger-color);
+            background: var(--danger-color);
             color: white;
             border: none;
             padding: 6px 10px;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 0.75rem;
         }
 
@@ -192,12 +233,13 @@
 
         .price-chip {
             background-color: var(--input-bg);
-            padding: 8px 10px;
-            border-radius: 6px;
+            padding: 10px 12px;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.82rem;
+            border: 1px solid var(--border-color);
         }
 
         .price-chip span {
@@ -206,22 +248,23 @@
         }
 
         .notif-item {
-            padding: 8px 10px;
+            padding: 10px 12px;
             background-color: var(--input-bg);
             border-left: 4px solid var(--accent-color);
-            border-radius: 4px;
+            border-radius: 8px;
             font-size: 0.82rem;
             margin-bottom: 8px;
+            border: 1px solid var(--border-color);
         }
 
         .notif-date {
             font-size: 0.7rem;
-            color: #888;
-            margin-top: 2px;
+            color: var(--text-muted);
+            margin-top: 3px;
         }
 
         .news-item {
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid var(--border-color);
             font-size: 0.85rem;
         }
@@ -234,18 +277,18 @@
             display: inline-block;
             background-color: var(--input-bg);
             color: var(--accent-color);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
             font-weight: bold;
             margin-bottom: 4px;
             border: 1px solid var(--border-color);
         }
 
         .news-date {
-            font-size: 0.75rem;
-            color: #888;
-            margin-top: 2px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 3px;
         }
 
         .news-link {
@@ -261,27 +304,28 @@
         .theme-options {
             display: flex;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .theme-btn {
             flex: 1;
-            padding: 8px;
-            font-size: 0.85rem;
+            padding: 10px;
+            font-size: 0.82rem;
             background-color: var(--input-bg);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
         .theme-btn.active {
             border-color: var(--accent-color);
-            background-color: var(--border-color);
+            background: var(--accent-glow);
+            color: var(--accent-color);
         }
 
         .color-pickers {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -291,49 +335,84 @@
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
+            transition: transform 0.2s;
         }
 
-        .color-dot.selected {
-            border-color: #fff;
+        .color-dot:hover {
             transform: scale(1.1);
+        }
+
+        /* Bottom Native-Style Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(13, 18, 27, 0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+
+        .nav-item.active {
+            color: var(--accent-color);
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>BSE Portfolio & Market Tracker</h1>
+        <div class="header-brand">
+            <img src="https://i.ibb.co/6Z09789/bull-logo.png" alt="Logo" class="header-logo">
+            <h1>Financial Markets Online</h1>
+        </div>
     </div>
 
     <!-- Theme & Display Customizer Card -->
-    <div class="card">
+    <div class="card" id="settings-section">
         <h2>Display & Theme Settings</h2>
-        <div style="font-size: 0.85rem; margin-bottom: 6px; color: #888;">Select Theme Mode:</div>
+        <div style="font-size: 0.8rem; margin-bottom: 6px; color: var(--text-muted);">Select Theme Mode:</div>
         <div class="theme-options">
             <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">Dark</button>
             <button class="theme-btn" onclick="setTheme('oled')" id="btn-oled">OLED Black</button>
             <button class="theme-btn" onclick="setTheme('light')" id="btn-light">Light</button>
         </div>
-        <div style="font-size: 0.85rem; margin-bottom: 6px; color: #888;">Accent Color:</div>
+        <div style="font-size: 0.8rem; margin-bottom: 6px; color: var(--text-muted);">Accent Color:</div>
         <div class="color-pickers">
+            <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
             <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
             <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
-            <div class="color-dot" style="background-color: #ffea00;" onclick="setAccent('#ffea00')"></div>
             <div class="color-dot" style="background-color: #ff5252;" onclick="setAccent('#ff5252')"></div>
             <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
         </div>
     </div>
 
-    <!-- Portfolio Notifications Drawer -->
-    <div class="card">
-        <h2>Portfolio Alerts & Notices</h2>
-        <div id="notifications-container">
-            <!-- Populated via JS based on holdings -->
-        </div>
-    </div>
-
     <!-- Summary & Dividend Metrics -->
-    <div class="card">
+    <div class="card" id="home-section">
         <h2>Portfolio Overview</h2>
         <div class="metrics-grid">
             <div class="metric-box">
@@ -345,16 +424,24 @@
                 <strong id="total-div" style="color: var(--accent-color);">P0.00</strong>
             </div>
         </div>
-        <div style="font-size: 0.85rem; color: #aaa; text-align: center; margin-top: 8px;">
-            Total Holdings: <span id="total-count">0</span> assets
+        <div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
+            Total Holdings: <span id="total-count" style="color: var(--text-color); font-weight: bold;">0</span> assets
+        </div>
+    </div>
+
+    <!-- Portfolio Notifications Drawer -->
+    <div class="card">
+        <h2>Portfolio Alerts & Notices</h2>
+        <div id="notifications-container">
+            <!-- Populated via JS -->
         </div>
     </div>
 
     <!-- Live Market Prices Window -->
-    <div class="card">
+    <div class="card" id="markets-section">
         <h2>BSE Market Board Prices</h2>
         <div class="prices-grid" id="market-prices-grid">
-            <!-- Dynamically populated via JS -->
+            <!-- Populated via JS -->
         </div>
     </div>
 
@@ -370,7 +457,7 @@
     <div class="card">
         <h2>Add / Update Holding</h2>
         <div class="form-group">
-            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker or Name (e.g., ABSAB, STX500, O)..." oninput="autoFillPrice()" onchange="autoFillPrice()">
+            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker or Name (e.g., BTCL, FNBB)..." oninput="autoFillPrice()" onchange="autoFillPrice()">
             <datalist id="bse-list"></datalist>
             
             <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
@@ -380,7 +467,7 @@
     </div>
 
     <!-- Holdings Table -->
-    <div class="card">
+    <div class="card" id="portfolio-section">
         <h2>Holdings & Dividends</h2>
         <div style="overflow-x: auto;">
             <table>
@@ -401,7 +488,7 @@
     </div>
 
     <!-- Market News / Announcements Summary Section -->
-    <div class="card">
+    <div class="card" id="news-section">
         <h2>BSE Market News & Disclosures</h2>
         <div id="news-container">
             <div class="news-item">
@@ -416,19 +503,37 @@
             </div>
             <div class="news-item">
                 <span class="news-tag">BTCL</span>
-                <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>Notice of Annual General Meeting (AGM) & Shareholder Circular</strong></a></div>
+                <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>Notice of Annual General Meeting (AGM)</strong></a></div>
                 <div class="news-date">2026-10-25</div>
-            </div>
-            <div class="news-item">
-                <span class="news-tag">FNBB / BIHL</span>
-                <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>Interim Financial Statements & Dividend Calendar Update</strong></a></div>
-                <div class="news-date">2026-10-20</div>
             </div>
         </div>
     </div>
 
+    <!-- Bottom Native Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="scrollToSection('home-section', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Home
+        </button>
+        <button class="nav-item" onclick="scrollToSection('portfolio-section', this)">
+            <svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zm6.5 0h3v7h-3zM2 19h20v3H2zm15-9h3v7h-3zm-5-9L2 6v2h20V6z"/></svg>
+            Portfolio
+        </button>
+        <button class="nav-item" onclick="scrollToSection('markets-section', this)">
+            <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+            Markets
+        </button>
+        <button class="nav-item" onclick="scrollToSection('news-section', this)">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+            News
+        </button>
+        <button class="nav-item" onclick="scrollToSection('settings-section', this)">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            Settings
+        </button>
+    </nav>
+
     <script>
-        // Full BSE Dataset Across All Boards
         const bseAssets = [
             { symbol: "ABSAB", name: "ABSA Bank Botswana Limited", type: "Equity", price: 6.85, divYield: 0.065 },
             { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Equity", price: 2.15, divYield: 0.045 },
@@ -476,7 +581,6 @@
         let holdings = JSON.parse(localStorage.getItem('bse_portfolio')) || [];
         let portfolioChart = null;
 
-        // Theme and Display Logic
         function setTheme(mode) {
             document.documentElement.setAttribute('data-theme', mode);
             localStorage.setItem('bse_theme', mode);
@@ -484,21 +588,29 @@
             document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`btn-${mode}`).classList.add('active');
 
-            const metaTheme = mode === 'light' ? '#f4f6f9' : (mode === 'oled' ? '#000000' : '#121212');
+            const metaTheme = mode === 'light' ? '#f4f6f9' : (mode === 'oled' ? '#000000' : '#07090e');
             document.getElementById('meta-theme-color').setAttribute('content', metaTheme);
         }
 
         function setAccent(color) {
             document.documentElement.style.setProperty('--accent-color', color);
+            document.documentElement.style.setProperty('--accent-glow', color + '33');
             localStorage.setItem('bse_accent', color);
+            saveAndRender();
         }
 
         function loadPreferences() {
             const savedTheme = localStorage.getItem('bse_theme') || 'dark';
             setTheme(savedTheme);
 
-            const savedAccent = localStorage.getItem('bse_accent') || '#00e676';
+            const savedAccent = localStorage.getItem('bse_accent') || '#d4af37';
             setAccent(savedAccent);
+        }
+
+        function scrollToSection(sectionId, btn) {
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
         }
 
         function initDatalist() {
@@ -532,15 +644,14 @@
                 return;
             }
 
-            // Generate contextual alerts based on user holdings
             holdings.forEach(item => {
                 const meta = bseAssets.find(a => a.symbol === item.symbol);
-                if (meta && meta.divYield > 0.05) {
+                if (meta && meta.divYield > 0.04) {
                     const notif = document.createElement('div');
                     notif.className = 'notif-item';
                     notif.innerHTML = `
                         <strong>${item.symbol} Dividend Notice</strong>
-                        <div>Upcoming dividend distribution cycle expected this quarter. Estimated annual yield: ${(meta.divYield * 100).toFixed(1)}%.</div>
+                        <div>Upcoming distribution cycle expected this quarter. Estimated yield: ${(meta.divYield * 100).toFixed(1)}%.</div>
                         <div class="notif-date">System Alert • Active holding</div>
                     `;
                     container.appendChild(notif);
@@ -619,6 +730,8 @@
                 data = [1];
             }
 
+            const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+
             portfolioChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -626,12 +739,12 @@
                     datasets: [{
                         data: data,
                         backgroundColor: [
-                            '#00e676', '#00b0ff', '#7c4dff', '#ffea00', 
+                            currentAccent, '#00b0ff', '#7c4dff', '#ffea00', 
                             '#ff9100', '#ff5252', '#f50057', '#18ffff', 
                             '#e040fb', '#eeff41', '#b2ff59', '#64ffda'
                         ],
-                        borderWidth: 1,
-                        borderColor: '#121212'
+                        borderWidth: 2,
+                        borderColor: '#07090e'
                     }]
                 },
                 options: {
@@ -641,7 +754,7 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: '#e0e0e0',
+                                color: '#9ca3af',
                                 boxWidth: 12,
                                 font: { size: 11 }
                             }
