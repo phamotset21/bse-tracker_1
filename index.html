@@ -12,9 +12,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BSE Tracker">
     
-    <!-- Custom App Icon (Gold Bull Emblem) -->
-    <link rel="apple-touch-icon" href="https://i.ibb.co/6Z09789/bull-logo.png">
-    <link rel="icon" type="image/png" href="https://i.ibb.co/6Z09789/bull-logo.png">
+    <!-- Embedded Gold Stock Market Chart Vector Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23d4af37'><rect width='512' height='512' rx='100' fill='%2307090e'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23d4af37' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23d4af37'><rect width='512' height='512' rx='100' fill='%2307090e'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23d4af37' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
 
     <!-- Chart.js for Portfolio Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -25,7 +25,7 @@
             --card-bg: linear-gradient(145deg, #121824, #0d121b);
             --text-color: #f3f4f6;
             --text-muted: #9ca3af;
-            --accent-color: #d4af37; /* Gold Bull Theme */
+            --accent-color: #d4af37; /* Gold Bull / Market Chart Theme */
             --accent-glow: rgba(212, 175, 55, 0.2);
             --border-color: rgba(255, 255, 255, 0.08);
             --input-bg: #161f30;
@@ -78,15 +78,7 @@
         .header-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .header-logo {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--accent-color);
+            gap: 12px;
         }
 
         .header h1 {
@@ -387,7 +379,15 @@
 
     <div class="header">
         <div class="header-brand">
-            <img src="https://i.ibb.co/6Z09789/bull-logo.png" alt="Logo" class="header-logo">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: #161f30; display: flex; align-items: center; justify-content: center; border: 1px solid #d4af37;">
+                <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: none; stroke: #d4af37; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
+                    <path d="M3 17l6-6 4 4 8-8"></path>
+                    <circle cx="3" cy="17" r="1.5" fill="#d4af37"></circle>
+                    <circle cx="9" cy="11" r="1.5" fill="#d4af37"></circle>
+                    <circle cx="13" cy="15" r="1.5" fill="#d4af37"></circle>
+                    <circle cx="21" cy="7" r="2" fill="#d4af37"></circle>
+                </svg>
+            </div>
             <h1>Financial Markets Online</h1>
         </div>
     </div>
@@ -804,14 +804,15 @@
             saveAndRender();
         }
 
+        // Register Service Worker for PWA Installation Support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+
         loadPreferences();
         initDatalist();
         initMarketPricesGrid();
         saveAndRender();
-        if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
-
     </script>
 </body>
 </html>
