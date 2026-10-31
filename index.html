@@ -158,7 +158,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            max-height: 180px;
+            max-height: 220px;
             overflow-y: auto;
             padding-right: 4px;
         }
@@ -170,7 +170,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
         }
 
         .price-chip span {
@@ -242,7 +242,7 @@
 
     <!-- Live Market Prices Window -->
     <div class="card">
-        <h2>Live Market Prices (BWP / USD)</h2>
+        <h2>BSE Market Board Prices</h2>
         <div class="prices-grid" id="market-prices-grid">
             <!-- Dynamically populated via JS -->
         </div>
@@ -260,11 +260,11 @@
     <div class="card">
         <h2>Add / Update Holding</h2>
         <div class="form-group">
-            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., BTCL, TURNSTAR, ADBF)..." oninput="autoFillPrice()" onchange="autoFillPrice()">
+            <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker or Name (e.g., ABSAB, STX500, O)..." oninput="autoFillPrice()" onchange="autoFillPrice()">
             <datalist id="bse-list"></datalist>
             
             <input type="number" id="asset-qty" placeholder="Shares / Units Quantity" step="any">
-            <input type="number" id="asset-price" placeholder="Current Market Price (P / $)" step="any">
+            <input type="number" id="asset-price" placeholder="Current Price (P / $)" step="any">
             <button onclick="addHolding()">Add to Portfolio</button>
         </div>
     </div>
@@ -318,24 +318,51 @@
     </div>
 
     <script>
-        // Comprehensive BSE Equities, ETFs, and Tracked Assets Dataset with Live Prices
+        // Full BSE Dataset Across All Boards
         const bseAssets = [
-            { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Equity", price: 1.46, divYield: 0.08 },
-            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.09 },
-            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity", price: 1.90, divYield: 0.085 },
-            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity", price: 5.75, divYield: 0.065 },
-            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity", price: 16.00, divYield: 0.05 },
-            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity", price: 40.50, divYield: 0.07 },
-            { symbol: "NAP", name: "New African Properties Limited", type: "Equity", price: 4.06, divYield: 0.075 },
-            { symbol: "BIHL", name: "Botswana Insurance Holdings Ltd", type: "Equity", price: 23.76, divYield: 0.06 },
+            // 1. Domestic Main Board (Local Equities)
+            { symbol: "ABSAB", name: "ABSA Bank Botswana Limited", type: "Equity", price: 6.85, divYield: 0.065 },
+            { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Equity", price: 2.15, divYield: 0.045 },
+            { symbol: "BIHL", name: "Botswana Insurance Holdings Limited", type: "Equity", price: 23.76, divYield: 0.060 },
+            { symbol: "BTCL", name: "Botswana Telecommunications Corp Ltd", type: "Equity", price: 1.46, divYield: 0.080 },
             { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity", price: 18.70, divYield: 0.055 },
-            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", price: 14.25, divYield: 0.06 },
-            { symbol: "LUCARA", name: "Lucara Diamond Corp", type: "Equity", price: 1.70, divYield: 0.00 },
-            { symbol: "ANGLO", name: "Anglo American Plc", type: "Equity", price: 769.95, divYield: 0.035 },
-            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Equity", price: 0.81, divYield: 0.00 },
-            { symbol: "ADBF", name: "African Domestic Bond Fund ETF", type: "ETF", price: 102.53, divYield: 0.07 },
-            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.00 },
-            { symbol: "NEWPALL", name: "NewGold Palladium ETF", type: "ETF", price: 179.77, divYield: 0.00 },
+            { symbol: "CHOPPIES", name: "Choppies Enterprises Limited", type: "Equity", price: 0.55, divYield: 0.030 },
+            { symbol: "CRESTA", name: "Cresta Marakanelo Limited", type: "Equity", price: 1.25, divYield: 0.040 },
+            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", price: 14.25, divYield: 0.060 },
+            { symbol: "FNBB", name: "First National Bank of Botswana Ltd", type: "Equity", price: 5.75, divYield: 0.065 },
+            { symbol: "FPC", name: "The Field Property Company Limited", type: "Equity", price: 2.40, divYield: 0.070 },
+            { symbol: "G4S", name: "G4S Botswana Limited", type: "Equity", price: 2.95, divYield: 0.050 },
+            { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Equity", price: 3.10, divYield: 0.075 },
+            { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Equity", price: 1.35, divYield: 0.050 },
+            { symbol: "NAP", name: "National Asset Management Properties (NAP)", type: "Equity", price: 4.06, divYield: 0.075 },
+            { symbol: "OLYMPIA", name: "Olympia Capital Corporation Limited", type: "Equity", price: 0.40, divYield: 0.000 },
+            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings Limited", type: "Equity", price: 1.90, divYield: 0.085 },
+            { symbol: "RDCP", name: "RDC Properties Limited", type: "Equity", price: 2.30, divYield: 0.065 },
+            { symbol: "SECHABA", name: "Sechaba Brewery Holdings Limited", type: "Equity", price: 40.50, divYield: 0.070 },
+            { symbol: "SEEDCO", name: "Seed Co International Limited", type: "Equity", price: 3.20, divYield: 0.035 },
+            { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Equity", price: 16.00, divYield: 0.050 },
+            { symbol: "STANCHART", name: "Standard Chartered Bank Botswana Ltd", type: "Equity", price: 3.10, divYield: 0.060 },
+            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.090 },
+
+            // 2. Foreign Main & Venture Capital Board
+            { symbol: "ANGLO", name: "Anglo American plc", type: "Dual Equity", price: 769.95, divYield: 0.035 },
+            { symbol: "BOTALA", name: "Botala Energy Limited", type: "Venture Equity", price: 0.95, divYield: 0.000 },
+            { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Dual Equity", price: 6.80, divYield: 0.040 },
+            { symbol: "GAIA", name: "Gaia REIT Limited", type: "Dual Equity", price: 5.10, divYield: 0.065 },
+            { symbol: "INVESTEC", name: "Investec Group Limited", type: "Dual Equity", price: 82.50, divYield: 0.050 },
+            { symbol: "LUCARA", name: "Lucara Diamond Corp.", type: "Dual Equity", price: 1.70, divYield: 0.000 },
+            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Dual Equity", price: 0.81, divYield: 0.000 },
+            { symbol: "TLOU", name: "Tlou Energy Limited", type: "Dual Equity", price: 0.50, divYield: 0.000 },
+
+            // 3. Exchange-Traded Funds (ETF Board) & International Holdings
+            { symbol: "ADFB", name: "African Domestic Bond Fund ETF", type: "ETF", price: 102.53, divYield: 0.070 },
+            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000 },
+            { symbol: "NEWPALL", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000 },
+            { symbol: "NEWPLAT", name: "NewPlatinum ETF", type: "ETF", price: 145.20, divYield: 0.000 },
+            { symbol: "STX500", name: "Satrix S&P 500 ETF", type: "ETF", price: 112.40, divYield: 0.012 },
+            { symbol: "STXEMG", name: "Satrix MSCI Emerging Markets ETF", type: "ETF", price: 48.60, divYield: 0.020 },
+            { symbol: "STXWDM", name: "Satrix MSCI World ETF", type: "ETF", price: 85.30, divYield: 0.015 },
+            { symbol: "VGE-ETF", name: "CoreShares / Vetiva Global Equity ETF", type: "ETF", price: 32.10, divYield: 0.018 },
             { symbol: "O", name: "Realty Income Corporation", type: "US REIT", price: 57.20, divYield: 0.056 }
         ];
 
@@ -438,7 +465,8 @@
                         data: data,
                         backgroundColor: [
                             '#00e676', '#64ffda', '#00b0ff', '#7c4dff', 
-                            '#ffea00', '#ff9100', '#ff5252', '#f50057'
+                            '#ffea00', '#ff9100', '#ff5252', '#f50057',
+                            '#18ffff', '#e040fb', '#eeff41', '#b2ff59'
                         ],
                         borderWidth: 1,
                         borderColor: '#1e1e1e'
