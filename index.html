@@ -30,6 +30,7 @@
             --text-muted: #94a3b8;
             --input-bg: #161f2c;
             --danger-color: #ef4444;
+            --success-color: #00e676;
         }
 
         [data-theme="light"] {
@@ -60,7 +61,7 @@
             color: var(--text-main);
             margin: 0;
             padding: 16px;
-            padding-bottom: 110px; /* Space for bottom nav */
+            padding-bottom: 110px;
             max-width: 520px;
             margin-left: auto;
             margin-right: auto;
@@ -100,7 +101,6 @@
             margin-top: 2px;
         }
 
-        /* Glassmorphism Card Style */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: blur(20px);
@@ -114,10 +114,6 @@
             position: relative;
             overflow: hidden;
             transition: border-color 0.2s;
-        }
-
-        .glass-card:hover {
-            border-color: rgba(255, 87, 34, 0.3);
         }
 
         .glass-card h2 {
@@ -234,28 +230,62 @@
         }
 
         .prices-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            max-height: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 280px;
             overflow-y: auto;
             padding-right: 4px;
         }
 
-        .price-chip {
+        .price-row {
             background-color: var(--input-bg);
-            padding: 10px 12px;
-            border-radius: 12px;
+            padding: 10px 14px;
+            border-radius: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.82rem;
             border: 1px solid var(--card-border);
+            font-size: 0.85rem;
         }
 
-        .price-chip span {
-            color: var(--accent-orange);
+        .price-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-info span:first-child {
             font-weight: bold;
+            color: var(--accent-orange);
+        }
+
+        .price-info span:last-child {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .price-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .price-actions input {
+            width: 60px;
+            padding: 6px 8px;
+            font-size: 0.8rem;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        .action-btn-sm {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            border-radius: 8px;
+            background: var(--accent-orange);
+            color: #fff;
+            border: none;
+            cursor: pointer;
         }
 
         .notif-item {
@@ -362,7 +392,7 @@
             transform: translateX(-50%);
             width: calc(100% - 32px);
             max-width: 440px;
-            background: rgba(18, 24, 33, 0.8);
+            background: rgba(18, 24, 33, 0.85);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--card-border);
@@ -460,16 +490,15 @@
     <!-- Portfolio Alerts & Notices -->
     <div class="glass-card">
         <h2>Portfolio Alerts & Notices</h2>
-        <div id="notifications-container">
-            <!-- Populated via JS -->
-        </div>
+        <div id="notifications-container"></div>
     </div>
 
-    <!-- Live Market Prices Card -->
+    <!-- Live Market Prices & Quick Action Board -->
     <div class="glass-card" id="markets-section">
-        <h2>BSE Market Board Prices</h2>
+        <h2>BSE Market Board & Quick Actions</h2>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Adjust shares and click Add/Remove to instantly update your portfolio.</div>
         <div class="prices-grid" id="market-prices-grid">
-            <!-- Populated via JS -->
+            <!-- Populated via JS with inputs and buttons -->
         </div>
     </div>
 
@@ -509,8 +538,7 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="holdings-list">
-                </tbody>
+                <tbody id="holdings-list"></tbody>
             </table>
         </div>
     </div>
@@ -563,27 +591,27 @@
 
     <script>
         const bseAssets = [
-            { symbol: "ABSAB", name: "ABSA Bank Botswana Limited", type: "Equity", price: 6.85, divYield: 0.065 },
-            { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Equity", price: 2.15, divYield: 0.045 },
-            { symbol: "BIHL", name: "Botswana Insurance Holdings Limited", type: "Equity", price: 23.76, divYield: 0.060 },
-            { symbol: "BTCL", name: "Botswana Telecommunications Corp Ltd", type: "Equity", price: 1.46, divYield: 0.080 },
+            { symbol: "ABSAB", name: "ABSA Bank Botswana", type: "Equity", price: 6.85, divYield: 0.065 },
+            { symbol: "ACCESS", name: "Access Bank Botswana", type: "Equity", price: 2.15, divYield: 0.045 },
+            { symbol: "BIHL", name: "Botswana Insurance Holdings", type: "Equity", price: 23.76, divYield: 0.060 },
+            { symbol: "BTCL", name: "Botswana Telecommunications", type: "Equity", price: 1.46, divYield: 0.080 },
             { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity", price: 18.70, divYield: 0.055 },
-            { symbol: "CHOPPIES", name: "Choppies Enterprises Limited", type: "Equity", price: 0.55, divYield: 0.030 },
-            { symbol: "CRESTA", name: "Cresta Marakanelo Limited", type: "Equity", price: 1.25, divYield: 0.040 },
+            { symbol: "CHOPPIES", name: "Choppies Enterprises", type: "Equity", price: 0.55, divYield: 0.030 },
+            { symbol: "CRESTA", name: "Cresta Marakanelo", type: "Equity", price: 1.25, divYield: 0.040 },
             { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", price: 14.25, divYield: 0.060 },
-            { symbol: "FNBB", name: "First National Bank of Botswana Ltd", type: "Equity", price: 5.75, divYield: 0.065 },
-            { symbol: "FPC", name: "The Field Property Company Limited", type: "Equity", price: 2.40, divYield: 0.070 },
+            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity", price: 5.75, divYield: 0.065 },
+            { symbol: "FPC", name: "Field Property Company", type: "Equity", price: 2.40, divYield: 0.070 },
             { symbol: "G4S", name: "G4S Botswana Limited", type: "Equity", price: 2.95, divYield: 0.050 },
             { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Equity", price: 3.10, divYield: 0.075 },
             { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Equity", price: 1.35, divYield: 0.050 },
-            { symbol: "NAP", name: "National Asset Management Properties (NAP)", type: "Equity", price: 4.06, divYield: 0.075 },
-            { symbol: "OLYMPIA", name: "Olympia Capital Corporation Limited", type: "Equity", price: 0.40, divYield: 0.000 },
-            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings Limited", type: "Equity", price: 1.90, divYield: 0.085 },
+            { symbol: "NAP", name: "National Asset Management Properties", type: "Equity", price: 4.06, divYield: 0.075 },
+            { symbol: "OLYMPIA", name: "Olympia Capital Corp", type: "Equity", price: 0.40, divYield: 0.000 },
+            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity", price: 1.90, divYield: 0.085 },
             { symbol: "RDCP", name: "RDC Properties Limited", type: "Equity", price: 2.30, divYield: 0.065 },
-            { symbol: "SECHABA", name: "Sechaba Brewery Holdings Limited", type: "Equity", price: 40.50, divYield: 0.070 },
-            { symbol: "SEEDCO", name: "Seed Co International Limited", type: "Equity", price: 3.20, divYield: 0.035 },
-            { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Equity", price: 16.00, divYield: 0.050 },
-            { symbol: "STANCHART", name: "Standard Chartered Bank Botswana Ltd", type: "Equity", price: 3.10, divYield: 0.060 },
+            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity", price: 40.50, divYield: 0.070 },
+            { symbol: "SEEDCO", name: "Seed Co International", type: "Equity", price: 3.20, divYield: 0.035 },
+            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity", price: 16.00, divYield: 0.050 },
+            { symbol: "STANCHART", name: "Standard Chartered Bank", type: "Equity", price: 3.10, divYield: 0.060 },
             { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.090 },
             { symbol: "ANGLO", name: "Anglo American plc", type: "Dual Equity", price: 769.95, divYield: 0.035 },
             { symbol: "BOTALA", name: "Botala Energy Limited", type: "Venture Equity", price: 0.95, divYield: 0.000 },
@@ -593,14 +621,14 @@
             { symbol: "LUCARA", name: "Lucara Diamond Corp.", type: "Dual Equity", price: 1.70, divYield: 0.000 },
             { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Dual Equity", price: 0.81, divYield: 0.000 },
             { symbol: "TLOU", name: "Tlou Energy Limited", type: "Dual Equity", price: 0.50, divYield: 0.000 },
-            { symbol: "ADFB", name: "African Domestic Bond Fund ETF", type: "ETF", price: 102.53, divYield: 0.070 },
+            { symbol: "ADFB", name: "African Domestic Bond Fund", type: "ETF", price: 102.53, divYield: 0.070 },
             { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000 },
             { symbol: "NEWPALL", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000 },
             { symbol: "NEWPLAT", name: "NewPlatinum ETF", type: "ETF", price: 145.20, divYield: 0.000 },
             { symbol: "STX500", name: "Satrix S&P 500 ETF", type: "ETF", price: 112.40, divYield: 0.012 },
-            { symbol: "STXEMG", name: "Satrix MSCI Emerging Markets ETF", type: "ETF", price: 48.60, divYield: 0.020 },
+            { symbol: "STXEMG", name: "Satrix MSCI Emerging Markets", type: "ETF", price: 48.60, divYield: 0.020 },
             { symbol: "STXWDM", name: "Satrix MSCI World ETF", type: "ETF", price: 85.30, divYield: 0.015 },
-            { symbol: "VGE-ETF", name: "CoreShares / Vetiva Global Equity ETF", type: "ETF", price: 32.10, divYield: 0.018 },
+            { symbol: "VGE-ETF", name: "Vetiva Global Equity ETF", type: "ETF", price: 32.10, divYield: 0.018 },
             { symbol: "O", name: "Realty Income Corporation", type: "US REIT", price: 57.20, divYield: 0.056 }
         ];
 
@@ -610,10 +638,8 @@
         function setTheme(mode) {
             document.documentElement.setAttribute('data-theme', mode);
             localStorage.setItem('bse_theme', mode);
-            
             document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`btn-${mode}`).classList.add('active');
-
             const metaTheme = mode === 'light' ? '#f4f6f9' : (mode === 'oled' ? '#000000' : '#0d1117');
             document.getElementById('meta-theme-color').setAttribute('content', metaTheme);
         }
@@ -628,7 +654,6 @@
         function loadPreferences() {
             const savedTheme = localStorage.getItem('bse_theme') || 'dark';
             setTheme(savedTheme);
-
             const savedAccent = localStorage.getItem('bse_accent') || '#ff5722';
             setAccent(savedAccent);
         }
@@ -654,22 +679,54 @@
             const grid = document.getElementById('market-prices-grid');
             grid.innerHTML = '';
             bseAssets.forEach(asset => {
-                const chip = document.createElement('div');
-                chip.className = 'price-chip';
-                chip.innerHTML = `<span>${asset.symbol}</span> <strong>${asset.price.toFixed(2)}</strong>`;
-                grid.appendChild(chip);
+                const existingHolding = holdings.find(h => h.symbol === asset.symbol);
+                const currentQty = existingHolding ? existingHolding.qty : '';
+
+                const row = document.createElement('div');
+                row.className = 'price-row';
+                row.innerHTML = `
+                    <div class="price-info">
+                        <span>${asset.symbol} • P${asset.price.toFixed(2)}</span>
+                        <span>${asset.name}</span>
+                    </div>
+                    <div class="price-actions">
+                        <input type="number" id="qty-${asset.symbol}" placeholder="Qty" value="${currentQty}" step="any">
+                        <button class="action-btn-sm" onclick="quickToggleHolding('${asset.symbol}', ${asset.price})">${existingHolding ? 'Update' : 'Add'}</button>
+                        ${existingHolding ? `<button class="action-btn-sm" style="background:var(--danger-color);" onclick="quickRemoveHolding('${asset.symbol}')">✕</button>` : ''}
+                    </div>
+                `;
+                grid.appendChild(row);
             });
+        }
+
+        function quickToggleHolding(symbol, price) {
+            const inputVal = parseFloat(document.getElementById(`qty-${symbol}`).value);
+            if (isNaN(inputVal) || inputVal <= 0) {
+                alert("Please enter a valid share quantity.");
+                return;
+            }
+            const existingIndex = holdings.findIndex(item => item.symbol === symbol);
+            if (existingIndex !== -1) {
+                holdings[existingIndex].qty = inputVal;
+                holdings[existingIndex].price = price;
+            } else {
+                holdings.push({ symbol: symbol, qty: inputVal, price: price });
+            }
+            saveAndRender();
+        }
+
+        function quickRemoveHolding(symbol) {
+            holdings = holdings.filter(item => item.symbol !== symbol);
+            saveAndRender();
         }
 
         function updateNotifications() {
             const container = document.getElementById('notifications-container');
             container.innerHTML = '';
-
             if (holdings.length === 0) {
                 container.innerHTML = `<div class="notif-item"><span>Add assets to your portfolio to view customized dividend alerts and notices.</span></div>`;
                 return;
             }
-
             holdings.forEach(item => {
                 const meta = bseAssets.find(a => a.symbol === item.symbol);
                 if (meta && meta.divYield > 0.04) {
@@ -683,7 +740,6 @@
                     container.appendChild(notif);
                 }
             });
-
             if (container.children.length === 0) {
                 container.innerHTML = `<div class="notif-item"><span>All holdings are up to date. No pending corporate actions or alerts.</span><div class="notif-date">System Status • Normal</div></div>`;
             }
@@ -708,7 +764,6 @@
 
             let totalVal = 0;
             let totalAnnualDiv = 0;
-            
             let chartLabels = [];
             let chartData = [];
 
@@ -742,20 +797,18 @@
 
             updateChart(chartLabels, chartData);
             updateNotifications();
+            initMarketPricesGrid();
         }
 
         function updateChart(labels, data) {
             const ctx = document.getElementById('portfolioChart').getContext('2d');
-            
             if (portfolioChart) {
                 portfolioChart.destroy();
             }
-
             if (labels.length === 0) {
                 labels = ['No Assets Added'];
                 data = [1];
             }
-
             const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent-orange').trim();
 
             portfolioChart = new Chart(ctx, {
@@ -802,18 +855,9 @@
             }
 
             const existingIndex = holdings.findIndex(item => item.symbol === symbolInput);
-
             if (existingIndex !== -1) {
-                const existing = holdings[existingIndex];
-                const totalQty = existing.qty + qtyInput;
-                const totalCost = (existing.qty * existing.price) + (qtyInput * priceInput);
-                const avgPrice = totalCost / totalQty;
-
-                holdings[existingIndex] = {
-                    symbol: symbolInput,
-                    qty: totalQty,
-                    price: avgPrice
-                };
+                holdings[existingIndex].qty += qtyInput;
+                holdings[existingIndex].price = priceInput;
             } else {
                 holdings.push({ symbol: symbolInput, qty: qtyInput, price: priceInput });
             }
@@ -821,7 +865,6 @@
             document.getElementById('asset-search').value = '';
             document.getElementById('asset-qty').value = '';
             document.getElementById('asset-price').value = '';
-
             saveAndRender();
         }
 
