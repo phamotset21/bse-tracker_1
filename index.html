@@ -12,58 +12,59 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BSE Tracker">
     
-    <!-- Embedded Gold Stock Market Chart Vector Icon -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23d4af37'><rect width='512' height='512' rx='100' fill='%2307090e'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23d4af37' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23d4af37'><rect width='512' height='512' rx='100' fill='%2307090e'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23d4af37' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
+    <!-- Embedded Vector Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
 
-    <!-- Chart.js for Portfolio Graphs -->
+    <!-- Chart.js for Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
-            --bg-color: #07090e;
-            --card-bg: linear-gradient(145deg, #121824, #0d121b);
-            --text-color: #f3f4f6;
-            --text-muted: #9ca3af;
-            --accent-color: #d4af37; /* Gold Bull / Market Chart Theme */
-            --accent-glow: rgba(212, 175, 55, 0.2);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --input-bg: #161f30;
+            --bg-base: #0d1117;
+            --card-bg: rgba(22, 28, 38, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-orange: #ff5722;
+            --accent-glow: rgba(255, 87, 34, 0.25);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --input-bg: #161f2c;
             --danger-color: #ef4444;
         }
 
         [data-theme="light"] {
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --text-color: #1f2937;
+            --bg-base: #f4f6f9;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: #e5e7eb;
+            --accent-orange: #f4511e;
+            --accent-glow: rgba(244, 81, 30, 0.15);
+            --text-main: #1f2937;
             --text-muted: #6b7280;
-            --accent-color: #b8860b;
-            --accent-glow: rgba(184, 134, 11, 0.15);
-            --border-color: #e5e7eb;
             --input-bg: #f9fafb;
         }
 
         [data-theme="oled"] {
-            --bg-color: #000000;
-            --card-bg: #0a0e17;
-            --text-color: #ffffff;
+            --bg-base: #000000;
+            --card-bg: rgba(10, 14, 23, 0.85);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --accent-orange: #ff5722;
+            --accent-glow: rgba(255, 87, 34, 0.3);
+            --text-main: #ffffff;
             --text-muted: #888888;
-            --accent-color: #d4af37;
-            --accent-glow: rgba(212, 175, 55, 0.25);
-            --border-color: #1f2937;
             --input-bg: #111827;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", Roboto, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
             margin: 0;
             padding: 16px;
-            padding-bottom: 90px; /* Space for bottom nav */
-            max-width: 600px;
+            padding-bottom: 110px; /* Space for bottom nav */
+            max-width: 520px;
             margin-left: auto;
             margin-right: auto;
+            -webkit-font-smoothing: antialiased;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -71,7 +72,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             padding: 0 4px;
         }
 
@@ -82,32 +83,48 @@
         }
 
         .header h1 {
-            font-size: 1.15rem;
+            font-size: 1.25rem;
             margin: 0;
-            color: var(--accent-color);
+            color: var(--text-main);
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
-        .card {
+        .header h1 span {
+            color: var(--accent-orange);
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
             background: var(--card-bg);
-            border-radius: 16px;
-            padding: 18px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            padding: 20px;
             margin-bottom: 16px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s;
         }
 
-        .card:hover {
-            border-color: rgba(212, 175, 55, 0.3);
+        .glass-card:hover {
+            border-color: rgba(255, 87, 34, 0.3);
         }
 
-        .card h2 {
-            font-size: 0.9rem;
+        .glass-card h2 {
+            font-size: 0.85rem;
             margin-top: 0;
             margin-bottom: 14px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--card-border);
             padding-bottom: 8px;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -126,9 +143,9 @@
         .metric-box {
             background-color: var(--input-bg);
             padding: 14px;
-            border-radius: 12px;
+            border-radius: 16px;
             text-align: center;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--card-border);
         }
 
         .metric-box span {
@@ -140,7 +157,7 @@
 
         .metric-box strong {
             font-size: 1.15rem;
-            color: var(--accent-color);
+            color: var(--accent-orange);
         }
 
         .form-group {
@@ -150,32 +167,33 @@
         }
 
         input, select, button {
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
             background-color: var(--input-bg);
-            color: var(--text-color);
+            color: var(--text-main);
             font-size: 0.95rem;
             outline: none;
             transition: border-color 0.2s;
         }
 
         input:focus {
-            border-color: var(--accent-color);
+            border-color: var(--accent-orange);
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
 
         button {
-            background: linear-gradient(135deg, #d4af37, #aa820a);
-            color: #07090e;
-            font-weight: bold;
+            background: linear-gradient(135deg, #ff7043, #f4511e);
+            color: #ffffff;
+            font-weight: 600;
             border: none;
             cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
+            box-shadow: 0 8px 20px rgba(244, 81, 30, 0.4);
+            transition: transform 0.1s, opacity 0.2s;
         }
 
         button:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
             opacity: 0.9;
         }
 
@@ -188,7 +206,7 @@
         th, td {
             text-align: left;
             padding: 12px 6px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--card-border);
         }
 
         th {
@@ -203,8 +221,9 @@
             color: white;
             border: none;
             padding: 6px 10px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 0.75rem;
+            box-shadow: none;
         }
 
         .chart-container {
@@ -226,27 +245,27 @@
         .price-chip {
             background-color: var(--input-bg);
             padding: 10px 12px;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 0.82rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--card-border);
         }
 
         .price-chip span {
-            color: var(--accent-color);
+            color: var(--accent-orange);
             font-weight: bold;
         }
 
         .notif-item {
-            padding: 10px 12px;
+            padding: 12px 14px;
             background-color: var(--input-bg);
-            border-left: 4px solid var(--accent-color);
-            border-radius: 8px;
+            border-left: 4px solid var(--accent-orange);
+            border-radius: 12px;
             font-size: 0.82rem;
             margin-bottom: 8px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--card-border);
         }
 
         .notif-date {
@@ -257,7 +276,7 @@
 
         .news-item {
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--card-border);
             font-size: 0.85rem;
         }
 
@@ -268,13 +287,13 @@
         .news-tag {
             display: inline-block;
             background-color: var(--input-bg);
-            color: var(--accent-color);
-            padding: 2px 8px;
-            border-radius: 6px;
+            color: var(--accent-orange);
+            padding: 3px 8px;
+            border-radius: 8px;
             font-size: 0.7rem;
             font-weight: bold;
             margin-bottom: 4px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--card-border);
         }
 
         .news-date {
@@ -284,12 +303,12 @@
         }
 
         .news-link {
-            color: var(--text-color);
+            color: var(--text-main);
             text-decoration: none;
         }
 
         .news-link:hover {
-            color: var(--accent-color);
+            color: var(--accent-orange);
             text-decoration: underline;
         }
 
@@ -304,15 +323,16 @@
             padding: 10px;
             font-size: 0.82rem;
             background-color: var(--input-bg);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: none;
         }
 
         .theme-btn.active {
-            border-color: var(--accent-color);
+            border-color: var(--accent-orange);
             background: var(--accent-glow);
-            color: var(--accent-color);
+            color: var(--accent-orange);
         }
 
         .color-pickers {
@@ -334,21 +354,25 @@
             transform: scale(1.1);
         }
 
-        /* Bottom Native-Style Navigation Bar */
+        /* Floating Bottom Navigation Bar */
         .bottom-nav {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(13, 18, 27, 0.95);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--border-color);
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 440px;
+            background: rgba(18, 24, 33, 0.8);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--card-border);
+            border-radius: 99px;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
+            align-items: center;
+            padding: 10px 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             z-index: 1000;
-            max-width: 600px;
-            margin: 0 auto;
         }
 
         .nav-item {
@@ -361,17 +385,21 @@
             align-items: center;
             gap: 4px;
             cursor: pointer;
-            transition: color 0.2s;
+            padding: 6px 12px;
+            border-radius: 99px;
+            transition: color 0.2s, background 0.2s;
+            box-shadow: none;
         }
 
         .nav-item svg {
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             fill: currentColor;
         }
 
         .nav-item.active {
-            color: var(--accent-color);
+            color: var(--accent-orange);
+            background: var(--accent-glow);
         }
     </style>
 </head>
@@ -379,21 +407,21 @@
 
     <div class="header">
         <div class="header-brand">
-            <div style="width: 38px; height: 38px; border-radius: 10px; background: #161f30; display: flex; align-items: center; justify-content: center; border: 1px solid #d4af37;">
-                <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: none; stroke: #d4af37; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
+            <div style="width: 40px; height: 40px; border-radius: 12px; background: #161f2c; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-orange);">
+                <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; fill: none; stroke: var(--accent-orange); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
                     <path d="M3 17l6-6 4 4 8-8"></path>
-                    <circle cx="3" cy="17" r="1.5" fill="#d4af37"></circle>
-                    <circle cx="9" cy="11" r="1.5" fill="#d4af37"></circle>
-                    <circle cx="13" cy="15" r="1.5" fill="#d4af37"></circle>
-                    <circle cx="21" cy="7" r="2" fill="#d4af37"></circle>
+                    <circle cx="3" cy="17" r="1.5" fill="var(--accent-orange)"></circle>
+                    <circle cx="9" cy="11" r="1.5" fill="var(--accent-orange)"></circle>
+                    <circle cx="13" cy="15" r="1.5" fill="var(--accent-orange)"></circle>
+                    <circle cx="21" cy="7" r="2" fill="var(--accent-orange)"></circle>
                 </svg>
             </div>
-            <h1>Financial Markets Online</h1>
+            <h1>Financial Markets Online <span>BSE & Asset Tracker</span></h1>
         </div>
     </div>
 
-    <!-- Theme & Display Customizer Card -->
-    <div class="card" id="settings-section">
+    <!-- Theme & Display Settings Card -->
+    <div class="glass-card" id="settings-section">
         <h2>Display & Theme Settings</h2>
         <div style="font-size: 0.8rem; margin-bottom: 6px; color: var(--text-muted);">Select Theme Mode:</div>
         <div class="theme-options">
@@ -403,16 +431,16 @@
         </div>
         <div style="font-size: 0.8rem; margin-bottom: 6px; color: var(--text-muted);">Accent Color:</div>
         <div class="color-pickers">
-            <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
+            <div class="color-dot" style="background-color: #ff5722;" onclick="setAccent('#ff5722')"></div>
             <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
             <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
-            <div class="color-dot" style="background-color: #ff5252;" onclick="setAccent('#ff5252')"></div>
+            <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
             <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
         </div>
     </div>
 
-    <!-- Summary & Dividend Metrics -->
-    <div class="card" id="home-section">
+    <!-- Portfolio Overview Card -->
+    <div class="glass-card" id="home-section">
         <h2>Portfolio Overview</h2>
         <div class="metrics-grid">
             <div class="metric-box">
@@ -421,40 +449,40 @@
             </div>
             <div class="metric-box">
                 <span>Est. Annual Dividends</span>
-                <strong id="total-div" style="color: var(--accent-color);">P0.00</strong>
+                <strong id="total-div" style="color: var(--accent-orange);">P0.00</strong>
             </div>
         </div>
-        <div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
-            Total Holdings: <span id="total-count" style="color: var(--text-color); font-weight: bold;">0</span> assets
+        <div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 14px;">
+            Total Holdings: <span id="total-count" style="color: var(--text-main); font-weight: bold;">0</span> assets
         </div>
     </div>
 
-    <!-- Portfolio Notifications Drawer -->
-    <div class="card">
+    <!-- Portfolio Alerts & Notices -->
+    <div class="glass-card">
         <h2>Portfolio Alerts & Notices</h2>
         <div id="notifications-container">
             <!-- Populated via JS -->
         </div>
     </div>
 
-    <!-- Live Market Prices Window -->
-    <div class="card" id="markets-section">
+    <!-- Live Market Prices Card -->
+    <div class="glass-card" id="markets-section">
         <h2>BSE Market Board Prices</h2>
         <div class="prices-grid" id="market-prices-grid">
             <!-- Populated via JS -->
         </div>
     </div>
 
-    <!-- Visual Charts Card -->
-    <div class="card">
+    <!-- Asset Allocation Chart Card -->
+    <div class="glass-card">
         <h2>Asset Allocation & Growth</h2>
         <div class="chart-container">
             <canvas id="portfolioChart"></canvas>
         </div>
     </div>
 
-    <!-- Add Asset Form -->
-    <div class="card">
+    <!-- Add Asset Form Card -->
+    <div class="glass-card">
         <h2>Add / Update Holding</h2>
         <div class="form-group">
             <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker or Name (e.g., BTCL, FNBB)..." oninput="autoFillPrice()" onchange="autoFillPrice()">
@@ -466,8 +494,8 @@
         </div>
     </div>
 
-    <!-- Holdings Table -->
-    <div class="card" id="portfolio-section">
+    <!-- Holdings Table Card -->
+    <div class="glass-card" id="portfolio-section">
         <h2>Holdings & Dividends</h2>
         <div style="overflow-x: auto;">
             <table>
@@ -487,8 +515,8 @@
         </div>
     </div>
 
-    <!-- Market News / Announcements Summary Section -->
-    <div class="card" id="news-section">
+    <!-- Market News Card -->
+    <div class="glass-card" id="news-section">
         <h2>BSE Market News & Disclosures</h2>
         <div id="news-container">
             <div class="news-item">
@@ -509,7 +537,7 @@
         </div>
     </div>
 
-    <!-- Bottom Native Navigation Bar -->
+    <!-- Floating Bottom Navigation Bar -->
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="scrollToSection('home-section', this)">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -557,7 +585,6 @@
             { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Equity", price: 16.00, divYield: 0.050 },
             { symbol: "STANCHART", name: "Standard Chartered Bank Botswana Ltd", type: "Equity", price: 3.10, divYield: 0.060 },
             { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.090 },
-
             { symbol: "ANGLO", name: "Anglo American plc", type: "Dual Equity", price: 769.95, divYield: 0.035 },
             { symbol: "BOTALA", name: "Botala Energy Limited", type: "Venture Equity", price: 0.95, divYield: 0.000 },
             { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Dual Equity", price: 6.80, divYield: 0.040 },
@@ -566,7 +593,6 @@
             { symbol: "LUCARA", name: "Lucara Diamond Corp.", type: "Dual Equity", price: 1.70, divYield: 0.000 },
             { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Dual Equity", price: 0.81, divYield: 0.000 },
             { symbol: "TLOU", name: "Tlou Energy Limited", type: "Dual Equity", price: 0.50, divYield: 0.000 },
-
             { symbol: "ADFB", name: "African Domestic Bond Fund ETF", type: "ETF", price: 102.53, divYield: 0.070 },
             { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000 },
             { symbol: "NEWPALL", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000 },
@@ -588,12 +614,12 @@
             document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`btn-${mode}`).classList.add('active');
 
-            const metaTheme = mode === 'light' ? '#f4f6f9' : (mode === 'oled' ? '#000000' : '#07090e');
+            const metaTheme = mode === 'light' ? '#f4f6f9' : (mode === 'oled' ? '#000000' : '#0d1117');
             document.getElementById('meta-theme-color').setAttribute('content', metaTheme);
         }
 
         function setAccent(color) {
-            document.documentElement.style.setProperty('--accent-color', color);
+            document.documentElement.style.setProperty('--accent-orange', color);
             document.documentElement.style.setProperty('--accent-glow', color + '33');
             localStorage.setItem('bse_accent', color);
             saveAndRender();
@@ -603,7 +629,7 @@
             const savedTheme = localStorage.getItem('bse_theme') || 'dark';
             setTheme(savedTheme);
 
-            const savedAccent = localStorage.getItem('bse_accent') || '#d4af37';
+            const savedAccent = localStorage.getItem('bse_accent') || '#ff5722';
             setAccent(savedAccent);
         }
 
@@ -704,7 +730,7 @@
                     <td>${item.qty}</td>
                     <td>${currentPrice.toFixed(2)}</td>
                     <td>${itemVal.toFixed(2)}</td>
-                    <td style="color: var(--accent-color);">+${itemDiv.toFixed(2)}</td>
+                    <td style="color: var(--accent-orange);">+${itemDiv.toFixed(2)}</td>
                     <td><button class="delete-btn" onclick="removeHolding(${index})">✕</button></td>
                 `;
                 tbody.appendChild(row);
@@ -730,7 +756,7 @@
                 data = [1];
             }
 
-            const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+            const currentAccent = getComputedStyle(document.documentElement).getPropertyValue('--accent-orange').trim();
 
             portfolioChart = new Chart(ctx, {
                 type: 'doughnut',
@@ -740,11 +766,11 @@
                         data: data,
                         backgroundColor: [
                             currentAccent, '#00b0ff', '#7c4dff', '#ffea00', 
-                            '#ff9100', '#ff5252', '#f50057', '#18ffff', 
-                            '#e040fb', '#eeff41', '#b2ff59', '#64ffda'
+                            '#ff9100', '#26a69a', '#ab47bc', '#29b6f6', 
+                            '#ec407a', '#d4af37', '#66bb6a', '#42a5f5'
                         ],
                         borderWidth: 2,
-                        borderColor: '#07090e'
+                        borderColor: '#0d1117'
                     }]
                 },
                 options: {
@@ -754,7 +780,7 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: '#9ca3af',
+                                color: '#94a3b8',
                                 boxWidth: 12,
                                 font: { size: 11 }
                             }
@@ -804,7 +830,6 @@
             saveAndRender();
         }
 
-        // Register Service Worker for PWA Installation Support
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(() => {});
         }
