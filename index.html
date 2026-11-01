@@ -288,20 +288,60 @@
             cursor: pointer;
         }
 
-        .notif-item {
-            padding: 12px 14px;
+        /* Structured Dividend Schedule Card */
+        .div-card {
             background-color: var(--input-bg);
-            border-left: 4px solid var(--accent-orange);
-            border-radius: 12px;
-            font-size: 0.82rem;
-            margin-bottom: 8px;
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
             border: 1px solid var(--card-border);
         }
 
-        .notif-date {
-            font-size: 0.7rem;
+        .div-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed var(--card-border);
+            padding-bottom: 8px;
+        }
+
+        .div-header strong {
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .div-amount {
+            color: var(--accent-orange);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .div-dates-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 0.75rem;
+        }
+
+        .div-date-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+        }
+
+        .div-date-box span {
             color: var(--text-muted);
-            margin-top: 3px;
+            display: block;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .div-date-box strong {
+            color: var(--text-main);
         }
 
         .news-item {
@@ -487,10 +527,12 @@
         </div>
     </div>
 
-    <!-- Portfolio Alerts & Notices -->
-    <div class="glass-card">
-        <h2>Portfolio Alerts & Notices</h2>
-        <div id="notifications-container"></div>
+    <!-- Clear Dividend Timeline & Key Dates Calendar -->
+    <div class="glass-card" id="dividends-section">
+        <h2>Upcoming Dividend Dates & Payout Schedule</h2>
+        <div id="dividends-schedule-container">
+            <!-- Populated dynamically via JS with Announcement Date, Ex Date, Record Date & Pay Date -->
+        </div>
     </div>
 
     <!-- Live Market Prices & Quick Action Board -->
@@ -498,7 +540,7 @@
         <h2>BSE Market Board & Quick Actions</h2>
         <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Adjust shares and click Add/Remove to instantly update your portfolio.</div>
         <div class="prices-grid" id="market-prices-grid">
-            <!-- Populated via JS with inputs and buttons -->
+            <!-- Populated via JS -->
         </div>
     </div>
 
@@ -525,7 +567,7 @@
 
     <!-- Holdings Table Card -->
     <div class="glass-card" id="portfolio-section">
-        <h2>Holdings & Dividends</h2>
+        <h2>Holdings & Dividends Breakdown</h2>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
@@ -571,6 +613,10 @@
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             Home
         </button>
+        <button class="nav-item" onclick="scrollToSection('dividends-section', this)">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            Dividends
+        </button>
         <button class="nav-item" onclick="scrollToSection('portfolio-section', this)">
             <svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zm6.5 0h3v7h-3zM2 19h20v3H2zm15-9h3v7h-3zm-5-9L2 6v2h20V6z"/></svg>
             Portfolio
@@ -579,57 +625,34 @@
             <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
             Markets
         </button>
-        <button class="nav-item" onclick="scrollToSection('news-section', this)">
-            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
-            News
-        </button>
         <button class="nav-item" onclick="scrollToSection('settings-section', this)">
-            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
             Settings
         </button>
     </nav>
 
     <script>
         const bseAssets = [
-            { symbol: "ABSAB", name: "ABSA Bank Botswana", type: "Equity", price: 6.85, divYield: 0.065 },
-            { symbol: "ACCESS", name: "Access Bank Botswana", type: "Equity", price: 2.15, divYield: 0.045 },
-            { symbol: "BIHL", name: "Botswana Insurance Holdings", type: "Equity", price: 23.76, divYield: 0.060 },
-            { symbol: "BTCL", name: "Botswana Telecommunications", type: "Equity", price: 1.46, divYield: 0.080 },
-            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity", price: 18.70, divYield: 0.055 },
-            { symbol: "CHOPPIES", name: "Choppies Enterprises", type: "Equity", price: 0.55, divYield: 0.030 },
-            { symbol: "CRESTA", name: "Cresta Marakanelo", type: "Equity", price: 1.25, divYield: 0.040 },
-            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", price: 14.25, divYield: 0.060 },
-            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity", price: 5.75, divYield: 0.065 },
-            { symbol: "FPC", name: "Field Property Company", type: "Equity", price: 2.40, divYield: 0.070 },
-            { symbol: "G4S", name: "G4S Botswana Limited", type: "Equity", price: 2.95, divYield: 0.050 },
-            { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Equity", price: 3.10, divYield: 0.075 },
-            { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Equity", price: 1.35, divYield: 0.050 },
-            { symbol: "NAP", name: "National Asset Management Properties", type: "Equity", price: 4.06, divYield: 0.075 },
-            { symbol: "OLYMPIA", name: "Olympia Capital Corp", type: "Equity", price: 0.40, divYield: 0.000 },
-            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity", price: 1.90, divYield: 0.085 },
-            { symbol: "RDCP", name: "RDC Properties Limited", type: "Equity", price: 2.30, divYield: 0.065 },
-            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity", price: 40.50, divYield: 0.070 },
-            { symbol: "SEEDCO", name: "Seed Co International", type: "Equity", price: 3.20, divYield: 0.035 },
-            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity", price: 16.00, divYield: 0.050 },
-            { symbol: "STANCHART", name: "Standard Chartered Bank", type: "Equity", price: 3.10, divYield: 0.060 },
-            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.090 },
-            { symbol: "ANGLO", name: "Anglo American plc", type: "Dual Equity", price: 769.95, divYield: 0.035 },
-            { symbol: "BOTALA", name: "Botala Energy Limited", type: "Venture Equity", price: 0.95, divYield: 0.000 },
-            { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Dual Equity", price: 6.80, divYield: 0.040 },
-            { symbol: "GAIA", name: "Gaia REIT Limited", type: "Dual Equity", price: 5.10, divYield: 0.065 },
-            { symbol: "INVESTEC", name: "Investec Group Limited", type: "Dual Equity", price: 82.50, divYield: 0.050 },
-            { symbol: "LUCARA", name: "Lucara Diamond Corp.", type: "Dual Equity", price: 1.70, divYield: 0.000 },
-            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Dual Equity", price: 0.81, divYield: 0.000 },
-            { symbol: "TLOU", name: "Tlou Energy Limited", type: "Dual Equity", price: 0.50, divYield: 0.000 },
-            { symbol: "ADFB", name: "African Domestic Bond Fund", type: "ETF", price: 102.53, divYield: 0.070 },
-            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000 },
-            { symbol: "NEWPALL", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000 },
-            { symbol: "NEWPLAT", name: "NewPlatinum ETF", type: "ETF", price: 145.20, divYield: 0.000 },
-            { symbol: "STX500", name: "Satrix S&P 500 ETF", type: "ETF", price: 112.40, divYield: 0.012 },
-            { symbol: "STXEMG", name: "Satrix MSCI Emerging Markets", type: "ETF", price: 48.60, divYield: 0.020 },
-            { symbol: "STXWDM", name: "Satrix MSCI World ETF", type: "ETF", price: 85.30, divYield: 0.015 },
-            { symbol: "VGE-ETF", name: "Vetiva Global Equity ETF", type: "ETF", price: 32.10, divYield: 0.018 },
-            { symbol: "O", name: "Realty Income Corporation", type: "US REIT", price: 57.20, divYield: 0.056 }
+            { symbol: "ABSAB", name: "ABSA Bank Botswana", type: "Equity", price: 6.85, divYield: 0.065, announceDate: "2026-08-28", exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28" },
+            { symbol: "ACCESS", name: "Access Bank Botswana", type: "Equity", price: 2.15, divYield: 0.045, announceDate: "2026-09-29", exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28" },
+            { symbol: "BIHL", name: "Botswana Insurance Holdings", type: "Equity", price: 23.76, divYield: 0.060, announceDate: "2026-08-25", exDate: "2026-10-05", recordDate: "2026-10-07", payDate: "2026-10-21" },
+            { symbol: "BTCL", name: "Botswana Telecommunications", type: "Equity", price: 1.46, divYield: 0.080, announceDate: "2026-08-31", exDate: "2026-10-01", recordDate: "2026-10-03", payDate: "2026-10-15" },
+            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Equity", price: 18.70, divYield: 0.055, announceDate: "2026-05-25", exDate: "2026-06-10", recordDate: "2026-06-12", payDate: "2026-06-24" },
+            { symbol: "CHOPPIES", name: "Choppies Enterprises", type: "Equity", price: 0.55, divYield: 0.030, announceDate: "2026-09-22", exDate: "2026-10-28", recordDate: "2026-10-30", payDate: "2026-11-12" },
+            { symbol: "CRESTA", name: "Cresta Marakanelo", type: "Equity", price: 1.25, divYield: 0.040, announceDate: "2026-04-18", exDate: "2026-05-20", recordDate: "2026-05-22", payDate: "2026-06-05" },
+            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Equity", price: 14.25, divYield: 0.060, announceDate: "2026-09-15", exDate: "2026-10-20", recordDate: "2026-10-22", payDate: "2026-11-05" },
+            { symbol: "FNBB", name: "First National Bank Botswana", type: "Equity", price: 5.75, divYield: 0.065, announceDate: "2026-09-10", exDate: "2026-10-08", recordDate: "2026-10-10", payDate: "2026-10-31" },
+            { symbol: "FPC", name: "Field Property Company", type: "Equity", price: 2.40, divYield: 0.070, announceDate: "2026-06-12", exDate: "2026-07-15", recordDate: "2026-07-17", payDate: "2026-07-31" },
+            { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Equity", price: 3.10, divYield: 0.075, announceDate: "2026-09-28", exDate: "2026-11-04", recordDate: "2026-11-06", payDate: "2026-11-20" },
+            { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Equity", price: 1.35, divYield: 0.050, announceDate: "2026-04-10", exDate: "2026-04-30", recordDate: "2026-05-02", payDate: "2026-05-22" },
+            { symbol: "NAP", name: "National Asset Management Properties", type: "Equity", price: 4.06, divYield: 0.075, announceDate: "2026-05-15", exDate: "2026-06-18", recordDate: "2026-06-20", payDate: "2026-07-08" },
+            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings", type: "Equity", price: 1.90, divYield: 0.085, announceDate: "2026-02-14", exDate: "2026-03-12", recordDate: "2026-03-14", payDate: "2026-03-28" },
+            { symbol: "RDCP", name: "RDC Properties Limited", type: "Equity", price: 2.30, divYield: 0.065, announceDate: "2026-09-18", exDate: "2026-10-22", recordDate: "2026-10-24", payDate: "2026-11-08" },
+            { symbol: "SECHABA", name: "Sechaba Brewery Holdings", type: "Equity", price: 40.50, divYield: 0.070, announceDate: "2026-08-14", exDate: "2026-09-16", recordDate: "2026-09-18", payDate: "2026-09-30" },
+            { symbol: "SEFALANA", name: "Sefalana Holding Company", type: "Equity", price: 16.00, divYield: 0.050, announceDate: "2026-07-31", exDate: "2026-08-26", recordDate: "2026-08-28", payDate: "2026-09-11" },
+            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Equity", price: 2.06, divYield: 0.090, announceDate: "2026-10-12", exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04" },
+            { symbol: "ADFB", name: "African Domestic Bond Fund", type: "ETF", price: 102.53, divYield: 0.070, announceDate: "2026-06-15", exDate: "2026-07-08", recordDate: "2026-07-10", payDate: "2026-07-24" },
+            { symbol: "O", name: "Realty Income Corporation", type: "US REIT", price: 57.20, divYield: 0.056, announceDate: "2026-10-01", exDate: "2026-10-30", recordDate: "2026-11-02", payDate: "2026-11-15" }
         ];
 
         let holdings = JSON.parse(localStorage.getItem('bse_portfolio')) || [];
@@ -720,28 +743,61 @@
             saveAndRender();
         }
 
-        function updateNotifications() {
-            const container = document.getElementById('notifications-container');
+        function updateDividendSchedule() {
+            const container = document.getElementById('dividends-schedule-container');
             container.innerHTML = '';
+
             if (holdings.length === 0) {
-                container.innerHTML = `<div class="notif-item"><span>Add assets to your portfolio to view customized dividend alerts and notices.</span></div>`;
+                container.innerHTML = `
+                    <div class="div-card">
+                        <div style="font-size:0.82rem; color:var(--text-muted); text-align:center;">
+                            Add dividend-paying stocks to your portfolio to view key dates (Announcement, Ex-Date, Record, and Pay Date).
+                        </div>
+                    </div>`;
                 return;
             }
+
             holdings.forEach(item => {
                 const meta = bseAssets.find(a => a.symbol === item.symbol);
-                if (meta && meta.divYield > 0.04) {
-                    const notif = document.createElement('div');
-                    notif.className = 'notif-item';
-                    notif.innerHTML = `
-                        <strong>${item.symbol} Dividend Notice</strong>
-                        <div>Upcoming distribution cycle expected this quarter. Estimated yield: ${(meta.divYield * 100).toFixed(1)}%.</div>
-                        <div class="notif-date">System Alert • Active holding</div>
+                if (meta && meta.divYield > 0) {
+                    const itemVal = item.qty * meta.price;
+                    const estPayout = itemVal * meta.divYield;
+
+                    const card = document.createElement('div');
+                    card.className = 'div-card';
+                    card.innerHTML = `
+                        <div class="div-header">
+                            <div>
+                                <strong>${item.symbol}</strong>
+                                <div style="font-size:0.7rem; color:var(--text-muted);">${meta.name}</div>
+                            </div>
+                            <div class="div-amount">+P${estPayout.toFixed(2)}/yr</div>
+                        </div>
+                        <div class="div-dates-grid">
+                            <div class="div-date-box">
+                                <span>Announcement Date</span>
+                                <strong>${meta.announceDate || '2026-08-15'}</strong>
+                            </div>
+                            <div class="div-date-box">
+                                <span>Ex-Dividend Date</span>
+                                <strong style="color:var(--accent-orange);">${meta.exDate || '2026-10-01'}</strong>
+                            </div>
+                            <div class="div-date-box">
+                                <span>Record Date</span>
+                                <strong>${meta.recordDate || '2026-10-03'}</strong>
+                            </div>
+                            <div class="div-date-box">
+                                <span>Payment Date</span>
+                                <strong style="color:var(--success-color);">${meta.payDate || '2026-10-25'}</strong>
+                            </div>
+                        </div>
                     `;
-                    container.appendChild(notif);
+                    container.appendChild(card);
                 }
             });
+
             if (container.children.length === 0) {
-                container.innerHTML = `<div class="notif-item"><span>All holdings are up to date. No pending corporate actions or alerts.</span><div class="notif-date">System Status • Normal</div></div>`;
+                container.innerHTML = `<div class="div-card"><div style="font-size:0.82rem; color:var(--text-muted); text-align:center;">None of your current holdings have active dividend distributions declared.</div></div>`;
             }
         }
 
@@ -796,7 +852,7 @@
             document.getElementById('total-count').innerText = holdings.length;
 
             updateChart(chartLabels, chartData);
-            updateNotifications();
+            updateDividendSchedule();
             initMarketPricesGrid();
         }
 
