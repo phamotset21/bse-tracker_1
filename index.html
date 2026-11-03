@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-font="normal">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,7 +7,7 @@
     
     <!-- PWA Setup -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#07090e" id="meta-theme-color">
+    <meta name="theme-color" content="#0d1117" id="meta-theme-color">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BSE Tracker">
@@ -32,11 +32,13 @@
             --warning-bg: rgba(234, 179, 8, 0.15);
             --warning-border: rgba(234, 179, 8, 0.4);
             --warning-text: #facc15;
+            --card-padding: 18px;
+            --card-margin: 16px;
         }
 
         [data-theme="light"] {
             --bg-base: #f4f6f9;
-            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-bg: rgba(255, 255, 255, 0.95);
             --card-border: #e5e7eb;
             --accent-orange: #f4511e;
             --accent-glow: rgba(244, 81, 30, 0.15);
@@ -50,13 +52,57 @@
 
         [data-theme="oled"] {
             --bg-base: #000000;
-            --card-bg: rgba(12, 12, 12, 0.9);
-            --card-border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(12, 12, 12, 0.95);
+            --card-border: rgba(255, 255, 255, 0.12);
             --accent-orange: #ff5722;
             --accent-glow: rgba(255, 87, 34, 0.35);
             --text-main: #ffffff;
             --text-muted: #888888;
             --input-bg: #111111;
+        }
+
+        [data-theme="midnight"] {
+            --bg-base: #0a0e17;
+            --card-bg: rgba(16, 24, 40, 0.85);
+            --card-border: rgba(56, 189, 248, 0.15);
+            --accent-orange: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.25);
+            --text-main: #f0f9ff;
+            --text-muted: #7dd3fc;
+            --input-bg: #0f172a;
+        }
+
+        [data-theme="forest"] {
+            --bg-base: #09150d;
+            --card-bg: rgba(18, 36, 25, 0.85);
+            --card-border: rgba(74, 222, 128, 0.15);
+            --accent-orange: #4ade80;
+            --accent-glow: rgba(74, 222, 128, 0.25);
+            --text-main: #f0fdf4;
+            --text-muted: #86efac;
+            --input-bg: #142e1d;
+        }
+
+        [data-theme="sand"] {
+            --bg-base: #f7f4ef;
+            --card-bg: rgba(255, 253, 248, 0.95);
+            --card-border: #e6dfd3;
+            --accent-orange: #d97706;
+            --accent-glow: rgba(217, 119, 6, 0.15);
+            --text-main: #451a03;
+            --text-muted: #78350f;
+            --input-bg: #fffbf5;
+        }
+
+        /* Font Sizes */
+        [data-font="small"] { font-size: 13px; }
+        [data-font="normal"] { font-size: 15px; }
+        [data-font="large"] { font-size: 17px; }
+
+        /* Compact Layout Overrides */
+        [data-compact="true"] {
+            --card-padding: 12px;
+            --card-margin: 10px;
         }
 
         * { box-sizing: border-box; }
@@ -115,9 +161,9 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--card-border);
             border-radius: 24px;
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
-            padding: 18px;
-            margin-bottom: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+            padding: var(--card-padding);
+            margin-bottom: var(--card-margin);
             position: relative;
         }
 
@@ -223,6 +269,16 @@
             gap: 10px;
         }
 
+        .switch-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--card-border);
+        }
+
+        .switch-row:last-child { border-bottom: none; }
+
         input, select, button {
             padding: 12px 14px;
             border-radius: 14px;
@@ -233,8 +289,11 @@
             outline: none;
         }
 
-        input:focus, select:focus {
-            border-color: var(--accent-orange);
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--accent-orange);
+            cursor: pointer;
         }
 
         button {
@@ -247,6 +306,19 @@
         }
 
         button:active { transform: scale(0.97); }
+
+        .btn-outline {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+            box-shadow: none;
+        }
 
         .controls-bar {
             display: flex;
@@ -356,6 +428,12 @@
             padding: 14px;
             margin-bottom: 12px;
             border: 1px solid var(--card-border);
+            transition: border-color 0.3s;
+        }
+
+        .div-card.amber-alert {
+            border: 1px solid #f59e0b;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), var(--input-bg));
         }
 
         .div-header {
@@ -408,6 +486,7 @@
             font-weight: bold;
         }
         .badge-upcoming { background: rgba(0,230,118,0.2); color: var(--success-color); }
+        .badge-soon { background: rgba(245, 158, 11, 0.25); color: #f59e0b; }
         .badge-paid { background: rgba(148,163,184,0.2); color: var(--text-muted); }
 
         .news-item {
@@ -443,21 +522,28 @@
 
         .news-link:hover { color: var(--accent-orange); }
 
-        .theme-options {
-            display: flex;
+        /* Themes Selection Layout */
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
             margin-bottom: 12px;
         }
 
         .theme-btn {
-            flex: 1;
             padding: 10px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             background-color: var(--input-bg);
             color: var(--text-main);
-            border: 1px solid var(--card-border);
+            border: 1.5px solid var(--card-border);
             border-radius: 12px;
             box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .theme-btn.active {
@@ -467,10 +553,19 @@
             font-weight: bold;
         }
 
+        .theme-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+            display: inline-block;
+        }
+
         .color-pickers {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .color-dot {
@@ -479,7 +574,10 @@
             border-radius: 50%;
             cursor: pointer;
             border: 2px solid transparent;
+            transition: transform 0.2s;
         }
+
+        .color-dot:hover { transform: scale(1.1); }
 
         /* Undo Toast Popup */
         #toast-undo {
@@ -655,7 +753,7 @@
                     <option value="yield">Highest Yield</option>
                     <option value="az">Ticker (A–Z)</option>
                 </select>
-                <button onclick="copyCSV()" style="padding:6px 10px; font-size:0.75rem; background:var(--input-bg); border:1px solid var(--card-border); color:var(--text-main); box-shadow:none;">Copy CSV</button>
+                <button onclick="copyCSV()" class="btn-outline" style="padding:6px 10px; font-size:0.75rem;">Copy CSV</button>
             </div>
             <div style="overflow-x: auto;">
                 <table>
@@ -701,31 +799,116 @@
         </div>
     </div>
 
-    <!-- TAB 5: SETTINGS & DISPLAY -->
+    <!-- TAB 5: REDESIGNED SETTINGS & DISPLAY -->
     <div id="tab-settings" class="tab-content">
+        
+        <!-- Theme Selection -->
         <div class="glass-card">
-            <h2>Display Theme</h2>
-            <div style="font-size: 0.78rem; margin-bottom: 8px; color: var(--text-muted);">Select Interface Mode:</div>
-            <div class="theme-options">
-                <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">Dark</button>
-                <button class="theme-btn" onclick="setTheme('oled')" id="btn-oled">OLED Black</button>
-                <button class="theme-btn" onclick="setTheme('light')" id="btn-light">Light</button>
+            <h2>Themes</h2>
+            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Visual Mode:</div>
+            <div class="themes-grid">
+                <button class="theme-btn" onclick="setTheme('auto')" id="btn-auto">
+                    <span class="theme-dot" style="background:#555;"></span> Auto (Phone)
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">
+                    <span class="theme-dot" style="background:#0d1117;"></span> Dark
+                </button>
+                <button class="theme-btn" onclick="setTheme('oled')" id="btn-oled">
+                    <span class="theme-dot" style="background:#000000;"></span> OLED Black
+                </button>
+                <button class="theme-btn" onclick="setTheme('light')" id="btn-light">
+                    <span class="theme-dot" style="background:#ffffff;"></span> Light
+                </button>
+                <button class="theme-btn" onclick="setTheme('midnight')" id="btn-midnight">
+                    <span class="theme-dot" style="background:#0a0e17;"></span> Midnight
+                </button>
+                <button class="theme-btn" onclick="setTheme('forest')" id="btn-forest">
+                    <span class="theme-dot" style="background:#09150d;"></span> Forest
+                </button>
+                <button class="theme-btn" onclick="setTheme('sand')" id="btn-sand">
+                    <span class="theme-dot" style="background:#f7f4ef;"></span> Sand
+                </button>
             </div>
-            <div style="font-size: 0.78rem; margin-bottom: 8px; color: var(--text-muted); margin-top: 14px;">Accent Theme Color:</div>
+        </div>
+
+        <!-- Accent Colors -->
+        <div class="glass-card">
+            <h2>Accent Colour</h2>
+            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Presets & Custom Picker:</div>
             <div class="color-pickers">
                 <div class="color-dot" style="background-color: #ff5722;" onclick="setAccent('#ff5722')"></div>
                 <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
                 <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
                 <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
                 <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
+                
+                <label style="font-size:0.75rem; color:var(--text-muted); margin-left: auto; display:flex; align-items:center; gap:6px;">
+                    Custom:
+                    <input type="color" id="custom-accent-picker" onchange="setAccent(this.value)" style="width:32px; height:32px; padding:0; border:none; background:none; cursor:pointer;">
+                </label>
             </div>
         </div>
 
+        <!-- Display Options -->
         <div class="glass-card">
-            <h2>Tax & Financial Parameters</h2>
+            <h2>Display Options</h2>
             <div class="form-group">
-                <label style="font-size: 0.78rem; color: var(--text-muted);">Dividend Withholding Tax Rate (%):</label>
-                <input type="number" id="tax-rate-input" value="10" step="0.5" onchange="updateTaxRate()">
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Text Size</span>
+                    <select id="font-size-select" onchange="setFontSize(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                        <option value="small">Small</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Compact Layout</span>
+                    <input type="checkbox" id="compact-toggle" onchange="toggleCompact(this.checked)">
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Hide Amounts (Mask Pula)</span>
+                    <input type="checkbox" id="hide-amounts-toggle" onchange="toggleHideAmounts(this.checked)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="glass-card">
+            <h2>Preferences</h2>
+            <div class="form-group">
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Opening Tab</span>
+                    <select id="opening-tab-select" onchange="setOpeningTab(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                        <option value="home">Home</option>
+                        <option value="portfolio">Portfolio</option>
+                        <option value="dividends">Dividends</option>
+                        <option value="markets">Markets</option>
+                        <option value="settings">Settings</option>
+                    </select>
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Dividend Alert Window</span>
+                    <select id="alert-window-select" onchange="setAlertWindow(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                        <option value="7">7 Days</option>
+                        <option value="14" selected>14 Days</option>
+                        <option value="30">30 Days</option>
+                    </select>
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Withholding Tax Rate (%)</span>
+                    <input type="number" id="tax-rate-input" value="10" step="0.5" style="width:70px; text-align:center; padding:4px;" onchange="updateTaxRate()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Data & Backup -->
+        <div class="glass-card">
+            <h2>Data & Storage Backup</h2>
+            <div class="form-group">
+                <button onclick="copyCSV()" class="btn-outline">Copy Holdings CSV</button>
+                <button onclick="copyBackupJSON()" class="btn-outline">Copy Backup (JSON)</button>
+                <button onclick="restoreBackupJSON()" class="btn-outline">Restore Backup</button>
+                <button onclick="resetAllData()" class="btn-danger" style="margin-top:8px;">Reset All Data</button>
             </div>
         </div>
     </div>
@@ -738,23 +921,23 @@
 
     <!-- Floating Bottom 5-Tab Navigation -->
     <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('home', this)">
+        <button class="nav-item active" onclick="switchTab('home', this)" id="nav-btn-home">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             Home
         </button>
-        <button class="nav-item" onclick="switchTab('portfolio', this)">
+        <button class="nav-item" onclick="switchTab('portfolio', this)" id="nav-btn-portfolio">
             <svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zm6.5 0h3v7h-3zM2 19h20v3H2zm15-9h3v7h-3zm-5-9L2 6v2h20V6z"/></svg>
             Portfolio
         </button>
-        <button class="nav-item" onclick="switchTab('dividends', this)">
+        <button class="nav-item" onclick="switchTab('dividends', this)" id="nav-btn-dividends">
             <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
             Dividends
         </button>
-        <button class="nav-item" onclick="switchTab('markets', this)">
+        <button class="nav-item" onclick="switchTab('markets', this)" id="nav-btn-markets">
             <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
             Markets
         </button>
-        <button class="nav-item" onclick="switchTab('settings', this)">
+        <button class="nav-item" onclick="switchTab('settings', this)" id="nav-btn-settings">
             <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
             Settings
         </button>
@@ -762,51 +945,46 @@
 
     <script>
         const STOCKS = [
-            // Domestic Equities (Main Board)
-            { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.045, announceDate: "2026-09-29", exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
-            { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.065, announceDate: "2026-08-28", exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
-            { symbol: "BIHL", name: "Botswana Insurance Holdings Limited", type: "Domestic Equity", price: 23.76, divYield: 0.060, announceDate: "2026-08-25", exDate: "2026-10-05", recordDate: "2026-10-07", payDate: "2026-10-21", payMonth: 9 },
-            { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Domestic Equity", price: 1.46, divYield: 0.080, announceDate: "2026-08-31", exDate: "2026-10-01", recordDate: "2026-10-03", payDate: "2026-10-15", payMonth: 9 },
-            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Domestic Equity", price: 18.70, divYield: 0.055, announceDate: "2026-05-25", exDate: "2026-06-10", recordDate: "2026-06-12", payDate: "2026-06-24", payMonth: 5 },
-            { symbol: "CHOPPIES", name: "Choppies Enterprises Limited", type: "Domestic Equity", price: 0.55, divYield: 0.030, announceDate: "2026-09-22", exDate: "2026-10-28", recordDate: "2026-10-30", payDate: "2026-11-12", payMonth: 10 },
-            { symbol: "CRESTA", name: "Cresta Marakanelo Limited", type: "Domestic Equity", price: 1.25, divYield: 0.040, announceDate: "2026-04-18", exDate: "2026-05-20", recordDate: "2026-05-22", payDate: "2026-06-05", payMonth: 5 },
-            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Domestic Equity", price: 14.25, divYield: 0.060, announceDate: "2026-09-15", exDate: "2026-10-20", recordDate: "2026-10-22", payDate: "2026-11-05", payMonth: 10 },
-            { symbol: "FNBB", name: "First National Bank of Botswana", type: "Domestic Equity", price: 5.75, divYield: 0.065, announceDate: "2026-09-10", exDate: "2026-10-08", recordDate: "2026-10-10", payDate: "2026-10-31", payMonth: 9 },
-            { symbol: "FPC", name: "The Far Property Company Limited", type: "Domestic Equity", price: 2.40, divYield: 0.070, announceDate: "2026-06-12", exDate: "2026-07-15", recordDate: "2026-07-17", payDate: "2026-07-31", payMonth: 6 },
-            { symbol: "G4S", name: "G4S Botswana Limited", type: "Domestic Equity", price: 2.95, divYield: 0.050, announceDate: "2026-05-10", exDate: "2026-06-01", recordDate: "2026-06-03", payDate: "2026-06-15", payMonth: 5 },
-            { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Domestic Equity", price: 3.10, divYield: 0.075, announceDate: "2026-09-28", exDate: "2026-11-04", recordDate: "2026-11-06", payDate: "2026-11-20", payMonth: 10 },
-            { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Domestic Equity", price: 1.35, divYield: 0.050, announceDate: "2026-04-10", exDate: "2026-04-30", recordDate: "2026-05-02", payDate: "2026-05-22", payMonth: 4 },
-            { symbol: "MINERGY", name: "Minergy Limited", type: "Domestic Equity", price: 0.45, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "NAP", name: "New African Properties Limited", type: "Domestic Equity", price: 4.06, divYield: 0.075, announceDate: "2026-05-15", exDate: "2026-06-18", recordDate: "2026-06-20", payDate: "2026-07-08", payMonth: 6 },
-            { symbol: "OLYMPIA", name: "Olympia Capital Corporation Ltd", type: "Domestic Equity", price: 0.40, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings Ltd", type: "Domestic Equity", price: 1.90, divYield: 0.085, announceDate: "2026-02-14", exDate: "2026-03-12", recordDate: "2026-03-14", payDate: "2026-03-28", payMonth: 2 },
-            { symbol: "RDCP", name: "RDC Properties Limited", type: "Domestic Equity", price: 2.30, divYield: 0.065, announceDate: "2026-09-18", exDate: "2026-10-22", recordDate: "2026-10-24", payDate: "2026-11-08", payMonth: 10 },
-            { symbol: "SECHABA", name: "Sechaba Brewery Holdings Limited", type: "Domestic Equity", price: 40.50, divYield: 0.070, announceDate: "2026-08-14", exDate: "2026-09-16", recordDate: "2026-09-18", payDate: "2026-09-30", payMonth: 8 },
-            { symbol: "SEEDCO", name: "Seedco International Limited", type: "Domestic Equity", price: 3.20, divYield: 0.035, announceDate: "2026-07-10", exDate: "2026-08-05", recordDate: "2026-08-07", payDate: "2026-08-20", payMonth: 7 },
-            { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Domestic Equity", price: 16.00, divYield: 0.050, announceDate: "2026-07-31", exDate: "2026-08-26", recordDate: "2026-08-28", payDate: "2026-09-11", payMonth: 8 },
-            { symbol: "STANCHART", name: "Standard Chartered Bank Botswana", type: "Domestic Equity", price: 3.10, divYield: 0.060, announceDate: "2026-06-20", exDate: "2026-07-10", recordDate: "2026-07-12", payDate: "2026-07-25", payMonth: 6 },
-            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.090, announceDate: "2026-10-12", exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04", payMonth: 11 },
-
-            // Foreign Equities
-            { symbol: "ANGLO", name: "Anglo American Plc", type: "Foreign Equity", price: 769.95, divYield: 0.035, announceDate: "2026-07-25", exDate: "2026-08-18", recordDate: "2026-08-20", payDate: "2026-09-10", payMonth: 8 },
-            { symbol: "BOTALA", name: "Botala Energy Limited", type: "Foreign Equity", price: 0.95, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "BMIN-EQO", name: "Botswana Minerals Plc", type: "Foreign Equity", price: 1.10, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Foreign Equity", price: 6.80, divYield: 0.040, announceDate: "2026-08-10", exDate: "2026-09-05", recordDate: "2026-09-07", payDate: "2026-09-21", payMonth: 8 },
-            { symbol: "GAIA", name: "GAIA Renewables 1 Limited", type: "Foreign Equity", price: 5.10, divYield: 0.065, announceDate: "2026-06-15", exDate: "2026-07-12", recordDate: "2026-07-14", payDate: "2026-07-28", payMonth: 6 },
-            { symbol: "INVESTEC", name: "Investec Limited", type: "Foreign Equity", price: 82.50, divYield: 0.050, announceDate: "2026-05-20", exDate: "2026-06-15", recordDate: "2026-06-17", payDate: "2026-07-02", payMonth: 6 },
-            { symbol: "LUC", name: "Lucara Diamond Corp", type: "Foreign Equity", price: 1.70, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Foreign Equity", price: 0.81, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "TLOU", name: "Tlou Energy Limited", type: "Foreign Equity", price: 0.50, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-
-            // ETFs
-            { symbol: "ADFB", name: "ADBFUND", type: "ETF", price: 102.53, divYield: 0.070, announceDate: "2026-06-15", exDate: "2026-07-08", recordDate: "2026-07-10", payDate: "2026-07-24", payMonth: 6 },
-            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "NEWPALLADIUM", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "NEWPLATINUM", name: "NewPlatinum ETF", type: "ETF", price: 145.20, divYield: 0.000, announceDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-            { symbol: "SATRIX500", name: "SATRIX500 ETF", type: "ETF", price: 112.40, divYield: 0.012, announceDate: "2026-06-10", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
-            { symbol: "SATRIXEMG", name: "SATRIXEMG ETF", type: "ETF", price: 48.60, divYield: 0.020, announceDate: "2026-06-10", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
-            { symbol: "SATRIXWDM", name: "SATRIXWDM ETF", type: "ETF", price: 85.30, divYield: 0.015, announceDate: "2026-06-10", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
-            { symbol: "VGE-ETF", name: "VGEPFAM ETF", type: "ETF", price: 32.10, divYield: 0.018, announceDate: "2026-06-10", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 }
+            { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.045, exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
+            { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.065, exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
+            { symbol: "BIHL", name: "Botswana Insurance Holdings Limited", type: "Domestic Equity", price: 23.76, divYield: 0.060, exDate: "2026-10-05", recordDate: "2026-10-07", payDate: "2026-10-21", payMonth: 9 },
+            { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Domestic Equity", price: 1.46, divYield: 0.080, exDate: "2026-10-01", recordDate: "2026-10-03", payDate: "2026-10-15", payMonth: 9 },
+            { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Domestic Equity", price: 18.70, divYield: 0.055, exDate: "2026-06-10", recordDate: "2026-06-12", payDate: "2026-06-24", payMonth: 5 },
+            { symbol: "CHOPPIES", name: "Choppies Enterprises Limited", type: "Domestic Equity", price: 0.55, divYield: 0.030, exDate: "2026-10-28", recordDate: "2026-10-30", payDate: "2026-11-12", payMonth: 10 },
+            { symbol: "CRESTA", name: "Cresta Marakanelo Limited", type: "Domestic Equity", price: 1.25, divYield: 0.040, exDate: "2026-05-20", recordDate: "2026-05-22", payDate: "2026-06-05", payMonth: 5 },
+            { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Domestic Equity", price: 14.25, divYield: 0.060, exDate: "2026-10-20", recordDate: "2026-10-22", payDate: "2026-11-05", payMonth: 10 },
+            { symbol: "FNBB", name: "First National Bank of Botswana", type: "Domestic Equity", price: 5.75, divYield: 0.065, exDate: "2026-10-08", recordDate: "2026-10-10", payDate: "2026-10-31", payMonth: 9 },
+            { symbol: "FPC", name: "The Far Property Company Limited", type: "Domestic Equity", price: 2.40, divYield: 0.070, exDate: "2026-07-15", recordDate: "2026-07-17", payDate: "2026-07-31", payMonth: 6 },
+            { symbol: "G4S", name: "G4S Botswana Limited", type: "Domestic Equity", price: 2.95, divYield: 0.050, exDate: "2026-06-01", recordDate: "2026-06-03", payDate: "2026-06-15", payMonth: 5 },
+            { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Domestic Equity", price: 3.10, divYield: 0.075, exDate: "2026-11-04", recordDate: "2026-11-06", payDate: "2026-11-20", payMonth: 10 },
+            { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Domestic Equity", price: 1.35, divYield: 0.050, exDate: "2026-04-30", recordDate: "2026-05-02", payDate: "2026-05-22", payMonth: 4 },
+            { symbol: "MINERGY", name: "Minergy Limited", type: "Domestic Equity", price: 0.45, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "NAP", name: "New African Properties Limited", type: "Domestic Equity", price: 4.06, divYield: 0.075, exDate: "2026-06-18", recordDate: "2026-06-20", payDate: "2026-07-08", payMonth: 6 },
+            { symbol: "OLYMPIA", name: "Olympia Capital Corporation Ltd", type: "Domestic Equity", price: 0.40, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "PRIMETIME", name: "PrimeTime Property Holdings Ltd", type: "Domestic Equity", price: 1.90, divYield: 0.085, exDate: "2026-03-12", recordDate: "2026-03-14", payDate: "2026-03-28", payMonth: 2 },
+            { symbol: "RDCP", name: "RDC Properties Limited", type: "Domestic Equity", price: 2.30, divYield: 0.065, exDate: "2026-10-22", recordDate: "2026-10-24", payDate: "2026-11-08", payMonth: 10 },
+            { symbol: "SECHABA", name: "Sechaba Brewery Holdings Limited", type: "Domestic Equity", price: 40.50, divYield: 0.070, exDate: "2026-09-16", recordDate: "2026-09-18", payDate: "2026-09-30", payMonth: 8 },
+            { symbol: "SEEDCO", name: "Seedco International Limited", type: "Domestic Equity", price: 3.20, divYield: 0.035, exDate: "2026-08-05", recordDate: "2026-08-07", payDate: "2026-08-20", payMonth: 7 },
+            { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Domestic Equity", price: 16.00, divYield: 0.050, exDate: "2026-08-26", recordDate: "2026-08-28", payDate: "2026-09-11", payMonth: 8 },
+            { symbol: "STANCHART", name: "Standard Chartered Bank Botswana", type: "Domestic Equity", price: 3.10, divYield: 0.060, exDate: "2026-07-10", recordDate: "2026-07-12", payDate: "2026-07-25", payMonth: 6 },
+            { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.090, exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04", payMonth: 11 },
+            { symbol: "ANGLO", name: "Anglo American Plc", type: "Foreign Equity", price: 769.95, divYield: 0.035, exDate: "2026-08-18", recordDate: "2026-08-20", payDate: "2026-09-10", payMonth: 8 },
+            { symbol: "BOTALA", name: "Botala Energy Limited", type: "Foreign Equity", price: 0.95, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "BMIN-EQO", name: "Botswana Minerals Plc", type: "Foreign Equity", price: 1.10, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Foreign Equity", price: 6.80, divYield: 0.040, exDate: "2026-09-05", recordDate: "2026-09-07", payDate: "2026-09-21", payMonth: 8 },
+            { symbol: "GAIA", name: "GAIA Renewables 1 Limited", type: "Foreign Equity", price: 5.10, divYield: 0.065, exDate: "2026-07-12", recordDate: "2026-07-14", payDate: "2026-07-28", payMonth: 6 },
+            { symbol: "INVESTEC", name: "Investec Limited", type: "Foreign Equity", price: 82.50, divYield: 0.050, exDate: "2026-06-15", recordDate: "2026-06-17", payDate: "2026-07-02", payMonth: 6 },
+            { symbol: "LUC", name: "Lucara Diamond Corp", type: "Foreign Equity", price: 1.70, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Foreign Equity", price: 0.81, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "TLOU", name: "Tlou Energy Limited", type: "Foreign Equity", price: 0.50, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "ADFB", name: "ADBFUND", type: "ETF", price: 102.53, divYield: 0.070, exDate: "2026-07-08", recordDate: "2026-07-10", payDate: "2026-07-24", payMonth: 6 },
+            { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "NEWPALLADIUM", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "NEWPLATINUM", name: "NewPlatinum ETF", type: "ETF", price: 145.20, divYield: 0.000, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+            { symbol: "SATRIX500", name: "SATRIX500 ETF", type: "ETF", price: 112.40, divYield: 0.012, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
+            { symbol: "SATRIXEMG", name: "SATRIXEMG ETF", type: "ETF", price: 48.60, divYield: 0.020, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
+            { symbol: "SATRIXWDM", name: "SATRIXWDM ETF", type: "ETF", price: 85.30, divYield: 0.015, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
+            { symbol: "VGE-ETF", name: "VGEPFAM ETF", type: "ETF", price: 32.10, divYield: 0.018, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 }
         ];
 
         const NEWS = [
@@ -825,6 +1003,12 @@
 
         let holdings = JSON.parse(localStorage.getItem('bse_portfolio')) || [];
         let taxRate = parseFloat(localStorage.getItem('bse_tax_rate')) || 10.0;
+        let alertWindow = parseInt(localStorage.getItem('bse_alert_window')) || 14;
+        let hideAmounts = localStorage.getItem('bse_hide_amounts') === 'true';
+        let compactLayout = localStorage.getItem('bse_compact') === 'true';
+        let fontSizeMode = localStorage.getItem('bse_font_size') || 'normal';
+        let defaultTab = localStorage.getItem('bse_default_tab') || 'home';
+
         let lastDeleted = null;
         let toastTimeout = null;
         let portfolioChart = null;
@@ -834,15 +1018,30 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
-            btn.classList.add('active');
+            
+            const targetBtn = btn || document.getElementById(`nav-btn-${tabId}`);
+            if (targetBtn) targetBtn.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function setTheme(mode) {
-            document.documentElement.setAttribute('data-theme', mode);
+            let activeTheme = mode;
+            if (mode === 'auto') {
+                activeTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            }
+
+            document.documentElement.setAttribute('data-theme', activeTheme);
             localStorage.setItem('bse_theme', mode);
+
             document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${mode}`).classList.add('active');
+            const activeBtn = document.getElementById(`btn-${mode}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const metaColorMap = {
+                'dark': '#0d1117', 'oled': '#000000', 'light': '#f4f6f9',
+                'midnight': '#0a0e17', 'forest': '#09150d', 'sand': '#f7f4ef'
+            };
+            document.getElementById('meta-theme-color').setAttribute('content', metaColorMap[activeTheme] || '#0d1117');
         }
 
         function setAccent(color) {
@@ -852,12 +1051,33 @@
             saveAndRender();
         }
 
-        function loadPreferences() {
-            const savedTheme = localStorage.getItem('bse_theme') || 'dark';
-            setTheme(savedTheme);
-            const savedAccent = localStorage.getItem('bse_accent') || '#ff5722';
-            setAccent(savedAccent);
-            document.getElementById('tax-rate-input').value = taxRate;
+        function setFontSize(size) {
+            fontSizeMode = size;
+            document.documentElement.setAttribute('data-font', size);
+            localStorage.setItem('bse_font_size', size);
+        }
+
+        function toggleCompact(isCompact) {
+            compactLayout = isCompact;
+            document.documentElement.setAttribute('data-compact', isCompact ? 'true' : 'false');
+            localStorage.setItem('bse_compact', isCompact ? 'true' : 'false');
+        }
+
+        function toggleHideAmounts(isMasked) {
+            hideAmounts = isMasked;
+            localStorage.setItem('bse_hide_amounts', isMasked ? 'true' : 'false');
+            saveAndRender();
+        }
+
+        function setOpeningTab(tab) {
+            defaultTab = tab;
+            localStorage.setItem('bse_default_tab', tab);
+        }
+
+        function setAlertWindow(days) {
+            alertWindow = parseInt(days);
+            localStorage.setItem('bse_alert_window', alertWindow);
+            saveAndRender();
         }
 
         function updateTaxRate() {
@@ -867,6 +1087,34 @@
                 localStorage.setItem('bse_tax_rate', taxRate);
                 saveAndRender();
             }
+        }
+
+        function loadPreferences() {
+            const savedTheme = localStorage.getItem('bse_theme') || 'dark';
+            setTheme(savedTheme);
+            const savedAccent = localStorage.getItem('bse_accent') || '#ff5722';
+            setAccent(savedAccent);
+            
+            setFontSize(fontSizeMode);
+            document.getElementById('font-size-select').value = fontSizeMode;
+
+            toggleCompact(compactLayout);
+            document.getElementById('compact-toggle').checked = compactLayout;
+
+            document.getElementById('hide-amounts-toggle').checked = hideAmounts;
+
+            document.getElementById('tax-rate-input').value = taxRate;
+            document.getElementById('alert-window-select').value = alertWindow;
+            document.getElementById('opening-tab-select').value = defaultTab;
+
+            if (defaultTab !== 'home') {
+                switchTab(defaultTab);
+            }
+        }
+
+        function formatCurrency(val) {
+            if (hideAmounts) return 'P••••';
+            return 'P' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
         }
 
         function initDatalist() {
@@ -976,7 +1224,6 @@
             let totalNetDiv = 0;
             const sortMode = document.getElementById('sort-select').value;
 
-            // Sort logic
             holdings.sort((a, b) => {
                 const metaA = getStockMeta(a.symbol);
                 const metaB = getStockMeta(b.symbol);
@@ -987,7 +1234,6 @@
                 if (sortMode === 'az') return a.symbol.localeCompare(b.symbol);
             });
 
-            // Check risk warning (>50%)
             let maxAsset = null;
             let maxVal = 0;
 
@@ -1016,23 +1262,22 @@
                 row.innerHTML = `
                     <td><strong>${item.symbol}</strong></td>
                     <td>${item.qty}</td>
-                    <td>P${(item.buyPrice || curPrice).toFixed(2)}<br><span style="color:var(--text-muted);">P${curPrice.toFixed(2)}</span></td>
-                    <td><strong>P${itemVal.toFixed(2)}</strong></td>
-                    <td style="color:${plColor}; font-weight:bold;">${pl >= 0 ? '+' : ''}P${pl.toFixed(2)}</td>
-                    <td style="color:var(--accent-orange);">+P${netDiv.toFixed(2)}</td>
+                    <td>${formatCurrency(item.buyPrice || curPrice)}<br><span style="color:var(--text-muted);">${formatCurrency(curPrice)}</span></td>
+                    <td><strong>${formatCurrency(itemVal)}</strong></td>
+                    <td style="color:${plColor}; font-weight:bold;">${pl >= 0 ? '+' : ''}${formatCurrency(pl)}</td>
+                    <td style="color:var(--accent-orange);">+${formatCurrency(netDiv)}</td>
                     <td><button class="delete-btn" onclick="deleteHolding(${i})">✕</button></td>
                 `;
                 tbody.appendChild(row);
             });
 
             const totalPL = totalVal - totalCost;
-            document.getElementById('dash-total-val').innerText = 'P' + totalVal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-            document.getElementById('dash-total-div').innerText = 'P' + totalNetDiv.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
-            document.getElementById('dash-total-pl').innerText = (totalPL >= 0 ? '+' : '') + 'P' + totalPL.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+            document.getElementById('dash-total-val').innerText = formatCurrency(totalVal);
+            document.getElementById('dash-total-div').innerText = formatCurrency(totalNetDiv);
+            document.getElementById('dash-total-pl').innerText = (totalPL >= 0 ? '+' : '') + formatCurrency(totalPL);
             document.getElementById('dash-total-pl').style.color = totalPL >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
             document.getElementById('dash-total-count').innerText = holdings.length;
 
-            // Render Concentration Alert
             const warnBox = document.getElementById('risk-warning-container');
             if (totalVal > 0 && (maxVal / totalVal) > 0.5) {
                 const pct = ((maxVal / totalVal) * 100).toFixed(1);
@@ -1128,15 +1373,23 @@
                     const diffTime = payDateObj - today;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     const isPaid = diffDays < 0;
+                    const isSoon = !isPaid && diffDays <= alertWindow;
 
-                    const statusBadge = isPaid 
-                        ? `<span class="badge-status badge-paid">Paid</span>` 
-                        : `<span class="badge-status badge-upcoming">In ${diffDays} days</span>`;
+                    if (isSoon) {
+                        card.classList.add('amber-alert');
+                    }
+
+                    let statusBadge = `<span class="badge-status badge-upcoming">In ${diffDays} days</span>`;
+                    if (isPaid) {
+                        statusBadge = `<span class="badge-status badge-paid">Paid</span>`;
+                    } else if (isSoon) {
+                        statusBadge = `<span class="badge-status badge-soon">Coming up soon</span>`;
+                    }
 
                     card.innerHTML = `
                         <div class="div-header">
                             <div><strong>${h.symbol}</strong> <span style="font-size:0.7rem; color:var(--text-muted);">${meta.name}</span></div>
-                            <div class="div-amount">+P${netAnnual.toFixed(2)}/yr (Net)</div>
+                            <div class="div-amount">+${formatCurrency(netAnnual)}/yr (Net)</div>
                         </div>
                         <div class="div-dates-grid">
                             <div class="div-date-box"><span>Ex-Dividend Date</span><strong>${meta.exDate}</strong></div>
@@ -1197,7 +1450,6 @@
 
             const holdingSymbols = holdings.map(h => h.symbol);
 
-            // Sort: Owned stocks news first
             const sortedNews = [...NEWS].sort((a, b) => {
                 const aOwned = holdingSymbols.includes(a.symbol);
                 const bOwned = holdingSymbols.includes(b.symbol);
@@ -1234,7 +1486,7 @@
                 row.setAttribute('data-name', s.name);
                 row.innerHTML = `
                     <div class="price-info">
-                        <span>${s.symbol} • P${s.price.toFixed(2)}</span>
+                        <span>${s.symbol} • ${formatCurrency(s.price)}</span>
                         <span>${s.name}</span>
                     </div>
                     <div class="price-actions">
@@ -1300,6 +1552,62 @@
             }).catch(() => {
                 alert("Failed to copy CSV.");
             });
+        }
+
+        function copyBackupJSON() {
+            const backupObj = {
+                holdings: holdings,
+                taxRate: taxRate,
+                alertWindow: alertWindow,
+                hideAmounts: hideAmounts,
+                compactLayout: compactLayout,
+                fontSizeMode: fontSizeMode,
+                defaultTab: defaultTab,
+                theme: localStorage.getItem('bse_theme') || 'dark',
+                accent: localStorage.getItem('bse_accent') || '#ff5722'
+            };
+
+            const jsonStr = JSON.stringify(backupObj, null, 2);
+            navigator.clipboard.writeText(jsonStr).then(() => {
+                alert("Backup JSON copied to clipboard!");
+            }).catch(() => {
+                alert("Failed to copy backup JSON.");
+            });
+        }
+
+        function restoreBackupJSON() {
+            const pasteStr = prompt("Paste your backup JSON here:");
+            if (!pasteStr) return;
+
+            try {
+                const parsed = JSON.parse(pasteStr);
+                if (parsed.holdings && Array.isArray(parsed.holdings)) {
+                    localStorage.setItem('bse_portfolio', JSON.stringify(parsed.holdings));
+                    if (parsed.taxRate) localStorage.setItem('bse_tax_rate', parsed.taxRate);
+                    if (parsed.alertWindow) localStorage.setItem('bse_alert_window', parsed.alertWindow);
+                    if (parsed.hideAmounts !== undefined) localStorage.setItem('bse_hide_amounts', parsed.hideAmounts);
+                    if (parsed.compactLayout !== undefined) localStorage.setItem('bse_compact', parsed.compactLayout);
+                    if (parsed.fontSizeMode) localStorage.setItem('bse_font_size', parsed.fontSizeMode);
+                    if (parsed.defaultTab) localStorage.setItem('bse_default_tab', parsed.defaultTab);
+                    if (parsed.theme) localStorage.setItem('bse_theme', parsed.theme);
+                    if (parsed.accent) localStorage.setItem('bse_accent', parsed.accent);
+
+                    alert("Backup restored successfully!");
+                    location.reload();
+                } else {
+                    alert("Invalid backup JSON format.");
+                }
+            } catch (err) {
+                alert("Error parsing backup JSON.");
+            }
+        }
+
+        function resetAllData() {
+            if (confirm("Are you sure you want to reset all portfolio holdings and settings? This action cannot be undone.")) {
+                localStorage.clear();
+                alert("All data reset.");
+                location.reload();
+            }
         }
 
         if ('serviceWorker' in navigator) {
