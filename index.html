@@ -94,12 +94,10 @@
             --input-bg: #fffbf5;
         }
 
-        /* Font Sizes */
         [data-font="small"] { font-size: 13px; }
         [data-font="normal"] { font-size: 15px; }
         [data-font="large"] { font-size: 17px; }
 
-        /* Compact Layout Overrides */
         [data-compact="true"] {
             --card-padding: 12px;
             --card-margin: 10px;
@@ -359,7 +357,7 @@
 
         .chart-container {
             position: relative;
-            height: 220px;
+            height: 240px;
             width: 100%;
             margin-top: 10px;
         }
@@ -522,7 +520,6 @@
 
         .news-link:hover { color: var(--accent-orange); }
 
-        /* Themes Selection Layout */
         .themes-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -579,7 +576,6 @@
 
         .color-dot:hover { transform: scale(1.1); }
 
-        /* Undo Toast Popup */
         #toast-undo {
             position: fixed;
             bottom: 90px;
@@ -608,7 +604,6 @@
             box-shadow: none;
         }
 
-        /* Floating Bottom Navigation Bar */
         .bottom-nav {
             position: fixed;
             bottom: 16px;
@@ -677,10 +672,8 @@
     <!-- TAB 1: HOME DASHBOARD -->
     <div id="tab-home" class="tab-content active">
         
-        <!-- Concentration Warning Banner -->
         <div id="risk-warning-container"></div>
 
-        <!-- Stanbic IPO Countdown Widget -->
         <div class="ipo-timer-card">
             <div class="ipo-timer-title">Stanbic Bank Botswana IPO Closes In</div>
             <div class="ipo-countdown-grid" id="ipo-countdown">
@@ -691,7 +684,6 @@
             </div>
         </div>
 
-        <!-- Portfolio Summary -->
         <div class="glass-card">
             <h2>Dashboard Summary</h2>
             <div class="metrics-grid">
@@ -714,15 +706,33 @@
             </div>
         </div>
 
-        <!-- Donut Allocation Chart -->
+        <!-- Allocation Chart with Customisers -->
         <div class="glass-card">
-            <h2>Asset Allocation (%)</h2>
+            <h2>
+              Asset Allocation
+              <div style="display:flex; gap:6px; font-size:0.7rem; font-weight:normal;">
+                <select id="chart-type-select" onchange="changeChartType(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                  <option value="donut">Donut</option>
+                  <option value="pie">Pie</option>
+                  <option value="half-donut">Half Donut</option>
+                  <option value="3d-pie">3D Pie</option>
+                  <option value="3d-donut">3D Donut</option>
+                  <option value="bars">Bars</option>
+                </select>
+                <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                  <option value="vivid">Vivid</option>
+                  <option value="pastel">Pastel</option>
+                  <option value="neon">Neon</option>
+                  <option value="earth">Earth</option>
+                  <option value="cb-safe">Colour-blind Safe</option>
+                </select>
+              </div>
+            </h2>
             <div class="chart-container">
                 <canvas id="portfolioChart"></canvas>
             </div>
         </div>
 
-        <!-- Pinned News -->
         <div class="glass-card">
             <h2>Pinned & Holdings News</h2>
             <div id="pinned-news-container"></div>
@@ -799,10 +809,9 @@
         </div>
     </div>
 
-    <!-- TAB 5: REDESIGNED SETTINGS & DISPLAY -->
+    <!-- TAB 5: SETTINGS & DISPLAY -->
     <div id="tab-settings" class="tab-content">
         
-        <!-- Theme Selection -->
         <div class="glass-card">
             <h2>Themes</h2>
             <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Visual Mode:</div>
@@ -831,7 +840,6 @@
             </div>
         </div>
 
-        <!-- Accent Colors -->
         <div class="glass-card">
             <h2>Accent Colour</h2>
             <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Presets & Custom Picker:</div>
@@ -849,7 +857,6 @@
             </div>
         </div>
 
-        <!-- Display Options -->
         <div class="glass-card">
             <h2>Display Options</h2>
             <div class="form-group">
@@ -872,7 +879,6 @@
             </div>
         </div>
 
-        <!-- Preferences -->
         <div class="glass-card">
             <h2>Preferences</h2>
             <div class="form-group">
@@ -901,7 +907,6 @@
             </div>
         </div>
 
-        <!-- Data & Backup -->
         <div class="glass-card">
             <h2>Data & Storage Backup</h2>
             <div class="form-group">
@@ -913,13 +918,11 @@
         </div>
     </div>
 
-    <!-- Undo Toast Bar -->
     <div id="toast-undo">
         <span id="toast-msg">Holding removed</span>
         <button onclick="undoDelete()">Undo</button>
     </div>
 
-    <!-- Floating Bottom 5-Tab Navigation -->
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="switchTab('home', this)" id="nav-btn-home">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -938,7 +941,7 @@
             Markets
         </button>
         <button class="nav-item" onclick="switchTab('settings', this)" id="nav-btn-settings">
-            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
             Settings
         </button>
     </nav>
@@ -1001,6 +1004,15 @@
             { symbol: "SHUMBA", title: "Shumba Energy Cautionary Update", date: "2026-10-23", summary: "Shumba Energy issues quarterly market update and cautionary renewal." }
         ];
 
+        // Colour Palettes
+        const PALETTES = {
+            vivid: ['#ff5722', '#2196f3', '#9c27b0', '#4caf50', '#ffeb3b', '#e91e63', '#00bcd4', '#ff9800', '#8bc34a', '#795548'],
+            pastel: ['#ffab91', '#90caf9', '#ce93d8', '#a5d6a7', '#fff59d', '#f48fb1', '#80deea', '#ffcc80', '#c5e1a5', '#bcaaa4'],
+            neon: ['#ff007f', '#00ffff', '#39ff14', '#ffbf00', '#bf00ff', '#ff073a', '#00ffcc', '#ffdf00', '#7df9ff', '#faed27'],
+            earth: ['#c85a17', '#2e8b57', '#d4af37', '#4682b4', '#8b4513', '#556b2f', '#bc8f8f', '#20b2aa', '#9acd32', '#cd853f'],
+            'cb-safe': ['#3b82f6', '#f97316', '#10b981', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#6366f1', '#84cc16', '#06b6d4']
+        };
+
         let holdings = JSON.parse(localStorage.getItem('bse_portfolio')) || [];
         let taxRate = parseFloat(localStorage.getItem('bse_tax_rate')) || 10.0;
         let alertWindow = parseInt(localStorage.getItem('bse_alert_window')) || 14;
@@ -1008,6 +1020,8 @@
         let compactLayout = localStorage.getItem('bse_compact') === 'true';
         let fontSizeMode = localStorage.getItem('bse_font_size') || 'normal';
         let defaultTab = localStorage.getItem('bse_default_tab') || 'home';
+        let chartType = localStorage.getItem('bse_chart_type') || 'donut';
+        let chartPalette = localStorage.getItem('bse_chart_palette') || 'vivid';
 
         let lastDeleted = null;
         let toastTimeout = null;
@@ -1080,6 +1094,18 @@
             saveAndRender();
         }
 
+        function changeChartType(type) {
+            chartType = type;
+            localStorage.setItem('bse_chart_type', type);
+            saveAndRender();
+        }
+
+        function changeChartPalette(palette) {
+            chartPalette = palette;
+            localStorage.setItem('bse_chart_palette', palette);
+            saveAndRender();
+        }
+
         function updateTaxRate() {
             const val = parseFloat(document.getElementById('tax-rate-input').value);
             if (!isNaN(val) && val >= 0) {
@@ -1106,6 +1132,9 @@
             document.getElementById('tax-rate-input').value = taxRate;
             document.getElementById('alert-window-select').value = alertWindow;
             document.getElementById('opening-tab-select').value = defaultTab;
+
+            document.getElementById('chart-type-select').value = chartType;
+            document.getElementById('chart-palette-select').value = chartPalette;
 
             if (defaultTab !== 'home') {
                 switchTab(defaultTab);
@@ -1291,14 +1320,14 @@
                 warnBox.innerHTML = '';
             }
 
-            updateDonutChart(totalVal);
+            updateAllocationChart(totalVal);
             updateDividendSection();
             initMarketPricesGrid();
             renderPinnedNews();
             update12MonthChart();
         }
 
-        function updateDonutChart(totalVal) {
+        function updateAllocationChart(totalVal) {
             const ctx = document.getElementById('portfolioChart').getContext('2d');
             if (portfolioChart) portfolioChart.destroy();
 
@@ -1318,26 +1347,50 @@
                 data = [1];
             }
 
-            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-orange').trim();
+            const paletteColors = PALETTES[chartPalette] || PALETTES.vivid;
+            const bgColors = data.map((_, i) => paletteColors[i % paletteColors.length]);
+
+            let configType = 'doughnut';
+            let chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+                }
+            };
+
+            if (chartType === 'pie') {
+                configType = 'pie';
+            } else if (chartType === 'half-donut') {
+                configType = 'doughnut';
+                chartOptions.circumference = 180;
+                chartOptions.rotation = 270;
+            } else if (chartType === 'bars') {
+                configType = 'bar';
+                chartOptions.indexAxis = 'y';
+                chartOptions.plugins.legend = { display: false };
+                chartOptions.scales = {
+                    x: { ticks: { color: '#94a3b8', font: { size: 9 } } },
+                    y: { ticks: { color: '#94a3b8', font: { size: 9 } } }
+                };
+            } else if (chartType === '3d-pie' || chartType === '3d-donut') {
+                // Emulate 3D effect with shadow and tilted border styling
+                configType = (chartType === '3d-donut') ? 'doughnut' : 'pie';
+            }
 
             portfolioChart = new Chart(ctx, {
-                type: 'doughnut',
+                type: configType,
                 data: {
                     labels: labels,
                     datasets: [{
                         data: data,
-                        backgroundColor: [accent, '#00b0ff', '#7c4dff', '#ffea00', '#ff9100', '#26a69a', '#ab47bc', '#d4af37', '#66bb6a'],
+                        backgroundColor: bgColors,
+                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim() || '#161f2c',
                         borderWidth: 2,
-                        borderColor: '#0d1117'
+                        hoverOffset: 4
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
-                    }
-                }
+                options: chartOptions
             });
         }
 
@@ -1563,6 +1616,8 @@
                 compactLayout: compactLayout,
                 fontSizeMode: fontSizeMode,
                 defaultTab: defaultTab,
+                chartType: chartType,
+                chartPalette: chartPalette,
                 theme: localStorage.getItem('bse_theme') || 'dark',
                 accent: localStorage.getItem('bse_accent') || '#ff5722'
             };
@@ -1589,6 +1644,8 @@
                     if (parsed.compactLayout !== undefined) localStorage.setItem('bse_compact', parsed.compactLayout);
                     if (parsed.fontSizeMode) localStorage.setItem('bse_font_size', parsed.fontSizeMode);
                     if (parsed.defaultTab) localStorage.setItem('bse_default_tab', parsed.defaultTab);
+                    if (parsed.chartType) localStorage.setItem('bse_chart_type', parsed.chartType);
+                    if (parsed.chartPalette) localStorage.setItem('bse_chart_palette', parsed.chartPalette);
                     if (parsed.theme) localStorage.setItem('bse_theme', parsed.theme);
                     if (parsed.accent) localStorage.setItem('bse_accent', parsed.accent);
 
