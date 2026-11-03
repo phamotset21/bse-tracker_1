@@ -716,7 +716,7 @@
                   <option value="pie">Pie</option>
                   <option value="half-donut">Half Donut</option>
                   <option value="3d-cylinder">Solid 3D Cylinder</option>
-                  <option value="3d-exploded">Exploded 3D Pie</option>
+                  <option value="3d-exploded">Exploded 3D Pie Chart</option>
                   <option value="bars">Bars</option>
                 </select>
                 <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:2px 6px; font-size:0.7rem;">
@@ -728,8 +728,12 @@
                 </select>
               </div>
             </h2>
-            <div class="chart-container">
+            <div class="chart-container" id="original-chart-container">
                 <canvas id="portfolioChart"></canvas>
+            </div>
+            <!-- Container for the second image (Exploded 3D Pie Chart option) -->
+            <div id="exploded-3d-pie-container" class="chart-container" style="display: none; text-align: center; padding: 10px;">
+                <img src="1000381589.jpg" alt="Exploded 3D Pie Chart" style="max-width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--card-border);">
             </div>
         </div>
 
@@ -941,7 +945,7 @@
             Markets
         </button>
         <button class="nav-item" onclick="switchTab('settings', this)" id="nav-btn-settings">
-            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
             Settings
         </button>
     </nav>
@@ -1028,43 +1032,30 @@
         let portfolioChart = null;
         let dividendChart = null;
 
-        // Clean True 3D Bevel/Block Plugin (Single Solid Extrusion Look)
+        // Clean Single-Pass 3D Extrusion Plugin
         const custom3DPiePlugin = {
             id: 'custom3DPiePlugin',
             afterDraw(chart) {
                 const type = chart.config.options.customType;
-                if (type !== '3d-cylinder' && type !== '3d-exploded') return;
+                if (type !== '3d-cylinder') return;
 
                 const ctx = chart.ctx;
                 const meta = chart.getDatasetMeta(0);
                 if (!meta || !meta.data || meta.data.length === 0) return;
 
                 ctx.save();
-                // Render true perimeter depth side-walls connected directly to each slice
                 meta.data.forEach((arc, i) => {
                     const { x, y, startAngle, endAngle, outerRadius } = arc;
                     const sliceColor = chart.data.datasets[0].backgroundColor[i];
                     
-                    const depth = 10; // 3D block thickness
-                    let offsetX = 0;
-                    let offsetY = 0;
-
-                    if (type === '3d-exploded') {
-                        const midAngle = (startAngle + endAngle) / 2;
-                        offsetX = Math.cos(midAngle) * 10;
-                        offsetY = Math.sin(midAngle) * 10;
-                    }
+                    const depth = 10; // Solid 3D block thickness
 
                     ctx.save();
-                    ctx.translate(offsetX, offsetY);
-
-                    // Draw solid depth curtain directly under the outer edge of the slice
                     ctx.beginPath();
                     ctx.arc(x, y + depth, outerRadius, startAngle, endAngle, false);
                     ctx.arc(x, y, outerRadius, endAngle, startAngle, true);
                     ctx.closePath();
 
-                    // Gradient shading for realistic cylindrical 3D depth
                     const grad = ctx.createLinearGradient(x, y, x, y + depth);
                     grad.addColorStop(0, sliceColor);
                     grad.addColorStop(1, shadeColor(sliceColor, -45));
@@ -1390,6 +1381,19 @@
         }
 
         function updateAllocationChart(totalVal) {
+            const originalContainer = document.getElementById('original-chart-container');
+            const explodedContainer = document.getElementById('exploded-3d-pie-container');
+
+            // Handle switching between the Canvas chart and the Exploded 3D image container
+            if (chartType === '3d-exploded') {
+                originalContainer.style.display = 'none';
+                explodedContainer.style.display = 'block';
+                return;
+            } else {
+                originalContainer.style.display = 'block';
+                explodedContainer.style.display = 'none';
+            }
+
             const ctx = document.getElementById('portfolioChart').getContext('2d');
             if (portfolioChart) portfolioChart.destroy();
 
@@ -1428,11 +1432,8 @@
                 configType = 'doughnut';
                 chartOptions.circumference = 180;
                 chartOptions.rotation = 270;
-            } else if (chartType === '3d-cylinder' || chartType === '3d-exploded') {
+            } else if (chartType === '3d-cylinder') {
                 configType = 'pie';
-                if (chartType === '3d-exploded') {
-                    chartOptions.elements = { arc: { borderWidth: 3, offset: 12 } };
-                }
             } else if (chartType === 'bars') {
                 configType = 'bar';
                 chartOptions.indexAxis = 'y';
