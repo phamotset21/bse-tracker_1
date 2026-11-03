@@ -14,8 +14,9 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
 
-    <!-- Chart.js -->
+    <!-- Chart.js & DataLabels -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <style>
         :root {
@@ -177,6 +178,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .alert-box {
@@ -357,7 +360,7 @@
 
         .chart-container {
             position: relative;
-            height: 240px;
+            height: 260px;
             width: 100%;
             margin-top: 10px;
         }
@@ -710,7 +713,7 @@
         <div class="glass-card">
             <h2>
               Asset Allocation
-              <div style="display:flex; gap:6px; font-size:0.7rem; font-weight:normal;">
+              <div style="display:flex; gap:6px; font-size:0.7rem; font-weight:normal; flex-wrap: wrap;">
                 <select id="chart-type-select" onchange="changeChartType(this.value)" style="padding:2px 6px; font-size:0.7rem;">
                   <option value="donut">Donut</option>
                   <option value="pie">Pie</option>
@@ -726,14 +729,17 @@
                   <option value="earth">Earth</option>
                   <option value="cb-safe">Colour-blind Safe</option>
                 </select>
+                <select id="chart-legend-select" onchange="changeChartLegend(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                  <option value="bottom">Legend: Bottom</option>
+                  <option value="top">Legend: Top</option>
+                  <option value="left">Legend: Left</option>
+                  <option value="right">Legend: Right</option>
+                  <option value="hidden">Hide Legend</option>
+                </select>
               </div>
             </h2>
             <div class="chart-container" id="original-chart-container">
                 <canvas id="portfolioChart"></canvas>
-            </div>
-            <!-- Container for the second image (Exploded 3D Pie Chart option) -->
-            <div id="exploded-3d-pie-container" class="chart-container" style="display: none; text-align: center; padding: 10px;">
-                <img src="1000381589.jpg" alt="Exploded 3D Pie Chart" style="max-width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--card-border);">
             </div>
         </div>
 
@@ -951,6 +957,8 @@
     </nav>
 
     <script>
+        Chart.register(ChartDataLabels);
+
         const STOCKS = [
             { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.045, exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
             { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.065, exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
@@ -1026,41 +1034,71 @@
         let defaultTab = localStorage.getItem('bse_default_tab') || 'home';
         let chartType = localStorage.getItem('bse_chart_type') || 'donut';
         let chartPalette = localStorage.getItem('bse_chart_palette') || 'vivid';
+        let chartLegendPosition = localStorage.getItem('bse_chart_legend') || 'bottom';
 
         let lastDeleted = null;
         let toastTimeout = null;
         let portfolioChart = null;
         let dividendChart = null;
 
-        // Clean Single-Pass 3D Extrusion Plugin
+        // Clean Single-Pass 3D Extrusion Plugin (Improved)
         const custom3DPiePlugin = {
             id: 'custom3DPiePlugin',
             afterDraw(chart) {
                 const type = chart.config.options.customType;
-                if (type !== '3d-cylinder') return;
+                if (type !== '3d-cylinder' && type !== '3d-exploded') return;
 
                 const ctx = chart.ctx;
                 const meta = chart.getDatasetMeta(0);
                 if (!meta || !meta.data || meta.data.length === 0) return;
 
+                const depth = type === '3d-exploded' ? 20 : 15;
+
                 ctx.save();
-                meta.data.forEach((arc, i) => {
-                    const { x, y, startAngle, endAngle, outerRadius } = arc;
+                
+                // Sort arcs to draw back slices first (for correct overlap)
+                const arcs = meta.data.map((arc, i) => ({ arc, i })).sort((a, b) => {
+                    const midA = (a.arc.startAngle + a.arc.endAngle) / 2;
+                    const midB = (b.arc.startAngle + b.arc.endAngle) / 2;
+                    return Math.sin(midA) - Math.sin(midB);
+                });
+
+                arcs.forEach(({ arc, i }) => {
+                    const { x, y, startAngle, endAngle, outerRadius, innerRadius } = arc;
                     const sliceColor = chart.data.datasets[0].backgroundColor[i];
-                    
-                    const depth = 10; // Solid 3D block thickness
 
                     ctx.save();
                     ctx.beginPath();
+                    
+                    // Outer side wall
                     ctx.arc(x, y + depth, outerRadius, startAngle, endAngle, false);
+                    ctx.lineTo(x + Math.cos(endAngle) * outerRadius, y + Math.sin(endAngle) * outerRadius);
                     ctx.arc(x, y, outerRadius, endAngle, startAngle, true);
+                    ctx.lineTo(x + Math.cos(startAngle) * outerRadius, y + Math.sin(startAngle) * outerRadius);
+                    
+                    // Inner side walls if it's a doughnut
+                    if (innerRadius > 0) {
+                        ctx.lineTo(x + Math.cos(startAngle) * innerRadius, y + Math.sin(startAngle) * innerRadius);
+                        ctx.arc(x, y, innerRadius, startAngle, endAngle, false);
+                        ctx.lineTo(x + Math.cos(endAngle) * innerRadius, y + Math.sin(endAngle) * innerRadius);
+                        ctx.arc(x, y + depth, innerRadius, endAngle, startAngle, true);
+                    } else {
+                        ctx.lineTo(x, y + depth);
+                    }
                     ctx.closePath();
 
+                    // Gradient for the side wall
                     const grad = ctx.createLinearGradient(x, y, x, y + depth);
                     grad.addColorStop(0, sliceColor);
                     grad.addColorStop(1, shadeColor(sliceColor, -45));
                     ctx.fillStyle = grad;
                     ctx.fill();
+                    
+                    // Slight border to sharpen the edge
+                    ctx.strokeStyle = shadeColor(sliceColor, -65);
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+
                     ctx.restore();
                 });
                 ctx.restore();
@@ -1159,6 +1197,12 @@
             saveAndRender();
         }
 
+        function changeChartLegend(pos) {
+            chartLegendPosition = pos;
+            localStorage.setItem('bse_chart_legend', pos);
+            saveAndRender();
+        }
+
         function updateTaxRate() {
             const val = parseFloat(document.getElementById('tax-rate-input').value);
             if (!isNaN(val) && val >= 0) {
@@ -1188,6 +1232,7 @@
 
             document.getElementById('chart-type-select').value = chartType;
             document.getElementById('chart-palette-select').value = chartPalette;
+            document.getElementById('chart-legend-select').value = chartLegendPosition;
 
             if (defaultTab !== 'home') {
                 switchTab(defaultTab);
@@ -1382,17 +1427,7 @@
 
         function updateAllocationChart(totalVal) {
             const originalContainer = document.getElementById('original-chart-container');
-            const explodedContainer = document.getElementById('exploded-3d-pie-container');
-
-            // Handle switching between the Canvas chart and the Exploded 3D image container
-            if (chartType === '3d-exploded') {
-                originalContainer.style.display = 'none';
-                explodedContainer.style.display = 'block';
-                return;
-            } else {
-                originalContainer.style.display = 'block';
-                explodedContainer.style.display = 'none';
-            }
+            originalContainer.style.display = 'block';
 
             const ctx = document.getElementById('portfolioChart').getContext('2d');
             if (portfolioChart) portfolioChart.destroy();
@@ -1417,12 +1452,19 @@
             const bgColors = data.map((_, i) => paletteColors[i % paletteColors.length]);
 
             let configType = 'doughnut';
+            
+            let legendOptions = { position: chartLegendPosition, labels: { color: '#94a3b8', font: { size: 10 } } };
+            if (chartLegendPosition === 'hidden') {
+                legendOptions = { display: false };
+            }
+
             let chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 customType: chartType,
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+                    legend: legendOptions,
+                    datalabels: { display: false } // Default off
                 }
             };
 
@@ -1433,7 +1475,35 @@
                 chartOptions.circumference = 180;
                 chartOptions.rotation = 270;
             } else if (chartType === '3d-cylinder') {
-                configType = 'pie';
+                configType = 'doughnut';
+                chartOptions.cutout = '40%';
+                chartOptions.plugins.datalabels = {
+                    display: true,
+                    color: '#fff',
+                    anchor: 'center',
+                    align: 'center',
+                    formatter: (value, ctx) => ctx.chart.data.labels[ctx.dataIndex].split(' (')[0]
+                };
+            } else if (chartType === '3d-exploded') {
+                configType = 'doughnut';
+                chartOptions.cutout = '30%';
+                chartOptions.plugins.datalabels = {
+                    display: (ctx) => {
+                        const val = ctx.dataset.data[ctx.dataIndex];
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        return (val / total) > 0.03; // Only show labels > 3%
+                    },
+                    color: '#fff',
+                    anchor: 'end',
+                    align: 'end',
+                    offset: 15,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 4,
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    padding: 5,
+                    formatter: (value, ctx) => ctx.chart.data.labels[ctx.dataIndex].split(' (')[0]
+                };
             } else if (chartType === 'bars') {
                 configType = 'bar';
                 chartOptions.indexAxis = 'y';
@@ -1444,17 +1514,24 @@
                 };
             }
 
+            const dataset = {
+                data: data,
+                backgroundColor: bgColors,
+                borderColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim() || '#161f2c',
+                borderWidth: 2,
+                hoverOffset: 6
+            };
+
+            if (chartType === '3d-exploded') {
+                dataset.offset = 15; // Explode the slices
+                dataset.borderWidth = 1;
+            }
+
             portfolioChart = new Chart(ctx, {
                 type: configType,
                 data: {
                     labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: bgColors,
-                        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--card-bg').trim() || '#161f2c',
-                        borderWidth: 2,
-                        hoverOffset: 6
-                    }]
+                    datasets: [dataset]
                 },
                 options: chartOptions,
                 plugins: [custom3DPiePlugin]
@@ -1555,7 +1632,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { legend: { display: false }, datalabels: { display: false } },
                     scales: {
                         x: { ticks: { color: '#94a3b8', font: { size: 9 } } },
                         y: { ticks: { color: '#94a3b8', font: { size: 9 } } }
@@ -1685,6 +1762,7 @@
                 defaultTab: defaultTab,
                 chartType: chartType,
                 chartPalette: chartPalette,
+                chartLegend: chartLegendPosition,
                 theme: localStorage.getItem('bse_theme') || 'dark',
                 accent: localStorage.getItem('bse_accent') || '#ff5722'
             };
@@ -1713,6 +1791,7 @@
                     if (parsed.defaultTab) localStorage.setItem('bse_default_tab', parsed.defaultTab);
                     if (parsed.chartType) localStorage.setItem('bse_chart_type', parsed.chartType);
                     if (parsed.chartPalette) localStorage.setItem('bse_chart_palette', parsed.chartPalette);
+                    if (parsed.chartLegend) localStorage.setItem('bse_chart_legend', parsed.chartLegend);
                     if (parsed.theme) localStorage.setItem('bse_theme', parsed.theme);
                     if (parsed.accent) localStorage.setItem('bse_accent', parsed.accent);
 
