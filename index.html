@@ -579,6 +579,24 @@
 
         .color-dot:hover { transform: scale(1.1); }
 
+        /* Custom Color Picker Styling */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            cursor: pointer;
+            background: none;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid var(--card-border);
+            border-radius: 8px;
+        }
+
         #toast-undo {
             position: fixed;
             bottom: 90px;
@@ -728,6 +746,7 @@
                   <option value="neon">Neon</option>
                   <option value="earth">Earth</option>
                   <option value="cb-safe">Colour-blind Safe</option>
+                  <option value="custom">Custom Colors</option>
                 </select>
                 <select id="chart-legend-select" onchange="changeChartLegend(this.value)" style="padding:2px 6px; font-size:0.7rem;">
                   <option value="bottom">Legend: Bottom</option>
@@ -740,6 +759,12 @@
             </h2>
             <div class="chart-container" id="original-chart-container">
                 <canvas id="portfolioChart"></canvas>
+            </div>
+            
+            <!-- Custom Color Selection Container -->
+            <div id="custom-color-settings" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--card-border);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Customize Slice Colors:</div>
+                <div id="custom-color-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
         </div>
 
@@ -862,7 +887,7 @@
                 
                 <label style="font-size:0.75rem; color:var(--text-muted); margin-left: auto; display:flex; align-items:center; gap:6px;">
                     Custom:
-                    <input type="color" id="custom-accent-picker" onchange="setAccent(this.value)" style="width:32px; height:32px; padding:0; border:none; background:none; cursor:pointer;">
+                    <input type="color" id="custom-accent-picker" onchange="setAccent(this.value)">
                 </label>
             </div>
         </div>
@@ -1035,16 +1060,17 @@
         let chartType = localStorage.getItem('bse_chart_type') || 'donut';
         let chartPalette = localStorage.getItem('bse_chart_palette') || 'vivid';
         let chartLegendPosition = localStorage.getItem('bse_chart_legend') || 'bottom';
+        let customColors = JSON.parse(localStorage.getItem('bse_custom_colors')) || {};
 
         let lastDeleted = null;
         let toastTimeout = null;
         let portfolioChart = null;
         let dividendChart = null;
 
-        // Clean Single-Pass 3D Extrusion Plugin (Improved)
+        // Rewritten 3D Extrusion Plugin (Solid 3D look)
         const custom3DPiePlugin = {
             id: 'custom3DPiePlugin',
-            afterDraw(chart) {
+            beforeDatasetsDraw(chart) {
                 const type = chart.config.options.customType;
                 if (type !== '3d-cylinder' && type !== '3d-exploded') return;
 
@@ -1052,54 +1078,72 @@
                 const meta = chart.getDatasetMeta(0);
                 if (!meta || !meta.data || meta.data.length === 0) return;
 
-                const depth = type === '3d-exploded' ? 20 : 15;
+                const depth = type === '3d-exploded' ? 25 : 15;
+                const dataset = chart.data.datasets[0];
 
-                ctx.save();
-                
-                // Sort arcs to draw back slices first (for correct overlap)
+                // Sort arcs to draw back slices first
                 const arcs = meta.data.map((arc, i) => ({ arc, i })).sort((a, b) => {
                     const midA = (a.arc.startAngle + a.arc.endAngle) / 2;
                     const midB = (b.arc.startAngle + b.arc.endAngle) / 2;
                     return Math.sin(midA) - Math.sin(midB);
                 });
 
+                ctx.save();
                 arcs.forEach(({ arc, i }) => {
                     const { x, y, startAngle, endAngle, outerRadius, innerRadius } = arc;
-                    const sliceColor = chart.data.datasets[0].backgroundColor[i];
+                    const sliceColor = dataset.backgroundColor[i];
+                    const shadedColor = shadeColor(sliceColor, -40);
 
-                    ctx.save();
+                    // 1. Draw outer side wall
                     ctx.beginPath();
-                    
-                    // Outer side wall
                     ctx.arc(x, y + depth, outerRadius, startAngle, endAngle, false);
                     ctx.lineTo(x + Math.cos(endAngle) * outerRadius, y + Math.sin(endAngle) * outerRadius);
                     ctx.arc(x, y, outerRadius, endAngle, startAngle, true);
-                    ctx.lineTo(x + Math.cos(startAngle) * outerRadius, y + Math.sin(startAngle) * outerRadius);
-                    
-                    // Inner side walls if it's a doughnut
-                    if (innerRadius > 0) {
-                        ctx.lineTo(x + Math.cos(startAngle) * innerRadius, y + Math.sin(startAngle) * innerRadius);
-                        ctx.arc(x, y, innerRadius, startAngle, endAngle, false);
-                        ctx.lineTo(x + Math.cos(endAngle) * innerRadius, y + Math.sin(endAngle) * innerRadius);
-                        ctx.arc(x, y + depth, innerRadius, endAngle, startAngle, true);
-                    } else {
-                        ctx.lineTo(x, y + depth);
-                    }
                     ctx.closePath();
-
-                    // Gradient for the side wall
+                    
                     const grad = ctx.createLinearGradient(x, y, x, y + depth);
                     grad.addColorStop(0, sliceColor);
-                    grad.addColorStop(1, shadeColor(sliceColor, -45));
+                    grad.addColorStop(1, shadedColor);
                     ctx.fillStyle = grad;
                     ctx.fill();
-                    
-                    // Slight border to sharpen the edge
-                    ctx.strokeStyle = shadeColor(sliceColor, -65);
-                    ctx.lineWidth = 0.5;
+                    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    ctx.lineWidth = 1;
                     ctx.stroke();
 
-                    ctx.restore();
+                    // 2. Draw inner side wall
+                    if (innerRadius > 0) {
+                        ctx.beginPath();
+                        ctx.arc(x, y + depth, innerRadius, startAngle, endAngle, false);
+                        ctx.lineTo(x + Math.cos(endAngle) * innerRadius, y + Math.sin(endAngle) * innerRadius);
+                        ctx.arc(x, y, innerRadius, endAngle, startAngle, true);
+                        ctx.closePath();
+                        ctx.fillStyle = shadeColor(sliceColor, -60);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+
+                    // 3. Draw radial cuts (flat sides of the slice)
+                    // Start cut
+                    ctx.beginPath();
+                    ctx.moveTo(x + Math.cos(startAngle) * innerRadius, y + Math.sin(startAngle) * innerRadius);
+                    ctx.lineTo(x + Math.cos(startAngle) * outerRadius, y + Math.sin(startAngle) * outerRadius);
+                    ctx.lineTo(x + Math.cos(startAngle) * outerRadius, y + depth + Math.sin(startAngle) * outerRadius);
+                    ctx.lineTo(x + Math.cos(startAngle) * innerRadius, y + depth + Math.sin(startAngle) * innerRadius);
+                    ctx.closePath();
+                    ctx.fillStyle = shadeColor(sliceColor, -20);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // End cut
+                    ctx.beginPath();
+                    ctx.moveTo(x + Math.cos(endAngle) * innerRadius, y + Math.sin(endAngle) * innerRadius);
+                    ctx.lineTo(x + Math.cos(endAngle) * outerRadius, y + Math.sin(endAngle) * outerRadius);
+                    ctx.lineTo(x + Math.cos(endAngle) * outerRadius, y + depth + Math.sin(endAngle) * outerRadius);
+                    ctx.lineTo(x + Math.cos(endAngle) * innerRadius, y + depth + Math.sin(endAngle) * innerRadius);
+                    ctx.closePath();
+                    ctx.fillStyle = shadeColor(sliceColor, -20);
+                    ctx.fill();
+                    ctx.stroke();
                 });
                 ctx.restore();
             }
@@ -1194,6 +1238,11 @@
         function changeChartPalette(palette) {
             chartPalette = palette;
             localStorage.setItem('bse_chart_palette', palette);
+            if (palette === 'custom') {
+                document.getElementById('custom-color-settings').style.display = 'block';
+            } else {
+                document.getElementById('custom-color-settings').style.display = 'none';
+            }
             saveAndRender();
         }
 
@@ -1210,6 +1259,34 @@
                 localStorage.setItem('bse_tax_rate', taxRate);
                 saveAndRender();
             }
+        }
+
+        function updateCustomColorsUI() {
+            const list = document.getElementById('custom-color-list');
+            list.innerHTML = '';
+            
+            holdings.forEach(h => {
+                const color = customColors[h.symbol] || '#888888';
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.padding = '4px 8px';
+                row.style.backgroundColor = 'var(--input-bg)';
+                row.style.borderRadius = '8px';
+                row.style.border = '1px solid var(--card-border)';
+                row.innerHTML = `
+                    <span style="font-size: 0.8rem; font-weight: bold;">${h.symbol}</span>
+                    <input type="color" value="${color}" onchange="setCustomColor('${h.symbol}', this.value)">
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function setCustomColor(symbol, color) {
+            customColors[symbol] = color;
+            localStorage.setItem('bse_custom_colors', JSON.stringify(customColors));
+            saveAndRender();
         }
 
         function loadPreferences() {
@@ -1233,6 +1310,10 @@
             document.getElementById('chart-type-select').value = chartType;
             document.getElementById('chart-palette-select').value = chartPalette;
             document.getElementById('chart-legend-select').value = chartLegendPosition;
+
+            if (chartPalette === 'custom') {
+                document.getElementById('custom-color-settings').style.display = 'block';
+            }
 
             if (defaultTab !== 'home') {
                 switchTab(defaultTab);
@@ -1419,6 +1500,7 @@
             }
 
             updateAllocationChart(totalVal);
+            updateCustomColorsUI();
             updateDividendSection();
             initMarketPricesGrid();
             renderPinnedNews();
@@ -1434,6 +1516,7 @@
 
             let labels = [];
             let data = [];
+            let bgColors = [];
 
             holdings.forEach(h => {
                 const meta = getStockMeta(h.symbol);
@@ -1446,10 +1529,16 @@
             if (labels.length === 0) {
                 labels = ['No Assets'];
                 data = [1];
+                bgColors = ['#888888'];
+            } else {
+                const paletteColors = PALETTES[chartPalette] || PALETTES.vivid;
+                bgColors = holdings.map((h, i) => {
+                    if (chartPalette === 'custom') {
+                        return customColors[h.symbol] || paletteColors[i % paletteColors.length];
+                    }
+                    return paletteColors[i % paletteColors.length];
+                });
             }
-
-            const paletteColors = PALETTES[chartPalette] || PALETTES.vivid;
-            const bgColors = data.map((_, i) => paletteColors[i % paletteColors.length]);
 
             let configType = 'doughnut';
             
@@ -1464,7 +1553,7 @@
                 customType: chartType,
                 plugins: {
                     legend: legendOptions,
-                    datalabels: { display: false } // Default off
+                    datalabels: { display: false }
                 }
             };
 
@@ -1491,17 +1580,17 @@
                     display: (ctx) => {
                         const val = ctx.dataset.data[ctx.dataIndex];
                         const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        return (val / total) > 0.03; // Only show labels > 3%
+                        return (val / total) > 0.03; 
                     },
                     color: '#fff',
                     anchor: 'end',
                     align: 'end',
-                    offset: 15,
+                    offset: 25,
                     borderWidth: 1,
                     borderColor: 'rgba(255,255,255,0.2)',
                     borderRadius: 4,
                     backgroundColor: 'rgba(0,0,0,0.6)',
-                    padding: 5,
+                    padding: 6,
                     formatter: (value, ctx) => ctx.chart.data.labels[ctx.dataIndex].split(' (')[0]
                 };
             } else if (chartType === 'bars') {
@@ -1523,7 +1612,7 @@
             };
 
             if (chartType === '3d-exploded') {
-                dataset.offset = 15; // Explode the slices
+                dataset.offset = 15;
                 dataset.borderWidth = 1;
             }
 
@@ -1763,6 +1852,7 @@
                 chartType: chartType,
                 chartPalette: chartPalette,
                 chartLegend: chartLegendPosition,
+                customColors: customColors,
                 theme: localStorage.getItem('bse_theme') || 'dark',
                 accent: localStorage.getItem('bse_accent') || '#ff5722'
             };
@@ -1792,6 +1882,7 @@
                     if (parsed.chartType) localStorage.setItem('bse_chart_type', parsed.chartType);
                     if (parsed.chartPalette) localStorage.setItem('bse_chart_palette', parsed.chartPalette);
                     if (parsed.chartLegend) localStorage.setItem('bse_chart_legend', parsed.chartLegend);
+                    if (parsed.customColors) localStorage.setItem('bse_custom_colors', JSON.stringify(parsed.customColors));
                     if (parsed.theme) localStorage.setItem('bse_theme', parsed.theme);
                     if (parsed.accent) localStorage.setItem('bse_accent', parsed.accent);
 
