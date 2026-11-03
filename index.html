@@ -715,8 +715,8 @@
                   <option value="donut">Donut</option>
                   <option value="pie">Pie</option>
                   <option value="half-donut">Half Donut</option>
-                  <option value="3d-cylinder">Solid 3D Cylinder (Img 1)</option>
-                  <option value="3d-exploded">Exploded 3D Pie (Img 2)</option>
+                  <option value="3d-cylinder">Solid 3D Cylinder</option>
+                  <option value="3d-exploded">Exploded 3D Pie</option>
                   <option value="bars">Bars</option>
                 </select>
                 <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:2px 6px; font-size:0.7rem;">
@@ -1028,7 +1028,7 @@
         let portfolioChart = null;
         let dividendChart = null;
 
-        // Custom 3D Plugin to draw extruded sides & drop shadow blocks
+        // Clean True 3D Bevel/Block Plugin (Single Solid Extrusion Look)
         const custom3DPiePlugin = {
             id: 'custom3DPiePlugin',
             afterDraw(chart) {
@@ -1040,31 +1040,35 @@
                 if (!meta || !meta.data || meta.data.length === 0) return;
 
                 ctx.save();
-                // Draw 3D extrusion effect on secondary pass
+                // Render true perimeter depth side-walls connected directly to each slice
                 meta.data.forEach((arc, i) => {
-                    const { x, y, startAngle, endAngle, outerRadius, innerRadius } = arc;
+                    const { x, y, startAngle, endAngle, outerRadius } = arc;
                     const sliceColor = chart.data.datasets[0].backgroundColor[i];
                     
-                    const depth = 16; // height of the 3D block
-                    const angle = (startAngle + endAngle) / 2;
+                    const depth = 10; // 3D block thickness
                     let offsetX = 0;
                     let offsetY = 0;
 
                     if (type === '3d-exploded') {
-                        offsetX = Math.cos(angle) * 12;
-                        offsetY = Math.sin(angle) * 12;
+                        const midAngle = (startAngle + endAngle) / 2;
+                        offsetX = Math.cos(midAngle) * 10;
+                        offsetY = Math.sin(midAngle) * 10;
                     }
 
-                    // Draw vertical shadow/depth wall downwards
                     ctx.save();
-                    ctx.translate(offsetX, offsetY + depth);
+                    ctx.translate(offsetX, offsetY);
+
+                    // Draw solid depth curtain directly under the outer edge of the slice
                     ctx.beginPath();
-                    ctx.arc(x, y, outerRadius, startAngle, endAngle);
-                    ctx.arc(x, y, innerRadius || 0, endAngle, startAngle, true);
+                    ctx.arc(x, y + depth, outerRadius, startAngle, endAngle, false);
+                    ctx.arc(x, y, outerRadius, endAngle, startAngle, true);
                     ctx.closePath();
-                    
-                    // Darken colour for side walls
-                    ctx.fillStyle = shadeColor(sliceColor, -35);
+
+                    // Gradient shading for realistic cylindrical 3D depth
+                    const grad = ctx.createLinearGradient(x, y, x, y + depth);
+                    grad.addColorStop(0, sliceColor);
+                    grad.addColorStop(1, shadeColor(sliceColor, -45));
+                    ctx.fillStyle = grad;
                     ctx.fill();
                     ctx.restore();
                 });
