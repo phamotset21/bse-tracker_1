@@ -3,9 +3,10 @@
   "short_name": "BSE Tracker",
   "description": "Mobile PWA for tracking Botswana Stock Exchange equities, dividends, and market disclosures.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#07090e",
-  "theme_color": "#07090e",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
   "orientation": "portrait",
   "icons": [
     {
