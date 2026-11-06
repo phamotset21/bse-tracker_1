@@ -11,12 +11,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BSE Tracker">
-    
-    <!-- Icons -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
 
-    <!-- External CSS -->
+    <!-- Link to External CSS -->
     <link rel="stylesheet" href="style.css">
 
     <!-- Chart.js & DataLabels -->
@@ -40,19 +38,309 @@
         </div>
     </div>
 
-    <!-- PASTE YOUR BODY CONTENT HERE -->
-    <!-- (Everything from <div id="tab-home"...> down to the bottom <nav> element) -->
-    
+    <!-- TAB 1: HOME DASHBOARD -->
+    <div id="tab-home" class="tab-content active">
+        <div id="risk-warning-container"></div>
+
+        <div class="ipo-timer-card">
+            <div class="ipo-timer-title">Stanbic Bank Botswana IPO Closes In</div>
+            <div class="ipo-countdown-grid" id="ipo-countdown">
+                <div class="countdown-unit"><strong id="ipo-days">00</strong><span>Days</span></div>
+                <div class="countdown-unit"><strong id="ipo-hours">00</strong><span>Hours</span></div>
+                <div class="countdown-unit"><strong id="ipo-mins">00</strong><span>Mins</span></div>
+                <div class="countdown-unit"><strong id="ipo-secs">00</strong><span>Secs</span></div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Dashboard Summary</h2>
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <span>Total Portfolio Value</span>
+                    <strong id="dash-total-val">P0.00</strong>
+                </div>
+                <div class="metric-box">
+                    <span>Est. Net Annual Div</span>
+                    <strong id="dash-total-div">P0.00</strong>
+                </div>
+                <div class="metric-box">
+                    <span>Total Unrealized P/L</span>
+                    <strong id="dash-total-pl">P0.00</strong>
+                </div>
+                <div class="metric-box">
+                    <span>Total Holdings</span>
+                    <strong id="dash-total-count" style="color:var(--text-main);">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>
+              Asset Allocation
+              <div style="display:flex; gap:6px; font-size:0.7rem; font-weight:normal; flex-wrap: wrap;">
+                <select id="chart-type-select" onchange="changeChartType(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                  <option value="donut">Donut</option>
+                  <option value="pie">Pie</option>
+                  <option value="half-donut">Half Donut</option>
+                  <option value="3d-cylinder">Solid 3D Cylinder</option>
+                  <option value="3d-exploded">Exploded 3D Pie Chart</option>
+                  <option value="bars">Bars</option>
+                </select>
+                <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                  <option value="vivid">Vivid</option>
+                  <option value="pastel">Pastel</option>
+                  <option value="neon">Neon</option>
+                  <option value="earth">Earth</option>
+                  <option value="cb-safe">Colour-blind Safe</option>
+                  <option value="custom">Custom Colors</option>
+                </select>
+                <select id="chart-legend-select" onchange="changeChartLegend(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                  <option value="bottom">Legend: Bottom</option>
+                  <option value="top">Legend: Top</option>
+                  <option value="left">Legend: Left</option>
+                  <option value="right">Legend: Right</option>
+                  <option value="hidden">Hide Legend</option>
+                </select>
+              </div>
+            </h2>
+            <div class="chart-container" id="original-chart-container">
+                <canvas id="portfolioChart"></canvas>
+            </div>
+            
+            <div id="custom-color-settings" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--card-border);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Customize Slice Colors:</div>
+                <div id="custom-color-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>
+                Pinned & Holdings News 
+                <button onclick="fetchLiveNews(true)" style="padding: 4px 10px; font-size: 0.65rem; width: auto; margin: 0; border-radius: 8px; box-shadow: none;">🔄 Refresh</button>
+            </h2>
+            <div id="pinned-news-container"></div>
+        </div>
+    </div>
+
+    <!-- TAB 2: PORTFOLIO BREAKDOWN -->
+    <div id="tab-portfolio" class="tab-content">
+        <div class="glass-card">
+            <h2>Add / Update Asset Holding</h2>
+            <div class="form-group">
+                <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., FNBB, TURNSTAR)..." oninput="autoFillPrice()">
+                <datalist id="bse-list"></datalist>
+                
+                <input type="number" id="asset-qty" placeholder="Share Quantity" step="any">
+                <input type="number" id="asset-buy-price" placeholder="Avg Buy Price per Share (P)" step="any">
+                <input type="number" id="asset-price" placeholder="Current Price (P)" step="any">
+                <button onclick="addHolding()">Save Holding to Portfolio</button>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Holdings & Performance</h2>
+            <div class="controls-bar">
+                <div style="font-size:0.75rem; color:var(--text-muted);">Sort By:</div>
+                <select id="sort-select" onchange="saveAndRender()" style="padding:6px 10px; font-size:0.78rem;">
+                    <option value="value">Highest Value</option>
+                    <option value="yield">Highest Yield</option>
+                    <option value="az">Ticker (A–Z)</option>
+                </select>
+                <button onclick="copyCSV()" class="btn-outline" style="padding:6px 10px; font-size:0.75rem;">Copy CSV</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Qty</th>
+                            <th>Avg / Cur</th>
+                            <th>Value</th>
+                            <th>Gain / Loss</th>
+                            <th>Yield</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holdings-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: DIVIDENDS & PAYOUTS -->
+    <div id="tab-dividends" class="tab-content">
+        <div class="glass-card">
+            <h2>12-Month Net Dividend Projection</h2>
+            <div class="chart-container">
+                <canvas id="dividendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Dividend Schedule & Key Dates</h2>
+            <div id="dividends-schedule-container"></div>
+        </div>
+    </div>
+
+    <!-- TAB 4: MARKETS BOARD -->
+    <div id="tab-markets" class="tab-content">
+        <div class="glass-card">
+            <h2>BSE Market Board & Quick Entry</h2>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Search market tickers and adjust share positions directly:</div>
+            <input type="text" id="market-search-input" placeholder="Search Tickers or Companies..." onkeyup="filterMarketGrid()" style="margin-bottom: 12px; width: 100%;">
+            <div class="prices-grid" id="market-prices-grid"></div>
+        </div>
+    </div>
+
+    <!-- TAB 5: SETTINGS & DISPLAY -->
+    <div id="tab-settings" class="tab-content">
+        
+        <div class="glass-card">
+            <h2>Themes</h2>
+            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Visual Mode:</div>
+            <div class="themes-grid">
+                <button class="theme-btn" onclick="setTheme('auto')" id="btn-auto">
+                    <span class="theme-dot" style="background:#555;"></span> Auto (Phone)
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">
+                    <span class="theme-dot" style="background:#0d1117;"></span> Dark
+                </button>
+                <button class="theme-btn" onclick="setTheme('oled')" id="btn-oled">
+                    <span class="theme-dot" style="background:#000000;"></span> OLED Black
+                </button>
+                <button class="theme-btn" onclick="setTheme('light')" id="btn-light">
+                    <span class="theme-dot" style="background:#ffffff;"></span> Light
+                </button>
+                <button class="theme-btn" onclick="setTheme('midnight')" id="btn-midnight">
+                    <span class="theme-dot" style="background:#0a0e17;"></span> Midnight
+                </button>
+                <button class="theme-btn" onclick="setTheme('forest')" id="btn-forest">
+                    <span class="theme-dot" style="background:#09150d;"></span> Forest
+                </button>
+                <button class="theme-btn" onclick="setTheme('sand')" id="btn-sand">
+                    <span class="theme-dot" style="background:#f7f4ef;"></span> Sand
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Accent Colour</h2>
+            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Presets & Custom Picker:</div>
+            <div class="color-pickers">
+                <div class="color-dot" style="background-color: #ff5722;" onclick="setAccent('#ff5722')"></div>
+                <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
+                <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
+                <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
+                <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
+                
+                <label style="font-size:0.75rem; color:var(--text-muted); margin-left: auto; display:flex; align-items:center; gap:6px;">
+                    Custom:
+                    <input type="color" id="custom-accent-picker" onchange="setAccent(this.value)">
+                </label>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Display Options</h2>
+            <div class="form-group">
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Text Size</span>
+                    <select id="font-size-select" onchange="setFontSize(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                        <option value="small">Small</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Compact Layout</span>
+                    <input type="checkbox" id="compact-toggle" onchange="toggleCompact(this.checked)">
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Hide Amounts (Mask Pula)</span>
+                    <input type="checkbox" id="hide-amounts-toggle" onchange="toggleHideAmounts(this.checked)">
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Preferences</h2>
+            <div class="form-group">
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Opening Tab</span>
+                    <select id="opening-tab-select" onchange="setOpeningTab(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                        <option value="home">Home</option>
+                        <option value="portfolio">Portfolio</option>
+                        <option value="dividends">Dividends</option>
+                        <option value="markets">Markets</option>
+                        <option value="settings">Settings</option>
+                    </select>
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Dividend Alert Window</span>
+                    <select id="alert-window-select" onchange="setAlertWindow(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                        <option value="7">7 Days</option>
+                        <option value="14" selected>14 Days</option>
+                        <option value="30">30 Days</option>
+                    </select>
+                </div>
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Withholding Tax Rate (%)</span>
+                    <input type="number" id="tax-rate-input" value="10" step="0.5" style="width:70px; text-align:center; padding:4px;" onchange="updateTaxRate()">
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Custom News Editor</h2>
+            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Add your own BSE updates or notes. These will be merged with live news.</div>
+            <div class="form-group">
+                <input type="text" id="custom-news-symbol" placeholder="Ticker (e.g., FNBB)">
+                <input type="text" id="custom-news-title" placeholder="Headline Title">
+                <input type="text" id="custom-news-summary" placeholder="Brief summary...">
+                <button onclick="saveCustomNews()">Add News Item</button>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Data & Storage Backup</h2>
+            <div class="form-group">
+                <button onclick="copyCSV()" class="btn-outline">Copy Holdings CSV</button>
+                <button onclick="copyBackupJSON()" class="btn-outline">Copy Backup (JSON)</button>
+                <button onclick="restoreBackupJSON()" class="btn-outline">Restore Backup</button>
+                <button onclick="resetAllData()" class="btn-danger" style="margin-top:8px;">Reset All Data</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-undo">
         <span id="toast-msg">Holding removed</span>
         <button onclick="undoDelete()">Undo</button>
     </div>
 
     <nav class="bottom-nav">
-        <!-- PASTE YOUR NAV ITEMS HERE -->
+        <button class="nav-item active" onclick="switchTab('home', this)" id="nav-btn-home">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Home
+        </button>
+        <button class="nav-item" onclick="switchTab('portfolio', this)" id="nav-btn-portfolio">
+            <svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zm6.5 0h3v7h-3zM2 19h20v3H2zm15-9h3v7h-3zm-5-9L2 6v2h20V6z"/></svg>
+            Portfolio
+        </button>
+        <button class="nav-item" onclick="switchTab('dividends', this)" id="nav-btn-dividends">
+            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            Dividends
+        </button>
+        <button class="nav-item" onclick="switchTab('markets', this)" id="nav-btn-markets">
+            <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+            Markets
+        </button>
+        <button class="nav-item" onclick="switchTab('settings', this)" id="nav-btn-settings">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
+            Settings
+        </button>
     </nav>
 
-    <!-- External JavaScript -->
+    <!-- Link to External JS -->
     <script src="app.js"></script>
 </body>
 </html>
