@@ -1,47 +1,46 @@
 Chart.register(ChartDataLabels);
 
 const STOCKS = [
-    { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.045, divAmount: 0.0967, exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
-    { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.065, divAmount: 0.4452, exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
-    { symbol: "BIHL", name: "Botswana Insurance Holdings Limited", type: "Domestic Equity", price: 23.76, divYield: 0.060, divAmount: 1.4256, exDate: "2026-10-05", recordDate: "2026-10-07", payDate: "2026-10-21", payMonth: 9 },
-    { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Domestic Equity", price: 1.46, divYield: 0.080, divAmount: 0.1168, exDate: "2026-10-01", recordDate: "2026-10-03", payDate: "2026-10-15", payMonth: 9 },
-    { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Domestic Equity", price: 18.70, divYield: 0.055, divAmount: 1.0285, exDate: "2026-06-10", recordDate: "2026-06-12", payDate: "2026-06-24", payMonth: 5 },
-    { symbol: "CHOPPIES", name: "Choppies Enterprises Limited", type: "Domestic Equity", price: 0.55, divYield: 0.030, divAmount: 0.0165, exDate: "2026-10-28", recordDate: "2026-10-30", payDate: "2026-11-12", payMonth: 10 },
-    { symbol: "CRESTA", name: "Cresta Marakanelo Limited", type: "Domestic Equity", price: 1.25, divYield: 0.040, divAmount: 0.0500, exDate: "2026-05-20", recordDate: "2026-05-22", payDate: "2026-06-05", payMonth: 5 },
-    { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Domestic Equity", price: 14.25, divYield: 0.060, divAmount: 0.8550, exDate: "2026-10-20", recordDate: "2026-10-22", payDate: "2026-11-05", payMonth: 10 },
-    { symbol: "FNBB", name: "First National Bank of Botswana", type: "Domestic Equity", price: 5.75, divYield: 0.065, divAmount: 0.3737, exDate: "2026-10-08", recordDate: "2026-10-10", payDate: "2026-10-31", payMonth: 9 },
-    { symbol: "FPC", name: "The Far Property Company Limited", type: "Domestic Equity", price: 2.40, divYield: 0.070, divAmount: 0.1680, exDate: "2026-07-15", recordDate: "2026-07-17", payDate: "2026-07-31", payMonth: 6 },
-    { symbol: "G4S", name: "G4S Botswana Limited", type: "Domestic Equity", price: 2.95, divYield: 0.050, divAmount: 0.1475, exDate: "2026-06-01", recordDate: "2026-06-03", payDate: "2026-06-15", payMonth: 5 },
-    { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Domestic Equity", price: 3.10, divYield: 0.075, divAmount: 0.2325, exDate: "2026-11-04", recordDate: "2026-11-06", payDate: "2026-11-20", payMonth: 10 },
-    { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Domestic Equity", price: 1.35, divYield: 0.050, divAmount: 0.0675, exDate: "2026-04-30", recordDate: "2026-05-02", payDate: "2026-05-22", payMonth: 4 },
-    { symbol: "MINERGY", name: "Minergy Limited", type: "Domestic Equity", price: 0.45, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "NAP", name: "New African Properties Limited", type: "Domestic Equity", price: 4.06, divYield: 0.075, divAmount: 0.3045, exDate: "2026-06-18", recordDate: "2026-06-20", payDate: "2026-07-08", payMonth: 6 },
-    { symbol: "OLYMPIA", name: "Olympia Capital Corporation Ltd", type: "Domestic Equity", price: 0.40, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "PRIMETIME", name: "PrimeTime Property Holdings Ltd", type: "Domestic Equity", price: 1.90, divYield: 0.085, divAmount: 0.1615, exDate: "2026-03-12", recordDate: "2026-03-14", payDate: "2026-03-28", payMonth: 2 },
-    { symbol: "RDCP", name: "RDC Properties Limited", type: "Domestic Equity", price: 2.30, divYield: 0.065, divAmount: 0.1495, exDate: "2026-10-22", recordDate: "2026-10-24", payDate: "2026-11-08", payMonth: 10 },
-    { symbol: "SECHABA", name: "Sechaba Brewery Holdings Limited", type: "Domestic Equity", price: 40.50, divYield: 0.070, divAmount: 2.8350, exDate: "2026-09-16", recordDate: "2026-09-18", payDate: "2026-09-30", payMonth: 8 },
-    { symbol: "SEEDCO", name: "Seedco International Limited", type: "Domestic Equity", price: 3.20, divYield: 0.035, divAmount: 0.1120, exDate: "2026-08-05", recordDate: "2026-08-07", payDate: "2026-08-20", payMonth: 7 },
-    { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Domestic Equity", price: 16.00, divYield: 0.050, divAmount: 0.8000, exDate: "2026-08-26", recordDate: "2026-08-28", payDate: "2026-09-11", payMonth: 8 },
-    { symbol: "STANCHART", name: "Standard Chartered Bank Botswana", type: "Domestic Equity", price: 3.10, divYield: 0.060, divAmount: 0.1860, exDate: "2026-07-10", recordDate: "2026-07-12", payDate: "2026-07-25", payMonth: 6 },
-    // CORRECTION MADE HERE: TURNSTAR divAmount changed from 0.6641 to 0.10
-    { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.090, divAmount: 0.10, exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04", payMonth: 11 },
-    { symbol: "ANGLO", name: "Anglo American Plc", type: "Foreign Equity", price: 769.95, divYield: 0.035, divAmount: 26.9483, exDate: "2026-08-18", recordDate: "2026-08-20", payDate: "2026-09-10", payMonth: 8 },
-    { symbol: "BOTALA", name: "Botala Energy Limited", type: "Foreign Equity", price: 0.95, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "BMIN-EQO", name: "Botswana Minerals Plc", type: "Foreign Equity", price: 1.10, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Foreign Equity", price: 6.80, divYield: 0.040, divAmount: 0.2720, exDate: "2026-09-05", recordDate: "2026-09-07", payDate: "2026-09-21", payMonth: 8 },
-    { symbol: "GAIA", name: "GAIA Renewables 1 Limited", type: "Foreign Equity", price: 5.10, divYield: 0.065, divAmount: 0.3315, exDate: "2026-07-12", recordDate: "2026-07-14", payDate: "2026-07-28", payMonth: 6 },
-    { symbol: "INVESTEC", name: "Investec Limited", type: "Foreign Equity", price: 82.50, divYield: 0.050, divAmount: 4.1250, exDate: "2026-06-15", recordDate: "2026-06-17", payDate: "2026-07-02", payMonth: 6 },
-    { symbol: "LUC", name: "Lucara Diamond Corp", type: "Foreign Equity", price: 1.70, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Foreign Equity", price: 0.81, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "TLOU", name: "Tlou Energy Limited", type: "Foreign Equity", price: 0.50, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "ADFB", name: "ADBFUND", type: "ETF", price: 102.53, divYield: 0.070, divAmount: 7.1771, exDate: "2026-07-08", recordDate: "2026-07-10", payDate: "2026-07-24", payMonth: 6 },
-    { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "NEWPALLADIUM", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "NEWPLATINUM", name: "NewPlatinum ETF", type: "ETF", price: 145.20, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "SATRIX500", name: "SATRIX500 ETF", type: "ETF", price: 112.40, divYield: 0.012, divAmount: 1.3488, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
-    { symbol: "SATRIXEMG", name: "SATRIXEMG ETF", type: "ETF", price: 48.60, divYield: 0.020, divAmount: 0.9720, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
-    { symbol: "SATRIXWDM", name: "SATRIXWDM ETF", type: "ETF", price: 85.30, divYield: 0.015, divAmount: 1.2795, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
-    { symbol: "VGE-ETF", name: "VGEPFAM ETF", type: "ETF", price: 32.10, divYield: 0.018, divAmount: 0.5778, exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 }
+    { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.028, divAmount: 0.059, divDate: "2025-04-22", exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
+    { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.074, divAmount: 0.5774, divDate: "2026-06-29", exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
+    { symbol: "BIHL", name: "Botswana Insurance Holdings Limited", type: "Domestic Equity", price: 23.76, divYield: 0.060, divAmount: 1.4256, divDate: "2025-10-21", exDate: "2026-10-05", recordDate: "2026-10-07", payDate: "2026-10-21", payMonth: 9 },
+    { symbol: "BTCL", name: "Botswana Telecommunications Corp", type: "Domestic Equity", price: 1.46, divYield: 0.043, divAmount: 0.0112, divDate: "2026-08-05", exDate: "2026-10-01", recordDate: "2026-10-03", payDate: "2026-10-15", payMonth: 9 },
+    { symbol: "CHOBE", name: "Chobe Holdings Limited", type: "Domestic Equity", price: 18.70, divYield: 0.055, divAmount: 1.0285, divDate: "2025-06-24", exDate: "2026-06-10", recordDate: "2026-06-12", payDate: "2026-06-24", payMonth: 5 },
+    { symbol: "CHOPPIES", name: "Choppies Enterprises Limited", type: "Domestic Equity", price: 0.55, divYield: 0.016, divAmount: 0.009, divDate: "2026-04-29", exDate: "2026-10-28", recordDate: "2026-10-30", payDate: "2026-11-12", payMonth: 10 },
+    { symbol: "CRESTA", name: "Cresta Marakanelo Limited", type: "Domestic Equity", price: 1.25, divYield: 0.040, divAmount: 0.0500, divDate: "2025-06-05", exDate: "2026-05-20", recordDate: "2026-05-22", payDate: "2026-06-05", payMonth: 5 },
+    { symbol: "ENGEN", name: "Engen Botswana Limited", type: "Domestic Equity", price: 14.25, divYield: 0.009, divAmount: 0.0171, divDate: "2025-09-17", exDate: "2026-10-20", recordDate: "2026-10-22", payDate: "2026-11-05", payMonth: 10 },
+    { symbol: "FNBB", name: "First National Bank of Botswana", type: "Domestic Equity", price: 5.75, divYield: 0.057, divAmount: 0.150, divDate: "2026-03-19", exDate: "2026-10-08", recordDate: "2026-10-10", payDate: "2026-10-31", payMonth: 9 },
+    { symbol: "FPC", name: "The Far Property Company Limited", type: "Domestic Equity", price: 2.40, divYield: 0.070, divAmount: 0.1680, divDate: "2025-07-31", exDate: "2026-07-15", recordDate: "2026-07-17", payDate: "2026-07-31", payMonth: 6 },
+    { symbol: "G4S", name: "G4S Botswana Limited", type: "Domestic Equity", price: 2.95, divYield: 0.050, divAmount: 0.1475, divDate: "2025-06-15", exDate: "2026-06-01", recordDate: "2026-06-03", payDate: "2026-06-15", payMonth: 5 },
+    { symbol: "LETLOLE", name: "Letlole La Rona Limited", type: "Domestic Equity", price: 3.10, divYield: 0.014, divAmount: 0.0044, divDate: "2026-03-27", exDate: "2026-11-04", recordDate: "2026-11-06", payDate: "2026-11-20", payMonth: 10 },
+    { symbol: "LETSHEGO", name: "Letshego Holdings Limited", type: "Domestic Equity", price: 1.35, divYield: 0.050, divAmount: 0.0675, divDate: "2025-05-22", exDate: "2026-04-30", recordDate: "2026-05-02", payDate: "2026-05-22", payMonth: 4 },
+    { symbol: "MINERGY", name: "Minergy Limited", type: "Domestic Equity", price: 0.45, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "NAP", name: "New African Properties Limited", type: "Domestic Equity", price: 4.06, divYield: 0.082, divAmount: 0.3332, divDate: "2025-10-08", exDate: "2026-06-18", recordDate: "2026-06-20", payDate: "2026-07-08", payMonth: 6 },
+    { symbol: "OLYMPIA", name: "Olympia Capital Corporation Ltd", type: "Domestic Equity", price: 0.40, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "PRIMETIME", name: "Primetime Property Holdings Ltd", type: "Domestic Equity", price: 1.90, divYield: 0.014, divAmount: 0.0267, divDate: "2025-04-25", exDate: "2026-03-12", recordDate: "2026-03-14", payDate: "2026-03-28", payMonth: 2 },
+    { symbol: "RDCP", name: "RDC Properties Limited", type: "Domestic Equity", price: 2.30, divYield: 0.038, divAmount: 0.04448, divDate: "2025-10-30", exDate: "2026-10-22", recordDate: "2026-10-24", payDate: "2026-11-08", payMonth: 10 },
+    { symbol: "SECHABA", name: "Sechaba Brewery Holdings Limited", type: "Domestic Equity", price: 40.50, divYield: 0.074, divAmount: 2.9906, divDate: "2026-06-26", exDate: "2026-09-16", recordDate: "2026-09-18", payDate: "2026-09-30", payMonth: 8 },
+    { symbol: "SEEDCO", name: "Seedco International Limited", type: "Domestic Equity", price: 3.20, divYield: 0.035, divAmount: 0.1120, divDate: "2025-08-20", exDate: "2026-08-05", recordDate: "2026-08-07", payDate: "2026-08-20", payMonth: 7 },
+    { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Domestic Equity", price: 16.00, divYield: 0.031, divAmount: 0.50, divDate: "2025-10-09", exDate: "2026-08-26", recordDate: "2026-08-28", payDate: "2026-09-11", payMonth: 8 },
+    { symbol: "STANCHART", name: "Standard Chartered Bank Botswana", type: "Domestic Equity", price: 3.10, divYield: 0.060, divAmount: 0.1860, divDate: "2025-07-25", exDate: "2026-07-10", recordDate: "2026-07-12", payDate: "2026-07-25", payMonth: 6 },
+    { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.034, divAmount: 0.10, divDate: "2026-05-28", exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04", payMonth: 11 },
+    { symbol: "ANGLO", name: "Anglo American Plc", type: "Foreign Equity", price: 769.95, divYield: 0.035, divAmount: 26.9483, divDate: "2025-09-10", exDate: "2026-08-18", recordDate: "2026-08-20", payDate: "2026-09-10", payMonth: 8 },
+    { symbol: "BOTALA", name: "Botala Energy Limited", type: "Foreign Equity", price: 0.95, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "BMIN-EQO", name: "Botswana Minerals Plc", type: "Foreign Equity", price: 1.10, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "CA SALES", name: "CA Sales Holdings Limited", type: "Foreign Equity", price: 6.80, divYield: 0.040, divAmount: 0.2720, divDate: "2025-09-21", exDate: "2026-09-05", recordDate: "2026-09-07", payDate: "2026-09-21", payMonth: 8 },
+    { symbol: "GAIA", name: "GAIA Renewables 1 Limited", type: "Foreign Equity", price: 5.10, divYield: 0.065, divAmount: 0.3315, divDate: "2025-07-28", exDate: "2026-07-12", recordDate: "2026-07-14", payDate: "2026-07-28", payMonth: 6 },
+    { symbol: "INVESTEC", name: "Investec Limited", type: "Foreign Equity", price: 82.50, divYield: 0.050, divAmount: 4.1250, divDate: "2025-07-02", exDate: "2026-06-15", recordDate: "2026-06-17", payDate: "2026-07-02", payMonth: 6 },
+    { symbol: "LUC", name: "Lucara Diamond Corp", type: "Foreign Equity", price: 1.70, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "SHUMBA", name: "Shumba Energy Limited", type: "Foreign Equity", price: 0.81, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "TLOU", name: "Tlou Energy Limited", type: "Foreign Equity", price: 0.50, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "ADFB", name: "ADBFUND", type: "ETF", price: 102.53, divYield: 0.070, divAmount: 7.1771, divDate: "2025-07-24", exDate: "2026-07-08", recordDate: "2026-07-10", payDate: "2026-07-24", payMonth: 6 },
+    { symbol: "NEWGOLD", name: "NewGold ETF", type: "ETF", price: 507.74, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "NEWPALLADIUM", name: "NewPalladium ETF", type: "ETF", price: 179.77, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "NEWPLATINUM", name: "NewPlatinum ETF", type: "ETF", price: 145.20, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
+    { symbol: "SATRIX500", name: "SATRIX500 ETF", type: "ETF", price: 112.40, divYield: 0.012, divAmount: 1.3488, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
+    { symbol: "SATRIXEMG", name: "SATRIXEMG ETF", type: "ETF", price: 48.60, divYield: 0.020, divAmount: 0.9720, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
+    { symbol: "SATRIXWDM", name: "SATRIXWDM ETF", type: "ETF", price: 85.30, divYield: 0.015, divAmount: 1.2795, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
+    { symbol: "VGE-ETF", name: "VGEPFAM ETF", type: "ETF", price: 32.10, divYield: 0.018, divAmount: 0.5778, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 }
 ];
 
 const BASE_NEWS = [
@@ -405,7 +404,7 @@ function showUndoToast(msg) {
 }
 
 function getStockMeta(sym) {
-    return STOCKS.find(s => s.symbol === sym) || { price: 1.0, divYield: 0, divAmount: 0, exDate: "-", payDate: "-", payMonth: -1, name: sym };
+    return STOCKS.find(s => s.symbol === sym) || { price: 1.0, divYield: 0, divAmount: 0, divDate: "-", exDate: "-", payDate: "-", payMonth: -1, name: sym };
 }
 
 function saveAndRender() {
@@ -608,7 +607,7 @@ function updateDividendSection() {
         const card = document.createElement('div');
         card.className = 'div-card';
         
-        if (meta.divYield === 0 || meta.payDate === '-') {
+        if (meta.divAmount === 0 || meta.payDate === '-') {
             card.innerHTML = `
                 <div class="div-header">
                     <div><strong>${h.symbol}</strong> <span style="font-size:0.7rem; color:var(--text-muted);">${meta.name}</span></div>
@@ -640,7 +639,7 @@ function updateDividendSection() {
                 statusBadge = `<span class="badge-status badge-soon">Coming up soon</span>`;
             }
 
-            const perShareAmount = meta.divAmount || (meta.price * meta.divYield);
+            const perShareAmount = meta.divAmount;
             const totalPayout = perShareAmount * h.qty;
 
             card.innerHTML = `
@@ -656,7 +655,7 @@ function updateDividendSection() {
                     
                     <!-- Announced Dividend Box -->
                     <div class="div-date-box" style="grid-column: span 2; background: rgba(255, 87, 34, 0.1); border-color: var(--accent-orange); margin-top: 4px;">
-                        <span style="color:var(--accent-orange); font-weight:bold;">Announced Dividend</span>
+                        <span style="color:var(--accent-orange); font-weight:bold;">Announced Dividend (${meta.divDate})</span>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
                             <strong style="font-size:0.9rem; color:var(--accent-orange);">${formatCurrency(perShareAmount)} <span style="font-size:0.65rem; font-weight:normal;">/ share</span></strong>
                             <span style="font-size:0.7rem; color:var(--text-main); background:var(--input-bg); padding:2px 6px; border-radius:4px;">Est. Total: ${formatCurrency(totalPayout)}</span>
