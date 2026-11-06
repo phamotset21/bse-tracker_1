@@ -1,4 +1,3 @@
-/* PASTE THIS IN style.css */
 :root {
     --bg-base: #0d1117;
     --card-bg: rgba(22, 28, 38, 0.75);
@@ -559,7 +558,6 @@ th {
 
 .color-dot:hover { transform: scale(1.1); }
 
-/* Custom Color Picker Styling */
 input[type="color"] {
     -webkit-appearance: none;
     border: none;
