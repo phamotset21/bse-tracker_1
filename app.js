@@ -23,7 +23,8 @@ const STOCKS = [
     { symbol: "SEEDCO", name: "Seedco International Limited", type: "Domestic Equity", price: 3.20, divYield: 0.035, divAmount: 0.1120, exDate: "2026-08-05", recordDate: "2026-08-07", payDate: "2026-08-20", payMonth: 7 },
     { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Domestic Equity", price: 16.00, divYield: 0.050, divAmount: 0.8000, exDate: "2026-08-26", recordDate: "2026-08-28", payDate: "2026-09-11", payMonth: 8 },
     { symbol: "STANCHART", name: "Standard Chartered Bank Botswana", type: "Domestic Equity", price: 3.10, divYield: 0.060, divAmount: 0.1860, exDate: "2026-07-10", recordDate: "2026-07-12", payDate: "2026-07-25", payMonth: 6 },
-    { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.090, divAmount: 0.6641, exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04", payMonth: 11 },
+    // CORRECTION MADE HERE: TURNSTAR divAmount changed from 0.6641 to 0.10
+    { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.090, divAmount: 0.10, exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04", payMonth: 11 },
     { symbol: "ANGLO", name: "Anglo American Plc", type: "Foreign Equity", price: 769.95, divYield: 0.035, divAmount: 26.9483, exDate: "2026-08-18", recordDate: "2026-08-20", payDate: "2026-09-10", payMonth: 8 },
     { symbol: "BOTALA", name: "Botala Energy Limited", type: "Foreign Equity", price: 0.95, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
     { symbol: "BMIN-EQO", name: "Botswana Minerals Plc", type: "Foreign Equity", price: 1.10, divYield: 0.000, divAmount: 0, exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
@@ -653,7 +654,7 @@ function updateDividendSection() {
                     <div class="div-date-box"><span>Payment Date</span><strong>${meta.payDate}</strong></div>
                     <div class="div-date-box"><span>Status</span><div>${statusBadge}</div></div>
                     
-                    <!-- New Announced Dividend Box -->
+                    <!-- Announced Dividend Box -->
                     <div class="div-date-box" style="grid-column: span 2; background: rgba(255, 87, 34, 0.1); border-color: var(--accent-orange); margin-top: 4px;">
                         <span style="color:var(--accent-orange); font-weight:bold;">Announced Dividend</span>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
