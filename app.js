@@ -17,7 +17,7 @@ const STOCKS = [
     { symbol: "MINERGY", name: "Minergy Limited", type: "Domestic Equity", price: 0.45, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
     { symbol: "NAP", name: "New African Properties Limited", type: "Domestic Equity", price: 4.06, divYield: 0.082, divAmount: 0.3332, divDate: "2025-10-08", exDate: "2026-06-18", recordDate: "2026-06-20", payDate: "2026-07-08", payMonth: 6 },
     { symbol: "OLYMPIA", name: "Olympia Capital Corporation Ltd", type: "Domestic Equity", price: 0.40, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
-    { symbol: "PRIMETIME", name: "Primetime Property Holdings Ltd", type: "Domestic Equity", price: 1.90, divYield: 0.014, divAmount: 0.0267, divDate: "2025-04-25", exDate: "2026-03-12", recordDate: "2026-03-14", payDate: "2026-03-28", payMonth: 2 },
+    { symbol: "PRIMETIME", name: "PrimeTime Property Holdings Ltd", type: "Domestic Equity", price: 1.90, divYield: 0.014, divAmount: 0.0267, divDate: "2025-04-25", exDate: "2026-03-12", recordDate: "2026-03-14", payDate: "2026-03-28", payMonth: 2 },
     { symbol: "RDCP", name: "RDC Properties Limited", type: "Domestic Equity", price: 2.30, divYield: 0.038, divAmount: 0.04448, divDate: "2025-10-30", exDate: "2026-10-22", recordDate: "2026-10-24", payDate: "2026-11-08", payMonth: 10 },
     { symbol: "SECHABA", name: "Sechaba Brewery Holdings Limited", type: "Domestic Equity", price: 40.50, divYield: 0.074, divAmount: 2.9906, divDate: "2026-06-26", exDate: "2026-09-16", recordDate: "2026-09-18", payDate: "2026-09-30", payMonth: 8 },
     { symbol: "SEEDCO", name: "Seedco International Limited", type: "Domestic Equity", price: 3.20, divYield: 0.035, divAmount: 0.1120, divDate: "2025-08-20", exDate: "2026-08-05", recordDate: "2026-08-07", payDate: "2026-08-20", payMonth: 7 },
@@ -653,7 +653,6 @@ function updateDividendSection() {
                     <div class="div-date-box"><span>Payment Date</span><strong>${meta.payDate}</strong></div>
                     <div class="div-date-box"><span>Status</span><div>${statusBadge}</div></div>
                     
-                    <!-- Announced Dividend Box -->
                     <div class="div-date-box" style="grid-column: span 2; background: rgba(255, 87, 34, 0.1); border-color: var(--accent-orange); margin-top: 4px;">
                         <span style="color:var(--accent-orange); font-weight:bold;">Announced Dividend (${meta.divDate})</span>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
@@ -807,12 +806,16 @@ function initMarketPricesGrid() {
         row.className = 'price-row';
         row.setAttribute('data-symbol', s.symbol);
         row.setAttribute('data-name', s.name);
+        
         row.innerHTML = `
             <div class="price-info">
                 <span>${s.symbol} • ${formatCurrency(s.price)}</span>
                 <span>${s.name}</span>
             </div>
             <div class="price-actions">
+                <button class="btn-outline" style="padding: 6px 8px; border-radius: 8px;" onclick="openChartModal('${s.symbol}', ${s.price})" title="View Chart">
+                    <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;"><path d="M3 17l6-6 4 4 8-8"></path></svg>
+                </button>
                 <input type="number" id="qty-${s.symbol}" placeholder="Qty" value="${qty}" step="any">
                 <button class="action-btn-sm" onclick="quickToggleHolding('${s.symbol}', ${s.price})">${existing ? 'Update' : 'Add'}</button>
             </div>
@@ -934,6 +937,137 @@ function resetAllData() {
         alert("All data reset.");
         location.reload();
     }
+}
+
+// --- HISTORICAL CHART LOGIC ---
+let modalChartInstance = null;
+let currentChartSymbol = "";
+let currentChartPrice = 0;
+let currentChartPeriod = "1M";
+
+function openChartModal(symbol, price) {
+    currentChartSymbol = symbol;
+    currentChartPrice = price;
+    currentChartPeriod = "1M";
+
+    document.getElementById('modal-chart-title').innerText = `${symbol} Price History`;
+    
+    document.querySelectorAll('#modal-periods button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`#modal-periods button[onclick="updateChartPeriod('1M')"]`).classList.add('active');
+
+    const modal = document.getElementById('chart-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+
+    renderModalChart();
+}
+
+function closeChartModal() {
+    const modal = document.getElementById('chart-modal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        if (modalChartInstance) {
+            modalChartInstance.destroy();
+            modalChartInstance = null;
+        }
+    }, 300);
+}
+
+function updateChartPeriod(period) {
+    currentChartPeriod = period;
+    document.querySelectorAll('#modal-periods button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`#modal-periods button[onclick="updateChartPeriod('${period}')"]`).classList.add('active');
+    renderModalChart();
+}
+
+function generateMockHistory(currentPrice, points) {
+    let prices = [];
+    let price = currentPrice * (0.85 + Math.random() * 0.15);
+    for (let i = 0; i < points; i++) {
+        let volatility = (Math.random() - 0.48) * 0.03; 
+        price = price + (price * volatility);
+        prices.push(price);
+    }
+    prices[prices.length - 1] = currentPrice;
+    return prices;
+}
+
+function renderModalChart() {
+    const ctx = document.getElementById('modalChartCanvas').getContext('2d');
+    if (modalChartInstance) modalChartInstance.destroy();
+
+    let points = 30;
+    let labels = [];
+    
+    if (currentChartPeriod === '1W') { points = 7; labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']; }
+    else if (currentChartPeriod === '1M') { points = 30; }
+    else if (currentChartPeriod === '6M') { points = 26; }
+    else if (currentChartPeriod === '1Y') { points = 12; labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; }
+
+    if (labels.length === 0) {
+        for (let i = points; i > 0; i--) {
+            labels.push(`-${i}d`);
+        }
+    }
+
+    const dataPoints = generateMockHistory(currentChartPrice, points);
+    const isUp = dataPoints[dataPoints.length - 1] >= dataPoints[0];
+    const lineColor = isUp ? 'var(--success-color)' : 'var(--danger-color)';
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, isUp ? 'rgba(0, 230, 118, 0.3)' : 'rgba(239, 68, 68, 0.3)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    modalChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `${currentChartSymbol} Price`,
+                data: dataPoints,
+                borderColor: lineColor,
+                backgroundColor: gradient,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return 'P' + context.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    display: true,
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8', font: { size: 9 }, maxTicksLimit: 6 } 
+                },
+                y: { 
+                    display: true,
+                    grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                    ticks: { 
+                        color: '#94a3b8', 
+                        font: { size: 9 },
+                        callback: function(value) { return 'P' + value.toFixed(2); }
+                    } 
+                }
+            }
+        }
+    });
 }
 
 if ('serviceWorker' in navigator) {
