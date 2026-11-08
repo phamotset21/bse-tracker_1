@@ -194,7 +194,6 @@
 
     <!-- TAB 5: SETTINGS & DISPLAY -->
     <div id="tab-settings" class="tab-content">
-        
         <div class="glass-card">
             <h2>Themes</h2>
             <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Visual Mode:</div>
@@ -315,6 +314,28 @@
     <div id="toast-undo">
         <span id="toast-msg">Holding removed</span>
         <button onclick="undoDelete()">Undo</button>
+    </div>
+
+    <!-- PRICE CHART MODAL -->
+    <div id="chart-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2 id="modal-chart-title" style="margin: 0; border: none; padding: 0;">STOCK CHART</h2>
+                <button class="close-btn" onclick="closeChartModal()">✕</button>
+            </div>
+            <div class="chart-periods" id="modal-periods">
+                <button onclick="updateChartPeriod('1W')">1W</button>
+                <button onclick="updateChartPeriod('1M')" class="active">1M</button>
+                <button onclick="updateChartPeriod('6M')">6M</button>
+                <button onclick="updateChartPeriod('1Y')">1Y</button>
+            </div>
+            <div class="chart-container" style="height: 280px; margin-top: 15px;">
+                <canvas id="modalChartCanvas"></canvas>
+            </div>
+            <div style="text-align: center; font-size: 0.65rem; color: var(--text-muted); margin-top: 10px;">
+                * Simulated historical data based on current market price.
+            </div>
+        </div>
     </div>
 
     <nav class="bottom-nav">
