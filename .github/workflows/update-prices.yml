@@ -1,9 +1,10 @@
 name: Update Stock Prices
 
 on:
+  push: # This triggers the workflow automatically when you save this file
   schedule:
-    - cron: '0 * * * *'
-  workflow_dispatch:
+    - cron: '0 * * * *' # Runs every hour
+  workflow_dispatch: # Allows manual runs
 
 jobs:
   update-prices:
