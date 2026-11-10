@@ -1,10 +1,10 @@
 name: Update Stock Prices
 
 on:
-  push: # This triggers the workflow automatically when you save this file
+  push:
   schedule:
     - cron: '0 * * * *' # Runs every hour
-  workflow_dispatch: # Allows manual runs
+  workflow_dispatch:
 
 jobs:
   update-prices:
@@ -13,35 +13,44 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Fetch Prices
+      - name: Fetch Prices from Mansa API
         run: |
           python - <<'PY'
           import json
           import urllib.request
-          import re
+          import os
 
-          url = "https://wallflake.com/exchanges/bse-botswana"
-          req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-          html = urllib.request.urlopen(req).read().decode('utf-8')
+          # Use the API key from GitHub Secrets
+          api_key = os.environ['MANSA_API_KEY']
+          url = "https://api.mansaapi.com/v1/markets/BSE/stocks" # BSE endpoint
 
-          pattern = r'\[([A-Z]+).*?\]\(.*?\).*?BWP ([\d\.]+)'
-          matches = re.findall(pattern, html)
+          req = urllib.request.Request(url, headers={
+              'Authorization': f'Bearer {api_key}',
+              'User-Agent': 'Mozilla/5.0'
+          })
 
-          prices = {ticker: float(price) for ticker, price in matches}
+          try:
+              with urllib.request.urlopen(req) as response:
+                  data = json.loads(response.read().decode('utf-8'))
+                  
+                  prices = {}
+                  # Adjust based on the actual API response structure
+                  for stock in data.get('stocks', []):
+                      prices[stock['symbol']] = stock['price']
+                  
+                  if not prices:
+                      print("No prices found in API response.")
+                      exit(1)
 
-          if not prices:
-              print("No prices found, check the scraper.")
+                  with open('prices.json', 'w') as f:
+                      json.dump(prices, f, indent=2)
+                  print(f"Successfully updated {len(prices)} prices.")
+          except Exception as e:
+              print(f"API request failed: {e}")
               exit(1)
-
-          with open('prices.json', 'w') as f:
-              json.dump(prices, f, indent=2)
-          print(f"Updated prices for {len(prices)} tickers.")
           PY
+        env:
+          MANSA_API_KEY: ${{ secrets.MANSA_API_KEY }}
 
       - name: Commit and Push
         run: |
