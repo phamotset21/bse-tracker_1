@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bse-tracker-v3'; // 1. Changed to v3 to force an update!
+const CACHE_NAME = 'bse-tracker-v4';!
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
