@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bse-tracker-v5';!
+const CACHE_NAME = 'bse-tracker-v7';!
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
