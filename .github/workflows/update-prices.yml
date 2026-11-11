@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 1. FETCH PRICES (Mansa API)
+      # 1. FETCH PRICES
       - name: Fetch Prices from Mansa API
         env:
           MANSA_API_KEY: ${{ secrets.MANSA_API_KEY }}
@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (Strict Date Scraper)
+      # 2. FETCH NEWS (Strict Box Proximity Scraper)
       - name: Scrape BSE News
         run: |
           pip install beautifulsoup4 requests
@@ -65,35 +65,38 @@ jobs:
               
               news_items = []
               
-              # Look for the specific date format the BSE uses: YYYY-MM-DD HH:MM AM/PM GMT+2
-              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
-              
-              # Find every text node on the page that matches this exact date format
-              date_elements = soup.find_all(string=date_pattern)
-
-              for date_el in date_elements:
-                  # The title link is usually the element just before the date
-                  parent = date_el.parent
+              # Look at EVERY link on the page
+              for a_tag in soup.find_all('a'):
+                  # Get the text of the link, joining broken lines with a space
+                  title = a_tag.get_text(" ", strip=True)
                   
-                  # Look backwards from the date to find the <a> tag containing the title
-                  prev_links = parent.find_all_previous('a')
-                  if prev_links:
-                      link = prev_links[0]
-                      title = link.get_text(strip=True)
-                      href = link.get('href', '#')
+                  # Skip short links or obvious menu items
+                  if len(title) < 10 or "Skip to" in title or "Overview" in title:
+                      continue
                       
-                      # Skip if it looks like a menu item
-                      if len(title) < 10 or "Skip to" in title:
-                          continue
+                  # Now, check the link itself and its parent boxes (up to 3 levels up)
+                  # We are looking for the specific BSE date format
+                  found_date = None
+                  current_node = a_tag
+                  
+                  for _ in range(4):
+                      if not current_node:
+                          break
+                      text_content = current_node.get_text(" ")
+                      # Regex matches: YYYY-MM-DD HH:MM AM/PM GMT+2
+                      match = re.search(r'(\d{4}-\d{2}-\d{2}) \d{2}:\d{2} [AP]M GMT\+2', text_content)
+                      if match:
+                          found_date = match.group(1)
+                          break
+                      current_node = current_node.parent
 
-                      # Clean up the date (just the YYYY-MM-DD part)
-                      date_str = date_el.strip()[:10]
-                          
-                      # Make absolute URL
+                  # If we found a date in the same box, it's definitely a news item!
+                  if found_date:
+                      href = a_tag.get('href', '#')
                       if href.startswith('/'):
                           href = "https://www.bse.co.bw" + href
                           
-                      # Guess the ticker based on the title text
+                      # Guess the ticker
                       ticker = "BSE"
                       upper_title = title.upper()
                       for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
@@ -105,7 +108,7 @@ jobs:
                           "symbol": ticker,
                           "title": title,
                           "link": href,
-                          "date": date_str,
+                          "date": found_date,
                           "summary": "Click to view the official BSE disclosure document."
                       })
 
@@ -113,15 +116,14 @@ jobs:
               unique_news = list({v['title']:v for v in news_items}.values())
 
               if len(unique_news) > 0:
-                  # Keep only the top 10
                   final_news = unique_news[:10]
                   with open('news.json', 'w') as f:
                       json.dump(final_news, f, indent=2)
                   print(f"Successfully scraped {len(final_news)} news items.")
                   for n in final_news:
-                      print(f"- {n['title']} ({n['date']})")
+                      print(f"- {n['date']} | {n['title']}")
               else:
-                  print("No news found with the specific date format.")
+                  print("CRITICAL: Found 0 news items.")
                   
           except Exception as e:
               print(f"News Error: {e}")
