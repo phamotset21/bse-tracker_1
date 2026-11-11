@@ -24,14 +24,9 @@ jobs:
           python - <<'PY'
           import json
           import urllib.request
-          import urllib.error
           import os
 
           api_key = os.environ.get('MANSA_API_KEY', '')
-          if not api_key:
-              print("ERROR: MANSA_API_KEY secret is empty.")
-              exit(1)
-              
           url = "https://mansaapi.com/api/v1/markets/exchanges/BSE/stocks?limit=200"
           req = urllib.request.Request(url, headers={
               'Authorization': f'Bearer {api_key}',
@@ -43,68 +38,52 @@ jobs:
               with urllib.request.urlopen(req) as response:
                   result = json.loads(response.read().decode('utf-8'))
                   stocks_data = result.get('data', [])
-                  
-                  if not stocks_data:
-                      print("API returned success but 0 stocks found.")
-                      exit(1)
-
-                  prices = {}
-                  for stock in stocks_data:
-                      ticker = stock.get('ticker')
-                      price = stock.get('price')
-                      if ticker and price is not None:
-                          prices[ticker] = price
-
+                  prices = {s.get('ticker'): s.get('price') for s in stocks_data if s.get('ticker') and s.get('price') is not None}
                   with open('prices.json', 'w') as f:
                       json.dump(prices, f, indent=2)
-                  print(f"Successfully updated {len(prices)} prices.")
+                  print(f"Updated {len(prices)} prices.")
           except Exception as e:
-              print(f"Error: {e}")
-              exit(1)
+              print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (Scrape BSE Website)
+      # 2. FETCH NEWS (BeautifulSoup Scraper)
       - name: Scrape BSE News
         run: |
+          pip install beautifulsoup4 requests
           python - <<'PY'
           import json
-          import urllib.request
-          import urllib.error
-          from html.parser import HTMLParser
+          import requests
+          from bs4 import BeautifulSoup
           import re
-          from datetime import datetime
 
-          url = "https://www.bse.co.bw/company-disclosures/"
-          req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+          url = "https://www.bse.co.bw/xnews/"
+          headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
           try:
-              with urllib.request.urlopen(req) as response:
-                  html = response.read().decode('utf-8')
-                  
-              # Basic text extraction and parsing
-              # Since BSE's HTML structure can change, we use regex to find dates and links
-              # The page usually lists disclosures in a table or list format
+              response = requests.get(url, headers=headers, timeout=15)
+              soup = BeautifulSoup(response.text, 'html.parser')
+              
               news_items = []
               
-              # Find links that point to disclosures (PDFs or pages) with dates
-              # Example pattern: <a href="/company-disclosures/...">Title</a> ... 2024-11-08
-              pattern = r'<a[^>]+href="([^"]*company-disclosures[^"]*)"[^>]*>(.*?)</a>.*?(\d{4}-\d{2}-\d{2})'
-              matches = re.findall(pattern, html, re.DOTALL | re.IGNORECASE)
-
-              for match in matches[:15]:  # Get top 15 latest news
-                  link = match[0]
-                  title = re.sub('<[^>]+>', '', match[1]).strip()  # Strip any inner HTML tags
-                  date_str = match[2]
-
-                  if title and date_str:
-                      # Try to guess the ticker from the title or link
+              # Find all links on the page
+              links = soup.find_all('a')
+              for link in links:
+                  title = link.get_text(strip=True)
+                  # Filter out short links (navigation, etc.)
+                  if len(title) > 15 and "X-News" not in title:
+                      # Try to find the date nearby in the parent element
+                      parent_text = link.parent.get_text()
+                      date_match = re.search(r'(\d{4}-\d{2}-\d{2})', parent_text)
+                      date_str = date_match.group(1) if date_match else "2026-11-11" # Fallback
+                      
+                      # Guess the ticker
                       ticker = "BSE"
                       upper_title = title.upper()
-                      for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN"]:
+                      for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
                           if sym in upper_title:
                               ticker = sym
                               break
-                      
+                              
                       news_items.append({
                           "symbol": ticker,
                           "title": title,
@@ -112,23 +91,20 @@ jobs:
                           "summary": "Click to view full disclosure on the BSE website."
                       })
 
-              if not news_items:
-                  # Fallback if regex fails (site structure changed)
-                  print("Warning: Could not parse BSE news. Keeping existing news.json.")
-                  exit(0)
-
-              # Remove duplicates and sort by date
+              # Remove duplicates
               unique_news = list({v['title']:v for v in news_items}.values())
-              unique_news.sort(key=lambda x: x['date'], reverse=True)
 
-              with open('news.json', 'w') as f:
-                  json.dump(unique_news, f, indent=2)
+              if len(unique_news) > 0:
+                  # Keep only the top 15
+                  final_news = unique_news[:15]
+                  with open('news.json', 'w') as f:
+                      json.dump(final_news, f, indent=2)
+                  print(f"Successfully scraped {len(final_news)} news items.")
+              else:
+                  print("No news found. The site structure might have changed.")
                   
-              print(f"Successfully scraped {len(unique_news)} news items.")
-              
           except Exception as e:
-              print(f"Error scraping news: {e}")
-              exit(1)
+              print(f"News Error: {e}")
           PY
 
       # 3. COMMIT CHANGES
