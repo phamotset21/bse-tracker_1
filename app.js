@@ -771,19 +771,24 @@ function renderPinnedNews() {
         if (!aOwned && bOwned) return 1;
         return new Date(b.date) - new Date(a.date);
     });
-    // Limit to the top 10 news items
-const topNews = sortedNews.slice(0, 10);
 
-topNews.forEach(n => {
-    const isOwned = holdingSymbols.includes(n.symbol);
+    // Limit to the top 10 news items
+    const topNews = sortedNews.slice(0, 10);
+
+    topNews.forEach(n => {
+        const isOwned = holdingSymbols.includes(n.symbol);
         const item = document.createElement('div');
         item.className = 'news-item';
+        
+        // Use the specific PDF link if available, otherwise fallback to the general disclosures page
+        const newsLink = n.link || 'https://www.bse.co.bw/company-disclosures/';
+        
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span class="news-tag">${n.symbol}</span>
                 ${isOwned ? '<span style="font-size:0.65rem; background:var(--accent-glow); color:var(--accent-orange); padding:2px 6px; border-radius:4px; font-weight:bold;">PORTFOLIO</span>' : ''}
             </div>
-            <div><a href="https://www.bse.co.bw/company-disclosures/" target="_blank" class="news-link"><strong>${n.title} ↗</strong></a></div>
+            <div><a href="${newsLink}" target="_blank" class="news-link"><strong>${n.title} ↗</strong></a></div>
             <div style="font-size:0.75rem; color:var(--text-main); margin-top:4px;">${n.summary}</div>
             <div class="news-date">${n.date} • BSE X-News Portal</div>
         `;
@@ -1068,13 +1073,11 @@ function renderModalChart() {
 // --- LIVE PRICES LOGIC ---
 async function fetchLivePrices() {
     try {
-        // Added { cache: 'no-store' } to bypass the browser HTTP cache
         const response = await fetch('prices.json', { cache: 'no-store' });
         if (!response.ok) throw new Error("File not found");
         
         const livePrices = await response.json();
         
-        // Translation Map: Maps the API ticker to your App's ticker
         const tickerMap = {
             "LETS": "LETSHEGO",
             "ANG": "ANGLO",
@@ -1100,9 +1103,7 @@ async function fetchLivePrices() {
         let updatedCount = 0;
         
         STOCKS.forEach(stock => {
-            // Check if the API has the exact symbol or if it's in the translation map
             let apiSymbol = stock.symbol;
-            
             for (const [apiKey, appKey] of Object.entries(tickerMap)) {
                 if (appKey === stock.symbol) {
                     apiSymbol = apiKey;
@@ -1110,7 +1111,6 @@ async function fetchLivePrices() {
                 }
             }
 
-            // If the price exists in the JSON, update it!
             if (livePrices[apiSymbol]) {
                 stock.price = livePrices[apiSymbol];
                 updatedCount++;
