@@ -44,18 +44,11 @@ const STOCKS = [
     { symbol: "VGE-ETF", name: "VGEPFAM ETF", type: "ETF", price: 32.10, divYield: 0.018, divAmount: 0.5778, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 }
 ];
 
+// Fallback news (used if news.json fails to load)
 const BASE_NEWS = [
     { symbol: "STANBIC", title: "Stanbic Bank Botswana Opens Landmark IPO", date: "2026-11-02", summary: "Stanbic Africa Holdings offers 319,362,050 shares (20% of capital). Offer closes Nov 27, 2026; listing Dec 7, 2026." },
     { symbol: "BoB", title: "Bank of Botswana Maintains MoPR at 5.5%", date: "2026-11-01", summary: "Central bank maintains key policy rate citing balanced inflation and steady growth." },
-    { symbol: "FNBB", title: "FNBB AGM Notice & Corporate Update", date: "2026-10-31", summary: "First National Bank Botswana releases AGM notice and financial updates." },
-    { symbol: "CHOPPIES", title: "Choppies Integrated Annual Report", date: "2026-10-30", summary: "Choppies publishes integrated annual report highlighting regional retail expansion." },
-    { symbol: "NAP", title: "NAP Reports FY26 Earnings", date: "2026-10-29", summary: "New African Properties reports 29.25% decrease in FY26 earnings due to valuation adjustments." },
-    { symbol: "ACCESS", title: "Access Bank Lists Botswana Depository Receipts", date: "2026-10-28", summary: "Access Bank formalizes BDR listing tied to Dangote Petroleum Refinery assets." },
-    { symbol: "TURNSTAR", title: "Turnstar H1 Profit Up 19.51%", date: "2026-10-27", summary: "Turnstar registered strong growth in Profit Before Tax for H1 26 from higher occupancy." },
-    { symbol: "MINERGY", title: "Minergy Renewal of Cautionary", date: "2026-10-26", summary: "Minergy advises shareholders to exercise caution pending restructuring talks." },
-    { symbol: "BOTALA", title: "Botala Serowe Gas Project Quarterly Update", date: "2026-10-25", summary: "Botala Energy reports gas flow testing milestones at the Serowe CBM project." },
-    { symbol: "BMIN-EQO", title: "Botswana Minerals AI Exploration Update", date: "2026-10-24", summary: "BMIN updates progress on AI-driven target modeling for copper/gold exploration." },
-    { symbol: "SHUMBA", title: "Shumba Energy Cautionary Update", date: "2026-10-23", summary: "Shumba Energy issues quarterly market update and cautionary renewal." }
+    { symbol: "FNBB", title: "FNBB AGM Notice & Corporate Update", date: "2026-10-31", summary: "First National Bank Botswana releases AGM notice and financial updates." }
 ];
 
 let activeNews = [...BASE_NEWS];
@@ -735,31 +728,28 @@ async function fetchLiveNews(isManual = false) {
     if (isManual || !newsContainer.innerHTML) {
         newsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:0.8rem;"><span style="display:inline-block; animation: spin 1s linear infinite;">⏳</span> Syncing latest BSE updates...</div>';
     }
+    
     try {
-        const response = await new Promise(resolve => setTimeout(() => {
-            resolve({
-                ok: true,
-                json: () => Promise.resolve([
-                    { symbol: "STANBIC", title: "Live Update: Stanbic IPO Subscription Surges Past Target", date: "2026-11-03", summary: "High demand reported as institutional and retail investors rush for Stanbic Bank Botswana shares." },
-                    { symbol: "FNBB", title: "Live Update: FNBB Board Declares Interim Dividend", date: "2026-11-03", summary: "First National Bank Botswana announces an interim dividend of 15 thebe per share." }
-                ])
-            });
-        }, 1000));
+        // Fetch news from the JSON file
+        const response = await fetch('news.json');
+        if (!response.ok) throw new Error("News file not found");
         
-        if (response.ok) {
-            const liveData = await response.json();
-            if (Array.isArray(liveData) && liveData.length > 0) {
-                const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
-                const combined = [...liveData, ...BASE_NEWS, ...customNews];
-                const uniqueNews = Array.from(new Map(combined.map(item => [item.title, item])).values());
-                activeNews = uniqueNews;
-                renderPinnedNews();
-                return;
-            }
+        const liveData = await response.json();
+        
+        if (Array.isArray(liveData) && liveData.length > 0) {
+            const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
+            // Combine downloaded news with your custom local news
+            const combined = [...liveData, ...customNews];
+            const uniqueNews = Array.from(new Map(combined.map(item => [item.title, item])).values());
+            activeNews = uniqueNews;
+            renderPinnedNews();
+            return;
         }
     } catch (error) {
-        console.warn("Network error fetching live news. Falling back to cached/hardcoded data.", error);
+        console.warn("Failed to load news.json, using fallback.", error);
     }
+    
+    // Fallback if fetch fails
     const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
     activeNews = [...BASE_NEWS, ...customNews];
     renderPinnedNews();
@@ -1074,13 +1064,11 @@ function renderModalChart() {
 // --- LIVE PRICES LOGIC ---
 async function fetchLivePrices() {
     try {
-        // Fetch the JSON file generated by the GitHub Action
         const response = await fetch('prices.json');
         if (!response.ok) throw new Error("File not found");
         
         const livePrices = await response.json();
         
-        // Update the STOCKS array with the new prices
         let updatedCount = 0;
         STOCKS.forEach(stock => {
             if (livePrices[stock.symbol]) {
@@ -1089,7 +1077,6 @@ async function fetchLivePrices() {
             }
         });
         
-        // Re-render the UI to show the new prices
         if (updatedCount > 0) {
             saveAndRender(); 
             console.log(`Successfully loaded ${updatedCount} live prices.`);
@@ -1098,7 +1085,6 @@ async function fetchLivePrices() {
         console.warn("Failed to load live prices, using fallback hardcoded data.", error);
     }
 }
-
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
