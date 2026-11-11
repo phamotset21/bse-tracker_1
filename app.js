@@ -771,8 +771,11 @@ function renderPinnedNews() {
         if (!aOwned && bOwned) return 1;
         return new Date(b.date) - new Date(a.date);
     });
-    sortedNews.forEach(n => {
-        const isOwned = holdingSymbols.includes(n.symbol);
+    // Limit to the top 10 news items
+const topNews = sortedNews.slice(0, 10);
+
+topNews.forEach(n => {
+    const isOwned = holdingSymbols.includes(n.symbol);
         const item = document.createElement('div');
         item.className = 'news-item';
         item.innerHTML = `
