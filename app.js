@@ -730,19 +730,19 @@ async function fetchLiveNews(isManual = false) {
     }
     
     try {
-        // Fetch news from the JSON file
-        const response = await fetch('news.json');
+        // Added { cache: 'no-store' } to force fetch the newest news.json
+        const response = await fetch('news.json', { cache: 'no-store' });
         if (!response.ok) throw new Error("News file not found");
         
         const liveData = await response.json();
         
         if (Array.isArray(liveData) && liveData.length > 0) {
             const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
-            // Combine downloaded news with your custom local news
             const combined = [...liveData, ...customNews];
             const uniqueNews = Array.from(new Map(combined.map(item => [item.title, item])).values());
             activeNews = uniqueNews;
             renderPinnedNews();
+            if (isManual) alert("Latest news loaded successfully!");
             return;
         }
     } catch (error) {
@@ -753,6 +753,7 @@ async function fetchLiveNews(isManual = false) {
     const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
     activeNews = [...BASE_NEWS, ...customNews];
     renderPinnedNews();
+    if (isManual) alert("Network error: Showing cached news.");
 }
 
 function renderPinnedNews() {
@@ -1064,22 +1065,58 @@ function renderModalChart() {
 // --- LIVE PRICES LOGIC ---
 async function fetchLivePrices() {
     try {
-        const response = await fetch('prices.json');
+        // Added { cache: 'no-store' } to bypass the browser HTTP cache
+        const response = await fetch('prices.json', { cache: 'no-store' });
         if (!response.ok) throw new Error("File not found");
         
         const livePrices = await response.json();
         
+        // Translation Map: Maps the API ticker to your App's ticker
+        const tickerMap = {
+            "LETS": "LETSHEGO",
+            "ANG": "ANGLO",
+            "BARC": "ABSA",
+            "BOTA": "BOTALA",
+            "CA-SALES": "CA SALES",
+            "CHOP": "CHOPPIES",
+            "ENGE": "ENGEN",
+            "INV": "INVESTEC",
+            "MIN": "MINERGY",
+            "NEWG": "NEWGOLD",
+            "NGPL": "NEWPALLADIUM",
+            "NGPT": "NEWPLATINUM",
+            "OLYM": "OLYMPIA",
+            "PRIM": "PRIMETIME",
+            "SCIL": "SEEDCO",
+            "SEFA": "SEFALANA",
+            "SHU": "SHUMBA",
+            "LUCA": "LUC",
+            "STAN": "STANCHART"
+        };
+
         let updatedCount = 0;
+        
         STOCKS.forEach(stock => {
-            if (livePrices[stock.symbol]) {
-                stock.price = livePrices[stock.symbol];
+            // Check if the API has the exact symbol or if it's in the translation map
+            let apiSymbol = stock.symbol;
+            
+            for (const [apiKey, appKey] of Object.entries(tickerMap)) {
+                if (appKey === stock.symbol) {
+                    apiSymbol = apiKey;
+                    break;
+                }
+            }
+
+            // If the price exists in the JSON, update it!
+            if (livePrices[apiSymbol]) {
+                stock.price = livePrices[apiSymbol];
                 updatedCount++;
             }
         });
         
         if (updatedCount > 0) {
             saveAndRender(); 
-            console.log(`Successfully loaded ${updatedCount} live prices.`);
+            console.log(`Successfully loaded ${updatedCount} live prices from prices.json.`);
         }
     } catch (error) {
         console.warn("Failed to load live prices, using fallback hardcoded data.", error);
