@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (Smarter Scraper)
+      # 2. FETCH NEWS (Strict Date Scraper)
       - name: Scrape BSE News
         run: |
           pip install beautifulsoup4 requests
@@ -65,36 +65,35 @@ jobs:
               
               news_items = []
               
-              # Find all links
-              links = soup.find_all('a')
-              for link in links:
-                  title = link.get_text(strip=True)
-                  href = link.get('href', '#')
+              # Look for the specific date format the BSE uses: YYYY-MM-DD HH:MM AM/PM GMT+2
+              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
+              
+              # Find every text node on the page that matches this exact date format
+              date_elements = soup.find_all(string=date_pattern)
+
+              for date_el in date_elements:
+                  # The title link is usually the element just before the date
+                  parent = date_el.parent
                   
-                  # Filter out navigation junk
-                  if len(title) < 10 or "Skip to" in title or "Overview" in title or "Mission" in title or "Contact" in title or "Privacy" in title:
-                      continue
+                  # Look backwards from the date to find the <a> tag containing the title
+                  prev_links = parent.find_all_previous('a')
+                  if prev_links:
+                      link = prev_links[0]
+                      title = link.get_text(strip=True)
+                      href = link.get('href', '#')
                       
-                  # Look for a date nearby (YYYY-MM-DD)
-                  parent = link.parent
-                  parent_text = parent.get_text() if parent else ""
-                  
-                  # If the parent doesn't have a date, check the grandparent
-                  if not re.search(r'\d{4}-\d{2}-\d{2}', parent_text) and parent:
-                      parent = parent.parent
-                      parent_text = parent.get_text() if parent else ""
-                      
-                  date_match = re.search(r'(\d{4}-\d{2}-\d{2})', parent_text)
-                  
-                  # ONLY keep it if we found a date (this proves it's a news item)
-                  if date_match:
-                      date_str = date_match.group(1)
-                      
-                      # Make sure the link is absolute
+                      # Skip if it looks like a menu item
+                      if len(title) < 10 or "Skip to" in title:
+                          continue
+
+                      # Clean up the date (just the YYYY-MM-DD part)
+                      date_str = date_el.strip()[:10]
+                          
+                      # Make absolute URL
                       if href.startswith('/'):
                           href = "https://www.bse.co.bw" + href
                           
-                      # Guess the ticker
+                      # Guess the ticker based on the title text
                       ticker = "BSE"
                       upper_title = title.upper()
                       for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
@@ -119,8 +118,10 @@ jobs:
                   with open('news.json', 'w') as f:
                       json.dump(final_news, f, indent=2)
                   print(f"Successfully scraped {len(final_news)} news items.")
+                  for n in final_news:
+                      print(f"- {n['title']} ({n['date']})")
               else:
-                  print("No news found with dates.")
+                  print("No news found with the specific date format.")
                   
           except Exception as e:
               print(f"News Error: {e}")
