@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (BeautifulSoup Scraper)
+      # 2. FETCH NEWS (Smarter Scraper)
       - name: Scrape BSE News
         run: |
           pip install beautifulsoup4 requests
@@ -65,17 +65,35 @@ jobs:
               
               news_items = []
               
-              # Find all links on the page
+              # Find all links
               links = soup.find_all('a')
               for link in links:
                   title = link.get_text(strip=True)
-                  # Filter out short links (navigation, etc.)
-                  if len(title) > 15 and "X-News" not in title:
-                      # Try to find the date nearby in the parent element
-                      parent_text = link.parent.get_text()
-                      date_match = re.search(r'(\d{4}-\d{2}-\d{2})', parent_text)
-                      date_str = date_match.group(1) if date_match else "2026-11-11" # Fallback
+                  href = link.get('href', '#')
+                  
+                  # Filter out navigation junk
+                  if len(title) < 10 or "Skip to" in title or "Overview" in title or "Mission" in title or "Contact" in title or "Privacy" in title:
+                      continue
                       
+                  # Look for a date nearby (YYYY-MM-DD)
+                  parent = link.parent
+                  parent_text = parent.get_text() if parent else ""
+                  
+                  # If the parent doesn't have a date, check the grandparent
+                  if not re.search(r'\d{4}-\d{2}-\d{2}', parent_text) and parent:
+                      parent = parent.parent
+                      parent_text = parent.get_text() if parent else ""
+                      
+                  date_match = re.search(r'(\d{4}-\d{2}-\d{2})', parent_text)
+                  
+                  # ONLY keep it if we found a date (this proves it's a news item)
+                  if date_match:
+                      date_str = date_match.group(1)
+                      
+                      # Make sure the link is absolute
+                      if href.startswith('/'):
+                          href = "https://www.bse.co.bw" + href
+                          
                       # Guess the ticker
                       ticker = "BSE"
                       upper_title = title.upper()
@@ -87,21 +105,22 @@ jobs:
                       news_items.append({
                           "symbol": ticker,
                           "title": title,
+                          "link": href,
                           "date": date_str,
-                          "summary": "Click to view full disclosure on the BSE website."
+                          "summary": "Click to view the official BSE disclosure document."
                       })
 
               # Remove duplicates
               unique_news = list({v['title']:v for v in news_items}.values())
 
               if len(unique_news) > 0:
-                  # Keep only the top 15
-                  final_news = unique_news[:15]
+                  # Keep only the top 10
+                  final_news = unique_news[:10]
                   with open('news.json', 'w') as f:
                       json.dump(final_news, f, indent=2)
                   print(f"Successfully scraped {len(final_news)} news items.")
               else:
-                  print("No news found. The site structure might have changed.")
+                  print("No news found with dates.")
                   
           except Exception as e:
               print(f"News Error: {e}")
