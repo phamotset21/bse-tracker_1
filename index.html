@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ff5722'><rect width='512' height='512' rx='100' fill='%230d1117'/><path d='M96 384h320v32H96z'/><path d='M120 320l96-120 80 80 120-160' stroke='%23ff5722' stroke-width='36' fill='none' stroke-linecap='round' stroke-linejoin='round'/><circle cx='120' cy='320' r='20'/><circle cx='216' cy='200' r='20'/><circle cx='296' cy='280' r='20'/><circle cx='416' cy='120' r='24'/></svg>">
 
-    <!-- Link to External CSS -->
+    <!-- External CSS -->
     <link rel="stylesheet" href="style.css">
 
     <!-- Chart.js & DataLabels -->
@@ -23,9 +23,16 @@
 </head>
 <body>
 
+    <!-- Ambient Background Mesh Orbs -->
+    <div class="ambient-bg" id="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
     <div class="header">
         <div class="header-brand">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: #161f2c; display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-orange);">
+            <div style="width: 38px; height: 38px; border-radius: 12px; background: var(--input-bg); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-orange); box-shadow: 0 4px 12px var(--accent-glow);">
                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: none; stroke: var(--accent-orange); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
                     <path d="M3 17l6-6 4 4 8-8"></path>
                     <circle cx="3" cy="17" r="1.5" fill="var(--accent-orange)"></circle>
@@ -78,15 +85,15 @@
             <h2>
               Asset Allocation
               <div style="display:flex; gap:6px; font-size:0.7rem; font-weight:normal; flex-wrap: wrap;">
-                <select id="chart-type-select" onchange="changeChartType(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                <select id="chart-type-select" onchange="changeChartType(this.value)" style="padding:3px 6px; font-size:0.7rem;">
                   <option value="donut">Donut</option>
                   <option value="pie">Pie</option>
                   <option value="half-donut">Half Donut</option>
                   <option value="3d-cylinder">Solid 3D Cylinder</option>
-                  <option value="3d-exploded">Exploded 3D Pie Chart</option>
+                  <option value="3d-exploded">Exploded 3D Pie</option>
                   <option value="bars">Bars</option>
                 </select>
-                <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:3px 6px; font-size:0.7rem;">
                   <option value="vivid">Vivid</option>
                   <option value="pastel">Pastel</option>
                   <option value="neon">Neon</option>
@@ -94,7 +101,7 @@
                   <option value="cb-safe">Colour-blind Safe</option>
                   <option value="custom">Custom Colors</option>
                 </select>
-                <select id="chart-legend-select" onchange="changeChartLegend(this.value)" style="padding:2px 6px; font-size:0.7rem;">
+                <select id="chart-legend-select" onchange="changeChartLegend(this.value)" style="padding:3px 6px; font-size:0.7rem;">
                   <option value="bottom">Legend: Bottom</option>
                   <option value="top">Legend: Top</option>
                   <option value="left">Legend: Left</option>
@@ -115,8 +122,8 @@
 
         <div class="glass-card">
             <h2>
-                Pinned & Holdings News 
-                <button onclick="fetchLiveNews(true)" style="padding: 4px 10px; font-size: 0.65rem; width: auto; margin: 0; border-radius: 8px; box-shadow: none;">🔄 Refresh</button>
+                Pinned & Holdings News
+                <button onclick="fetchLiveMarketData(true)" class="btn-refresh" id="refresh-news-btn">↻ Refresh</button>
             </h2>
             <div id="pinned-news-container"></div>
         </div>
@@ -195,11 +202,11 @@
     <!-- TAB 5: SETTINGS & DISPLAY -->
     <div id="tab-settings" class="tab-content">
         <div class="glass-card">
-            <h2>Themes</h2>
-            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Visual Mode:</div>
+            <h2>Themes & Atmosphere</h2>
+            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Base Theme:</div>
             <div class="themes-grid">
                 <button class="theme-btn" onclick="setTheme('auto')" id="btn-auto">
-                    <span class="theme-dot" style="background:#555;"></span> Auto (Phone)
+                    <span class="theme-dot" style="background:linear-gradient(135deg,#fff,#0d1117);"></span> Auto (Phone)
                 </button>
                 <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">
                     <span class="theme-dot" style="background:#0d1117;"></span> Dark
@@ -211,26 +218,66 @@
                     <span class="theme-dot" style="background:#ffffff;"></span> Light
                 </button>
                 <button class="theme-btn" onclick="setTheme('midnight')" id="btn-midnight">
-                    <span class="theme-dot" style="background:#0a0e17;"></span> Midnight
+                    <span class="theme-dot" style="background:#060b19;"></span> Midnight
                 </button>
                 <button class="theme-btn" onclick="setTheme('forest')" id="btn-forest">
-                    <span class="theme-dot" style="background:#09150d;"></span> Forest
+                    <span class="theme-dot" style="background:#06140d;"></span> Forest
                 </button>
                 <button class="theme-btn" onclick="setTheme('sand')" id="btn-sand">
-                    <span class="theme-dot" style="background:#f7f4ef;"></span> Sand
+                    <span class="theme-dot" style="background:#f5efe6;"></span> Sand
+                </button>
+                <button class="theme-btn" onclick="setTheme('cyberpunk')" id="btn-cyberpunk">
+                    <span class="theme-dot" style="background:linear-gradient(135deg,#ec4899,#06b6d4);"></span> Cyberpunk
+                </button>
+                <button class="theme-btn" onclick="setTheme('plum')" id="btn-plum">
+                    <span class="theme-dot" style="background:linear-gradient(135deg,#c084fc,#f43f5e);"></span> Royal Plum
+                </button>
+                <button class="theme-btn" onclick="setTheme('slate')" id="btn-slate">
+                    <span class="theme-dot" style="background:#181c24;"></span> Slate Pro
                 </button>
             </div>
         </div>
 
         <div class="glass-card">
-            <h2>Accent Colour</h2>
-            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Presets & Custom Picker:</div>
+            <h2>Glassmorphism & Transparency</h2>
+            <div class="form-group">
+                <div class="slider-row">
+                    <div class="slider-header">
+                        <span>Card Transparency (Opacity)</span>
+                        <span class="slider-val" id="opacity-val-label">72%</span>
+                    </div>
+                    <input type="range" id="card-opacity-slider" min="20" max="100" value="72" oninput="setCardOpacity(this.value)">
+                </div>
+
+                <div class="slider-row">
+                    <div class="slider-header">
+                        <span>Frosted Glass Blur</span>
+                        <span class="slider-val" id="blur-val-label">20px</span>
+                    </div>
+                    <input type="range" id="card-blur-slider" min="0" max="40" value="20" oninput="setCardBlur(this.value)">
+                </div>
+
+                <div class="switch-row">
+                    <span style="font-size: 0.85rem;">Ambient Background Glow Orbs</span>
+                    <input type="checkbox" id="ambient-orbs-toggle" checked onchange="toggleAmbientOrbs(this.checked)">
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Accent & Highlight Colours</h2>
+            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Presets & Custom Colour Picker:</div>
             <div class="color-pickers">
                 <div class="color-dot" style="background-color: #ff5722;" onclick="setAccent('#ff5722')"></div>
                 <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
                 <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
                 <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
                 <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
+                <div class="color-dot" style="background-color: #f43f5e;" onclick="setAccent('#f43f5e')"></div>
+                <div class="color-dot" style="background-color: #14b8a6;" onclick="setAccent('#14b8a6')"></div>
+                <div class="color-dot" style="background-color: #8b5cf6;" onclick="setAccent('#8b5cf6')"></div>
+                <div class="color-dot" style="background-color: #eab308;" onclick="setAccent('#eab308')"></div>
+                <div class="color-dot" style="background-color: #38bdf8;" onclick="setAccent('#38bdf8')"></div>
                 
                 <label style="font-size:0.75rem; color:var(--text-muted); margin-left: auto; display:flex; align-items:center; gap:6px;">
                     Custom:
@@ -286,17 +333,6 @@
                     <span style="font-size: 0.85rem;">Withholding Tax Rate (%)</span>
                     <input type="number" id="tax-rate-input" value="10" step="0.5" style="width:70px; text-align:center; padding:4px;" onchange="updateTaxRate()">
                 </div>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Custom News Editor</h2>
-            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Add your own BSE updates or notes. These will be merged with live news.</div>
-            <div class="form-group">
-                <input type="text" id="custom-news-symbol" placeholder="Ticker (e.g., FNBB)">
-                <input type="text" id="custom-news-title" placeholder="Headline Title">
-                <input type="text" id="custom-news-summary" placeholder="Brief summary...">
-                <button onclick="saveCustomNews()">Add News Item</button>
             </div>
         </div>
 
@@ -361,7 +397,6 @@
         </button>
     </nav>
 
-    <!-- Link to External JS -->
     <script src="app.js"></script>
 </body>
 </html>
