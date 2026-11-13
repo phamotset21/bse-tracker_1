@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (Date-Proximity + Strict Blacklist)
+      # 2. FETCH NEWS (Strict Company Match)
       - name: Scrape BSE News
         run: |
           pip install beautifulsoup4 requests
@@ -59,61 +59,85 @@ jobs:
           url = "https://www.bse.co.bw/xnews/"
           headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
+          # List of companies we actually care about
+          valid_companies = {
+              "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
+              "ABSA": "ABSA", "BARCLAYS": "ABSA",
+              "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL",
+              "TURNSTAR": "TURNSTAR",
+              "SECHABA": "SECHABA",
+              "SEFALANA": "SEFALANA",
+              "LETSHEGO": "LETSHEGO",
+              "CHOPPIES": "CHOPPIES",
+              "STANBIC": "STANBIC",
+              "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL",
+              "NAP": "NAP", "NEW AFRICAN PROPERTIES": "NAP",
+              "RDC": "RDCP", "RDC PROPERTIES": "RDCP",
+              "ENGEN": "ENGEN",
+              "MINERGY": "MINERGY",
+              "BOTALA": "BOTALA",
+              "SHUMBA": "SHUMBA",
+              "TLOU": "TLOU", "TLOU ENERGY": "TLOU",
+              "CHOBE": "CHOBE",
+              "CRESTA": "CRESTA",
+              "G4S": "G4S",
+              "LETLOLE": "LETLOLE",
+              "PRIMETIME": "PRIMETIME",
+              "ACCESS": "ACCESS", "ACCESS BANK": "ACCESS",
+              "SEEDCO": "SEEDCO",
+              "STANCHART": "STANCHART", "STANDARD CHARTERED": "STANCHART",
+              "OLYMPIA": "OLYMPIA",
+              "LUCARA": "LUC",
+              "INVESTEC": "INVESTEC",
+              "ANGLO": "ANGLO"
+          }
+
           try:
               response = requests.get(url, headers=headers, timeout=15)
               soup = BeautifulSoup(response.text, 'html.parser')
               
               news_items = []
               
-              # STRICT BLACKLIST for footer junk
-              blacklist = [
-                  "feedback", "complaint", "daily market", "overview", "history", 
-                  "mission", "vision", "partners", "corporate social", "objectives", 
-                  "adopt a school", "graduate trainee", "contact", "privacy", 
-                  "terms", "report", "form", "policy", "skip to"
-              ]
-              
               # Look for the EXACT BSE date format
               date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
               date_elements = soup.find_all(string=date_pattern)
 
               for date_el in date_elements:
-                  # Find the parent container that holds this date (usually a <div> or <li>)
+                  # Find the container holding the date
                   container = date_el.parent
-                  
-                  # Search up to 3 levels up for the container that holds BOTH the date and the title link
                   for _ in range(3):
                       if not container: break
-                      # If this container has an <a> tag, we found our news block
                       link_tag = container.find('a')
-                      if link_tag:
-                          break
+                      if link_tag: break
                       container = container.parent
                       
                   if link_tag:
                       title = link_tag.get_text(" ", strip=True)
                       href = link_tag.get('href', '#')
                       
-                      # Skip if it's too short or in the blacklist
                       if len(title) < 10: continue
-                      if any(word in title.lower() for word in blacklist): continue
+
+                      # THE FIX: Only keep it if the title contains a valid company
+                      matched_ticker = None
+                      upper_title = title.upper()
+                      
+                      for key, ticker in valid_companies.items():
+                          if key in upper_title:
+                              matched_ticker = ticker
+                              break
+                              
+                      # If we didn't find a company name, skip it completely!
+                      if not matched_ticker:
+                          continue
 
                       # Make absolute URL
                       if href.startswith('/'):
                           href = "https://www.bse.co.bw" + href
-                          
-                      # Guess the ticker
-                      ticker = "BSE"
-                      upper_title = title.upper()
-                      for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
-                          if sym in upper_title:
-                              ticker = sym
-                              break
                               
                       date_str = date_el.strip()[:10]
 
                       news_items.append({
-                          "symbol": ticker,
+                          "symbol": matched_ticker,
                           "title": title,
                           "link": href,
                           "date": date_str,
@@ -124,15 +148,14 @@ jobs:
               unique_news = list({v['title']:v for v in news_items}.values())
 
               if len(unique_news) > 0:
-                  # Keep only the top 10
                   final_news = unique_news[:10]
                   with open('news.json', 'w') as f:
                       json.dump(final_news, f, indent=2)
                   print(f"Successfully scraped {len(final_news)} news items.")
                   for n in final_news:
-                      print(f"- {n['date']} | {n['title']}")
+                      print(f"- {n['date']} | {n['symbol']} | {n['title']}")
               else:
-                  print("CRITICAL: Found 0 valid news items. Keeping old file.")
+                  print("CRITICAL: Found 0 valid company news items.")
                   
           except Exception as e:
               print(f"News Error: {e}")
