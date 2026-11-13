@@ -1,6 +1,14 @@
 [
   {
     "symbol": "LETSHEGO",
+    "title": "RETIREMENT OF MS CATHERINE LESETEDI",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7450.pdf",
+    "date": "2026-11-13",
+    "time": "15:04",
+    "summary": "LETSHEGO: RETIREMENT OF MS CATHERINE LESETEDI"
+  },
+  {
+    "symbol": "LETSHEGO",
     "title": "ANNOUNCEMENT - RESULTS OF LETSHEGO’S RIGHTS OFFER",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7446.pdf",
     "date": "2026-11-12",
@@ -70,13 +78,5 @@
     "date": "2026-11-03",
     "time": "15:04",
     "summary": "LETSHEGO: NOTICE TO SHAREHOLDERS  - RESIGNATION OF GROUP COMPANY SECRETARY"
-  },
-  {
-    "symbol": "BSE",
-    "title": "INDEPENDENT AUDITOR'S REPORT",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7437.pdf",
-    "date": "2026-11-03",
-    "time": "14:46",
-    "summary": "BSE: INDEPENDENT AUDITOR'S REPORT"
   }
 ]
