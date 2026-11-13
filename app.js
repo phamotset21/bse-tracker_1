@@ -43,7 +43,6 @@ const STOCKS = [
     { symbol: "VGE-ETF", name: "VGEPFAM ETF", type: "ETF", price: 32.10, divYield: 0.018, divAmount: 0.5778, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 }
 ];
 
-// Fallback news (used if news.json fails to load)
 const BASE_NEWS = [
     { symbol: "STANBIC", title: "Stanbic Bank Botswana Opens Landmark IPO", date: "2026-11-02", summary: "Stanbic Africa Holdings offers 319,362,050 shares (20% of capital). Offer closes Nov 27, 2026; listing Dec 7, 2026." },
     { symbol: "BoB", title: "Bank of Botswana Maintains MoPR at 5.5%", date: "2026-11-01", summary: "Central bank maintains key policy rate citing balanced inflation and steady growth." },
