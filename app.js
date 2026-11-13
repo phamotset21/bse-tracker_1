@@ -1,6 +1,5 @@
 Chart.register(ChartDataLabels);
 
-// Fallback prices (in case prices.json fails to load)
 const STOCKS = [
     { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.028, divAmount: 0.059, divDate: "2025-04-22", exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
     { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.074, divAmount: 0.5774, divDate: "2026-06-29", exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
@@ -72,6 +71,10 @@ let chartType = localStorage.getItem('bse_chart_type') || 'donut';
 let chartPalette = localStorage.getItem('bse_chart_palette') || 'vivid';
 let chartLegendPosition = localStorage.getItem('bse_chart_legend') || 'bottom';
 let customColors = JSON.parse(localStorage.getItem('bse_custom_colors')) || {};
+
+let cardOpacity = parseInt(localStorage.getItem('bse_card_opacity')) || 72;
+let cardBlur = parseInt(localStorage.getItem('bse_card_blur')) || 20;
+let ambientOrbs = localStorage.getItem('bse_ambient_orbs') !== 'false';
 
 let lastDeleted = null;
 let toastTimeout = null;
@@ -145,6 +148,7 @@ const custom3DPiePlugin = {
 };
 
 function shadeColor(color, percent) {
+    if (!color || !color.startsWith('#')) return '#444444';
     let R = parseInt(color.substring(1,3),16);
     let G = parseInt(color.substring(3,5),16);
     let B = parseInt(color.substring(5,7),16);
@@ -178,17 +182,40 @@ function setTheme(mode) {
     const activeBtn = document.getElementById(`btn-${mode}`);
     if (activeBtn) activeBtn.classList.add('active');
     const metaColorMap = {
-        'dark': '#0d1117', 'oled': '#000000', 'light': '#f4f6f9',
-        'midnight': '#0a0e17', 'forest': '#09150d', 'sand': '#f7f4ef'
+        'dark': '#0d1117', 'oled': '#000000', 'light': '#eef2f6',
+        'midnight': '#060b19', 'forest': '#06140d', 'sand': '#f5efe6',
+        'cyberpunk': '#090414', 'plum': '#13091f', 'slate': '#181c24'
     };
     document.getElementById('meta-theme-color').setAttribute('content', metaColorMap[activeTheme] || '#0d1117');
 }
 
 function setAccent(color) {
     document.documentElement.style.setProperty('--accent-orange', color);
-    document.documentElement.style.setProperty('--accent-glow', color + '33');
+    document.documentElement.style.setProperty('--accent-glow', color + '38');
+    const picker = document.getElementById('custom-accent-picker');
+    if (picker) picker.value = color;
     localStorage.setItem('bse_accent', color);
     saveAndRender();
+}
+
+function setCardOpacity(val) {
+    cardOpacity = parseInt(val);
+    document.documentElement.style.setProperty('--card-alpha', (cardOpacity / 100).toFixed(2));
+    document.getElementById('opacity-val-label').innerText = cardOpacity + '%';
+    localStorage.setItem('bse_card_opacity', cardOpacity);
+}
+
+function setCardBlur(val) {
+    cardBlur = parseInt(val);
+    document.documentElement.style.setProperty('--card-blur', cardBlur + 'px');
+    document.getElementById('blur-val-label').innerText = cardBlur + 'px';
+    localStorage.setItem('bse_card_blur', cardBlur);
+}
+
+function toggleAmbientOrbs(enabled) {
+    ambientOrbs = enabled;
+    document.getElementById('ambient-bg').style.opacity = enabled ? '1' : '0';
+    localStorage.setItem('bse_ambient_orbs', enabled ? 'true' : 'false');
 }
 
 function setFontSize(size) {
@@ -284,6 +311,12 @@ function loadPreferences() {
     setTheme(savedTheme);
     const savedAccent = localStorage.getItem('bse_accent') || '#ff5722';
     setAccent(savedAccent);
+    setCardOpacity(cardOpacity);
+    document.getElementById('card-opacity-slider').value = cardOpacity;
+    setCardBlur(cardBlur);
+    document.getElementById('card-blur-slider').value = cardBlur;
+    toggleAmbientOrbs(ambientOrbs);
+    document.getElementById('ambient-orbs-toggle').checked = ambientOrbs;
     setFontSize(fontSizeMode);
     document.getElementById('font-size-select').value = fontSizeMode;
     toggleCompact(compactLayout);
@@ -300,6 +333,61 @@ function loadPreferences() {
     }
     if (defaultTab !== 'home') {
         switchTab(defaultTab);
+    }
+}
+
+// Live sync with GitHub Actions JSON outputs
+async function fetchLiveMarketData(manual = false) {
+    const btn = document.getElementById('refresh-news-btn');
+    if (btn && manual) btn.innerText = '↻ Syncing...';
+
+    try {
+        const [priceRes, newsRes] = await Promise.all([
+            fetch('prices.json?t=' + Date.now()).catch(() => null),
+            fetch('news.json?t=' + Date.now()).catch(() => null)
+        ]);
+
+        if (priceRes && priceRes.ok) {
+            const livePrices = await priceRes.json();
+            
+            // Ticker Map
+            const tickerMap = {
+                "LETS": "LETSHEGO", "ANG": "ANGLO", "BARC": "ABSA", "BOTA": "BOTALA",
+                "CA-SALES": "CA SALES", "CHOP": "CHOPPIES", "ENGE": "ENGEN", "INV": "INVESTEC",
+                "MIN": "MINERGY", "NEWG": "NEWGOLD", "NGPL": "NEWPALLADIUM", "NGPT": "NEWPLATINUM",
+                "OLYM": "OLYMPIA", "PRIM": "PRIMETIME", "SCIL": "SEEDCO", "SEFA": "SEFALANA",
+                "SHU": "SHUMBA", "LUCA": "LUC", "STAN": "STANCHART"
+            };
+
+            STOCKS.forEach(s => {
+                let apiSymbol = s.symbol;
+                for (const [apiKey, appKey] of Object.entries(tickerMap)) {
+                    if (appKey === s.symbol) {
+                        apiSymbol = apiKey;
+                        break;
+                    }
+                }
+                if (livePrices[apiSymbol] !== undefined) {
+                    s.price = parseFloat(livePrices[apiSymbol]);
+                }
+            });
+        }
+
+        if (newsRes && newsRes.ok) {
+            const liveNews = await newsRes.json();
+            if (Array.isArray(liveNews) && liveNews.length > 0) {
+                activeNews = liveNews;
+            }
+        }
+    } catch (e) {
+        console.log('Using cached fallback data.');
+    }
+
+    initDatalist();
+    saveAndRender();
+    if (btn && manual) {
+        btn.innerText = '✓ Updated';
+        setTimeout(() => { btn.innerText = '↻ Refresh'; }, 1500);
     }
 }
 
@@ -698,64 +786,6 @@ function update12MonthChart() {
     });
 }
 
-function saveCustomNews() {
-    const symbol = document.getElementById('custom-news-symbol').value.trim().toUpperCase();
-    const title = document.getElementById('custom-news-title').value.trim();
-    const summary = document.getElementById('custom-news-summary').value.trim();
-    if (!symbol || !title || !summary) {
-        alert("Please fill in all fields.");
-        return;
-    }
-    const newNewsItem = { 
-        symbol: symbol, 
-        title: title, 
-        date: new Date().toISOString().split('T')[0], 
-        summary: summary 
-    };
-    const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
-    customNews.unshift(newNewsItem);
-    localStorage.setItem('bse_custom_news', JSON.stringify(customNews));
-    activeNews.unshift(newNewsItem);
-    renderPinnedNews();
-    document.getElementById('custom-news-symbol').value = '';
-    document.getElementById('custom-news-title').value = '';
-    document.getElementById('custom-news-summary').value = '';
-    alert("Custom news item added successfully!");
-}
-
-async function fetchLiveNews(isManual = false) {
-    const newsContainer = document.getElementById('pinned-news-container');
-    if (isManual || !newsContainer.innerHTML) {
-        newsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:0.8rem;"><span style="display:inline-block; animation: spin 1s linear infinite;">⏳</span> Syncing latest BSE updates...</div>';
-    }
-    
-    try {
-        // Added { cache: 'no-store' } to force fetch the newest news.json
-        const response = await fetch('news.json', { cache: 'no-store' });
-        if (!response.ok) throw new Error("News file not found");
-        
-        const liveData = await response.json();
-        
-        if (Array.isArray(liveData) && liveData.length > 0) {
-            const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
-            const combined = [...liveData, ...customNews];
-            const uniqueNews = Array.from(new Map(combined.map(item => [item.title, item])).values());
-            activeNews = uniqueNews;
-            renderPinnedNews();
-            if (isManual) alert("Latest news loaded successfully!");
-            return;
-        }
-    } catch (error) {
-        console.warn("Failed to load news.json, using fallback.", error);
-    }
-    
-    // Fallback if fetch fails
-    const customNews = JSON.parse(localStorage.getItem('bse_custom_news')) || [];
-    activeNews = [...BASE_NEWS, ...customNews];
-    renderPinnedNews();
-    if (isManual) alert("Network error: Showing cached news.");
-}
-
 function renderPinnedNews() {
     const container = document.getElementById('pinned-news-container');
     if (activeNews.length === 0) {
@@ -780,8 +810,8 @@ function renderPinnedNews() {
         const item = document.createElement('div');
         item.className = 'news-item';
         
-        // Use the specific PDF link if available, otherwise fallback to the general disclosures page
         const newsLink = n.link || 'https://www.bse.co.bw/company-disclosures/';
+        const timeStr = n.time ? ` • ${n.time}` : '';
         
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -790,7 +820,7 @@ function renderPinnedNews() {
             </div>
             <div><a href="${newsLink}" target="_blank" class="news-link"><strong>${n.title} ↗</strong></a></div>
             <div style="font-size:0.75rem; color:var(--text-main); margin-top:4px;">${n.summary}</div>
-            <div class="news-date">${n.date} • BSE X-News Portal</div>
+            <div class="news-date">${n.date}${timeStr} • BSE X-News Portal</div>
         `;
         container.appendChild(item);
     });
@@ -891,6 +921,9 @@ function copyBackupJSON() {
         chartPalette: chartPalette,
         chartLegend: chartLegendPosition,
         customColors: customColors,
+        cardOpacity: cardOpacity,
+        cardBlur: cardBlur,
+        ambientOrbs: ambientOrbs,
         theme: localStorage.getItem('bse_theme') || 'dark',
         accent: localStorage.getItem('bse_accent') || '#ff5722'
     };
@@ -919,6 +952,9 @@ function restoreBackupJSON() {
             if (parsed.chartPalette) localStorage.setItem('bse_chart_palette', parsed.chartPalette);
             if (parsed.chartLegend) localStorage.setItem('bse_chart_legend', parsed.chartLegend);
             if (parsed.customColors) localStorage.setItem('bse_custom_colors', JSON.stringify(parsed.customColors));
+            if (parsed.cardOpacity !== undefined) localStorage.setItem('bse_card_opacity', parsed.cardOpacity);
+            if (parsed.cardBlur !== undefined) localStorage.setItem('bse_card_blur', parsed.cardBlur);
+            if (parsed.ambientOrbs !== undefined) localStorage.setItem('bse_ambient_orbs', parsed.ambientOrbs);
             if (parsed.theme) localStorage.setItem('bse_theme', parsed.theme);
             if (parsed.accent) localStorage.setItem('bse_accent', parsed.accent);
             alert("Backup restored successfully!");
@@ -1070,62 +1106,6 @@ function renderModalChart() {
     });
 }
 
-// --- LIVE PRICES LOGIC ---
-async function fetchLivePrices() {
-    try {
-        const response = await fetch('prices.json', { cache: 'no-store' });
-        if (!response.ok) throw new Error("File not found");
-        
-        const livePrices = await response.json();
-        
-        const tickerMap = {
-            "LETS": "LETSHEGO",
-            "ANG": "ANGLO",
-            "BARC": "ABSA",
-            "BOTA": "BOTALA",
-            "CA-SALES": "CA SALES",
-            "CHOP": "CHOPPIES",
-            "ENGE": "ENGEN",
-            "INV": "INVESTEC",
-            "MIN": "MINERGY",
-            "NEWG": "NEWGOLD",
-            "NGPL": "NEWPALLADIUM",
-            "NGPT": "NEWPLATINUM",
-            "OLYM": "OLYMPIA",
-            "PRIM": "PRIMETIME",
-            "SCIL": "SEEDCO",
-            "SEFA": "SEFALANA",
-            "SHU": "SHUMBA",
-            "LUCA": "LUC",
-            "STAN": "STANCHART"
-        };
-
-        let updatedCount = 0;
-        
-        STOCKS.forEach(stock => {
-            let apiSymbol = stock.symbol;
-            for (const [apiKey, appKey] of Object.entries(tickerMap)) {
-                if (appKey === stock.symbol) {
-                    apiSymbol = apiKey;
-                    break;
-                }
-            }
-
-            if (livePrices[apiSymbol]) {
-                stock.price = livePrices[apiSymbol];
-                updatedCount++;
-            }
-        });
-        
-        if (updatedCount > 0) {
-            saveAndRender(); 
-            console.log(`Successfully loaded ${updatedCount} live prices from prices.json.`);
-        }
-    } catch (error) {
-        console.warn("Failed to load live prices, using fallback hardcoded data.", error);
-    }
-}
-
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
 }
@@ -1133,14 +1113,12 @@ if ('serviceWorker' in navigator) {
 // --- INITIALIZATION ---
 loadPreferences();
 initDatalist();
-saveAndRender(); // Render first with fallback prices
+saveAndRender();
+fetchLiveMarketData(false);
 startIPOCountdown();
-fetchLiveNews(); 
-fetchLivePrices(); // Fetch live prices and re-render
 
 // --- AUTOMATIC BACKGROUND REFRESH ---
 setInterval(() => {
     console.log("Auto-refreshing data...");
-    fetchLivePrices(); // Get new prices
-    fetchLiveNews(); 
+    fetchLiveMarketData();
 }, 3600000); 
