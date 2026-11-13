@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH STRICT COMPANY NEWS
+      # 2. FETCH PRECISE COMPANY DISCLOSURES
       - name: Scrape BSE Company Disclosures
         run: |
           pip install beautifulsoup4 requests
@@ -59,7 +59,6 @@ jobs:
           url = "https://www.bse.co.bw/xnews/"
           headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
-          # Comprehensive dictionary of valid BSE tickers and searchable terms
           valid_companies = {
               "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
               "ABSA": "ABSA", "BARCLAYS": "ABSA",
@@ -76,10 +75,9 @@ jobs:
               "INVESTEC": "INVESTEC", "ANGLO": "ANGLO"
           }
 
-          # Words that indicate generic website pages to be strictly ignored
-          ignored_keywords = [
-              "FEEDBACK", "COMPLAINTS", "FEE", "DATA PRODUCTS", 
-              "PROCEDURE", "FORM", "POLICY", "ABOUT", "CONTACT", "GUIDE"
+          ignored_phrases = [
+              "SKIP TO", "MARKET STATS", "MARKET SNAPSHOT", "HOME", 
+              "ABOUT US", "CONTACT", "SEARCH", "DATA PRODUCTS", "LISTING FEES"
           ]
 
           try:
@@ -88,29 +86,30 @@ jobs:
               
               news_items = []
               
-              # Find all links or rows that look like news items or disclosures
+              # Target announcement blocks/rows specifically
               for a_tag in soup.find_all('a', href=True):
                   title = a_tag.get_text(" ", strip=True)
                   href = a_tag.get('href', '')
 
-                  # Skip short links or empty titles
-                  if len(title) < 12:
+                  if len(title) < 15:
                       continue
 
                   title_upper = title.upper()
 
-                  # Skip generic website pages instantly
-                  if any(ig in title_upper for ig in ignored_keywords):
+                  # Skip layout elements or menu shortcuts
+                  if any(ig in title_upper for ig in ignored_phrases):
                       continue
 
-                  # Look for parent block content to check for company affiliation
+                  # The link must point to a document upload or specific announcement path
+                  if not any(ext in href.lower() for ext in ['.pdf', 'wp-content', 'disclosure', 'announcement', 'xnews', 'communique']):
+                      continue
+
                   parent_text = a_tag.parent.get_text(" ", strip=True).upper() if a_tag.parent else ""
+                  combined_context = f"{title_upper} {parent_text}"
 
                   matched_ticker = None
-                  # Check if any valid company name or ticker is explicitly in the title or block
                   for key, ticker in valid_companies.items():
-                      # Use word boundary or direct inclusion check
-                      if key in title_upper or key in parent_text:
+                      if key in combined_context:
                           matched_ticker = ticker
                           break
 
@@ -120,33 +119,28 @@ jobs:
                   if href.startswith('/'):
                       href = "https://www.bse.co.bw" + href
 
-                  # Try to extract nearby date if available in format YYYY-MM-DD or similar
-                  date_str = "2026-11-13" # Fallback current date
-                  # Look for date pattern in parent or nearby text
-                  date_match = re.search(r'\d{4}-\d{2}-\d{2}', parent_text)
-                  if date_match:
-                      date_str = date_match.group(0)
+                  # Look for date format in context text
+                  date_match = re.search(r'\d{4}-\d{2}-\d{2}', combined_context)
+                  date_str = date_match.group(0) if date_match else "2026-11-13"
 
                   news_items.append({
                       "symbol": matched_ticker,
                       "title": title,
                       "link": href,
                       "date": date_str,
-                      "summary": f"Official {matched_ticker} corporate disclosure announcement."
+                      "summary": f"Official verified disclosure document for {matched_ticker}."
                   })
 
-              # Deduplicate by title
-              unique_news = list({v['title']: v for v in news_items}.values())
+              # Deduplicate by link or title
+              unique_news = list({v['link']: v for v in news_items}.values())
 
               if len(unique_news) > 0:
                   final_news = unique_news[:10]
                   with open('news.json', 'w') as f:
                       json.dump(final_news, f, indent=2)
-                  print(f"Successfully scraped {len(final_news)} company-specific news items.")
-                  for n in final_news:
-                      print(f"- {n['date']} | {n['symbol']} | {n['title']}")
+                  print(f"Successfully scraped {len(final_news)} clean company announcements.")
               else:
-                  print("CRITICAL: Found 0 company-specific disclosures.")
+                  print("CRITICAL: Found 0 company announcements.")
                   
           except Exception as e:
               print(f"News Error: {e}")
@@ -158,6 +152,6 @@ jobs:
           git config --global user.name 'GitHub Action'
           git config --global user.email "action@github.com"
           git add prices.json news.json
-          git commit -m "Update prices and filtered company news" || exit 0
+          git commit -m "Fix news scraping and structural links" || exit 0
           git pull --rebase origin main
           git push
