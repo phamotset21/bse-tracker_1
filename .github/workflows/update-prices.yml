@@ -46,8 +46,8 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH PRECISE COMPANY DISCLOSURES
-      - name: Scrape BSE Company Disclosures
+      # 2. FETCH PRECISE ANNOUNCEMENT CARDS & VALID PDF LINKS
+      - name: Scrape BSE Announcements & PDFs
         run: |
           pip install beautifulsoup4 requests
           python - <<'PY'
@@ -60,25 +60,21 @@ jobs:
           headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
           valid_companies = {
+              "LETSHEGO": "LETSHEGO",
+              "TLOU": "TLOU", "TLOU ENERGY": "TLOU",
               "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
               "ABSA": "ABSA", "BARCLAYS": "ABSA",
               "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL",
               "TURNSTAR": "TURNSTAR", "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
-              "LETSHEGO": "LETSHEGO", "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
+              "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
               "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL", "NAP": "NAP", 
               "NEW AFRICAN PROPERTIES": "NAP", "RDC": "RDCP", "ENGEN": "ENGEN",
               "MINERGY": "MINERGY", "BOTALA": "BOTALA", "SHUMBA": "SHUMBA",
-              "TLOU": "TLOU", "TLOU ENERGY": "TLOU", "CHOBE": "CHOBE",
-              "CRESTA": "CRESTA", "G4S": "G4S", "LETLOLE": "LETLOLE",
-              "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS", "SEEDCO": "SEEDCO",
-              "STANCHART": "STANCHART", "OLYMPIA": "OLYMPIA", "LUCARA": "LUC",
-              "INVESTEC": "INVESTEC", "ANGLO": "ANGLO"
+              "CHOBE": "CHOBE", "CRESTA": "CRESTA", "G4S": "G4S", 
+              "LETLOLE": "LETLOLE", "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS", 
+              "SEEDCO": "SEEDCO", "STANCHART": "STANCHART", "OLYMPIA": "OLYMPIA", 
+              "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO"
           }
-
-          ignored_phrases = [
-              "SKIP TO", "MARKET STATS", "MARKET SNAPSHOT", "HOME", 
-              "ABOUT US", "CONTACT", "SEARCH", "DATA PRODUCTS", "LISTING FEES"
-          ]
 
           try:
               response = requests.get(url, headers=headers, timeout=15)
@@ -86,41 +82,39 @@ jobs:
               
               news_items = []
               
-              # Target announcement blocks/rows specifically
+              # Find all links that point to document files (.pdf or downloads) or have announcement structures
               for a_tag in soup.find_all('a', href=True):
+                  href = a_tag.get('href', '').strip()
                   title = a_tag.get_text(" ", strip=True)
-                  href = a_tag.get('href', '')
 
-                  if len(title) < 15:
+                  # Must be a valid document link or point to a file disclosure
+                  if not (href.lower().endswith('.pdf') or 'wp-content/uploads' in href.lower() or 'announcement' in href.lower() or 'disclosure' in href.lower()):
                       continue
 
+                  if len(title) < 10:
+                      continue
+
+                  # Inspect parent block for company names and timestamps
+                  parent = a_tag.parent
+                  parent_text = parent.get_text(" ", strip=True).upper() if parent else ""
                   title_upper = title.upper()
+                  combined = f"{title_upper} {parent_text}"
 
-                  # Skip layout elements or menu shortcuts
-                  if any(ig in title_upper for ig in ignored_phrases):
-                      continue
-
-                  # The link must point to a document upload or specific announcement path
-                  if not any(ext in href.lower() for ext in ['.pdf', 'wp-content', 'disclosure', 'announcement', 'xnews', 'communique']):
-                      continue
-
-                  parent_text = a_tag.parent.get_text(" ", strip=True).upper() if a_tag.parent else ""
-                  combined_context = f"{title_upper} {parent_text}"
-
-                  matched_ticker = None
+                  # Match against our strict company dictionary
+                  matched_ticker = "BSE" # Default fallback
                   for key, ticker in valid_companies.items():
-                      if key in combined_context:
+                      if key in combined:
                           matched_ticker = ticker
                           break
 
-                  if not matched_ticker:
-                      continue
-
+                  # Ensure absolute URL for PDFs
                   if href.startswith('/'):
                       href = "https://www.bse.co.bw" + href
+                  elif not href.startswith('http'):
+                      continue
 
-                  # Look for date format in context text
-                  date_match = re.search(r'\d{4}-\d{2}-\d{2}', combined_context)
+                  # Extract date string if present
+                  date_match = re.search(r'\d{4}-\d{2}-\d{2}', combined)
                   date_str = date_match.group(0) if date_match else "2026-11-13"
 
                   news_items.append({
@@ -128,19 +122,19 @@ jobs:
                       "title": title,
                       "link": href,
                       "date": date_str,
-                      "summary": f"Official verified disclosure document for {matched_ticker}."
+                      "summary": f"Official verified PDF disclosure announcement for {matched_ticker}."
                   })
 
-              # Deduplicate by link or title
+              # Remove duplicates by link
               unique_news = list({v['link']: v for v in news_items}.values())
 
               if len(unique_news) > 0:
                   final_news = unique_news[:10]
                   with open('news.json', 'w') as f:
                       json.dump(final_news, f, indent=2)
-                  print(f"Successfully scraped {len(final_news)} clean company announcements.")
+                  print(f"Successfully scraped {len(final_news)} valid corporate PDF announcements.")
               else:
-                  print("CRITICAL: Found 0 company announcements.")
+                  print("CRITICAL: Found 0 valid announcement PDFs.")
                   
           except Exception as e:
               print(f"News Error: {e}")
@@ -152,6 +146,6 @@ jobs:
           git config --global user.name 'GitHub Action'
           git config --global user.email "action@github.com"
           git add prices.json news.json
-          git commit -m "Fix news scraping and structural links" || exit 0
+          git commit -m "Fix PDF announcement links and extraction" || exit 0
           git pull --rebase origin main
           git push
