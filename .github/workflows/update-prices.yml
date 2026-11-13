@@ -4,7 +4,6 @@ permissions:
   contents: write
 
 on:
-  push:
   schedule:
     - cron: '0 * * * *' # Runs every hour
   workflow_dispatch:
@@ -46,96 +45,97 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH PRECISE ANNOUNCEMENT CARDS & VALID PDF LINKS
+      # 2. FETCH BSE ANNOUNCEMENTS & DIRECT PDFs
       - name: Scrape BSE Announcements & PDFs
         run: |
           pip install beautifulsoup4 requests
           python - <<'PY'
-          import json
-          import requests
+          import json, re, requests
           from bs4 import BeautifulSoup
-          import re
+          from urllib.parse import urljoin
 
-          url = "https://www.bse.co.bw/xnews/"
-          headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+          URL = "https://www.bse.co.bw/xnews/"
+          H = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
           valid_companies = {
-              "LETSHEGO": "LETSHEGO",
-              "TLOU": "TLOU", "TLOU ENERGY": "TLOU",
-              "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
-              "ABSA": "ABSA", "BARCLAYS": "ABSA",
-              "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL",
-              "TURNSTAR": "TURNSTAR", "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
+              "LETSHEGO": "LETSHEGO", "TLOU": "TLOU", "FNBB": "FNBB",
+              "ABSA": "ABSA", "BTCL": "BTCL", "TURNSTAR": "TURNSTAR",
+              "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
               "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
-              "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL", "NAP": "NAP", 
-              "NEW AFRICAN PROPERTIES": "NAP", "RDC": "RDCP", "ENGEN": "ENGEN",
-              "MINERGY": "MINERGY", "BOTALA": "BOTALA", "SHUMBA": "SHUMBA",
-              "CHOBE": "CHOBE", "CRESTA": "CRESTA", "G4S": "G4S", 
-              "LETLOLE": "LETLOLE", "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS", 
-              "SEEDCO": "SEEDCO", "STANCHART": "STANCHART", "OLYMPIA": "OLYMPIA", 
-              "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO"
+              "BIHL": "BIHL", "NAP": "NAP", "ENGEN": "ENGEN",
+              "MINERGY": "MINERGY", "LUCARA": "LUC", "FPC": "FPC",
+              "RDC": "RDCP", "ANGLO": "ANGLO", "INVESTEC": "INVESTEC"
           }
 
+          def find_pdf(page_url):
+              try:
+                  res = requests.get(page_url, headers=H, timeout=15)
+                  s = BeautifulSoup(res.text, 'html.parser')
+                  a = s.find('a', href=re.compile(r'\.pdf($|\?)', re.I))
+                  return urljoin(page_url, a['href']) if a else page_url
+              except Exception:
+                  return page_url
+
           try:
-              response = requests.get(url, headers=headers, timeout=15)
-              soup = BeautifulSoup(response.text, 'html.parser')
-              
-              news_items = []
-              
-              # Find all links that point to document files (.pdf or downloads) or have announcement structures
-              for a_tag in soup.find_all('a', href=True):
-                  href = a_tag.get('href', '').strip()
-                  title = a_tag.get_text(" ", strip=True)
+              r = requests.get(URL, headers=H, timeout=20)
+              print("Status:", r.status_code, "| cards in HTML:", 'RIGHTS OFFER' in r.text.upper() or 'COMMUNIQUE' in r.text.upper())
+              soup = BeautifulSoup(r.text, 'html.parser')
+              date_re = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})')
 
-                  # Must be a valid document link or point to a file disclosure
-                  if not (href.lower().endswith('.pdf') or 'wp-content/uploads' in href.lower() or 'announcement' in href.lower() or 'disclosure' in href.lower()):
+              items, seen = [], set()
+              for node in soup.find_all(string=date_re):
+                  m = date_re.search(node)
+                  if not m:
+                      continue
+                  
+                  card = node.parent
+                  a = None
+                  for _ in range(6):  # walk up to find the container card with a valid title link
+                      if not card:
+                          break
+                      a = next((x for x in card.find_all('a', href=True)
+                                if len(x.get_text(strip=True)) >= 10 and not any(skip in x.get_text(strip=True).upper() for skip in ['SKIP', 'HOME', 'STATISTICS', 'SNAPSHOT'])), None)
+                      if a:
+                          break
+                      card = card.parent
+                  
+                  if not a:
                       continue
 
-                  if len(title) < 10:
+                  link = urljoin(URL, a['href'].strip())
+                  if link in seen or 'bse.co.bw/#fac' in link:
                       continue
+                  seen.add(link)
 
-                  # Inspect parent block for company names and timestamps
-                  parent = a_tag.parent
-                  parent_text = parent.get_text(" ", strip=True).upper() if parent else ""
-                  title_upper = title.upper()
-                  combined = f"{title_upper} {parent_text}"
-
-                  # Match against our strict company dictionary
-                  matched_ticker = "BSE" # Default fallback
-                  for key, ticker in valid_companies.items():
-                      if key in combined:
-                          matched_ticker = ticker
+                  title = a.get_text(" ", strip=True)
+                  img = card.find('img') if card else None
+                  hay = f"{title} {img.get('alt','') if img else ''} {img.get('src','') if img else ''}".upper()
+                  
+                  ticker = "BSE"
+                  for k, t in valid_companies.items():
+                      if k in hay or k in title.upper():
+                          ticker = t
                           break
 
-                  # Ensure absolute URL for PDFs
-                  if href.startswith('/'):
-                      href = "https://www.bse.co.bw" + href
-                  elif not href.startswith('http'):
-                      continue
+                  if not link.lower().endswith('.pdf'):
+                      link = find_pdf(link)
 
-                  # Extract date string if present
-                  date_match = re.search(r'\d{4}-\d{2}-\d{2}', combined)
-                  date_str = date_match.group(0) if date_match else "2026-11-13"
-
-                  news_items.append({
-                      "symbol": matched_ticker,
+                  items.append({
+                      "symbol": ticker,
                       "title": title,
-                      "link": href,
-                      "date": date_str,
-                      "summary": f"Official verified PDF disclosure announcement for {matched_ticker}."
+                      "link": link,
+                      "date": m.group(1),
+                      "time": m.group(2),
+                      "summary": f"Official verified disclosure announcement for {ticker}."
                   })
 
-              # Remove duplicates by link
-              unique_news = list({v['link']: v for v in news_items}.values())
-
-              if len(unique_news) > 0:
-                  final_news = unique_news[:10]
+              items.sort(key=lambda x: (x['date'], x['time']), reverse=True)
+              if items:
                   with open('news.json', 'w') as f:
-                      json.dump(final_news, f, indent=2)
-                  print(f"Successfully scraped {len(final_news)} valid corporate PDF announcements.")
+                      json.dump(items[:10], f, indent=2)
+                  print(f"Successfully saved {len(items[:10])} announcements.")
               else:
-                  print("CRITICAL: Found 0 valid announcement PDFs.")
-                  
+                  print("Found 0 cards. Keeping existing file structure intact.")
           except Exception as e:
               print(f"News Error: {e}")
           PY
@@ -146,6 +146,6 @@ jobs:
           git config --global user.name 'GitHub Action'
           git config --global user.email "action@github.com"
           git add prices.json news.json
-          git commit -m "Fix PDF announcement links and extraction" || exit 0
+          git commit -m "Update stock prices and verified BSE PDF news" || exit 0
           git pull --rebase origin main
           git push
