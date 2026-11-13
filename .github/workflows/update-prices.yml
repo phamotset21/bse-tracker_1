@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (Strict Company Match)
+      # 2. FETCH NEWS (Scanning Full Container & Images)
       - name: Scrape BSE News
         run: |
           pip install beautifulsoup4 requests
@@ -59,37 +59,20 @@ jobs:
           url = "https://www.bse.co.bw/xnews/"
           headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
-          # List of companies we actually care about
           valid_companies = {
               "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
               "ABSA": "ABSA", "BARCLAYS": "ABSA",
               "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL",
-              "TURNSTAR": "TURNSTAR",
-              "SECHABA": "SECHABA",
-              "SEFALANA": "SEFALANA",
-              "LETSHEGO": "LETSHEGO",
-              "CHOPPIES": "CHOPPIES",
-              "STANBIC": "STANBIC",
-              "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL",
-              "NAP": "NAP", "NEW AFRICAN PROPERTIES": "NAP",
-              "RDC": "RDCP", "RDC PROPERTIES": "RDCP",
-              "ENGEN": "ENGEN",
-              "MINERGY": "MINERGY",
-              "BOTALA": "BOTALA",
-              "SHUMBA": "SHUMBA",
-              "TLOU": "TLOU", "TLOU ENERGY": "TLOU",
-              "CHOBE": "CHOBE",
-              "CRESTA": "CRESTA",
-              "G4S": "G4S",
-              "LETLOLE": "LETLOLE",
-              "PRIMETIME": "PRIMETIME",
-              "ACCESS": "ACCESS", "ACCESS BANK": "ACCESS",
-              "SEEDCO": "SEEDCO",
-              "STANCHART": "STANCHART", "STANDARD CHARTERED": "STANCHART",
-              "OLYMPIA": "OLYMPIA",
-              "LUCARA": "LUC",
-              "INVESTEC": "INVESTEC",
-              "ANGLO": "ANGLO"
+              "TURNSTAR": "TURNSTAR", "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
+              "LETSHEGO": "LETSHEGO", "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
+              "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL", "NAP": "NAP", 
+              "NEW AFRICAN PROPERTIES": "NAP", "RDC": "RDCP", "ENGEN": "ENGEN",
+              "MINERGY": "MINERGY", "BOTALA": "BOTALA", "SHUMBA": "SHUMBA",
+              "TLOU": "TLOU", "TLOU ENERGY": "TLOU", "CHOBE": "CHOBE",
+              "CRESTA": "CRESTA", "G4S": "G4S", "LETLOLE": "LETLOLE",
+              "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS", "SEEDCO": "SEEDCO",
+              "STANCHART": "STANCHART", "OLYMPIA": "OLYMPIA", "LUCARA": "LUC",
+              "INVESTEC": "INVESTEC", "ANGLO": "ANGLO"
           }
 
           try:
@@ -97,13 +80,10 @@ jobs:
               soup = BeautifulSoup(response.text, 'html.parser')
               
               news_items = []
-              
-              # Look for the EXACT BSE date format
               date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
               date_elements = soup.find_all(string=date_pattern)
 
               for date_el in date_elements:
-                  # Find the container holding the date
                   container = date_el.parent
                   for _ in range(3):
                       if not container: break
@@ -117,20 +97,21 @@ jobs:
                       
                       if len(title) < 10: continue
 
-                      # THE FIX: Only keep it if the title contains a valid company
+                      # THE FIX: Get ALL text in the container, including image alt text
+                      container_text = container.get_text(" ", strip=True).upper()
+                      for img in container.find_all('img'):
+                          container_text += " " + img.get('alt', '').upper()
+
+                      # Check if a valid company is mentioned anywhere in the block
                       matched_ticker = None
-                      upper_title = title.upper()
-                      
                       for key, ticker in valid_companies.items():
-                          if key in upper_title:
+                          if key in container_text or key in title.upper():
                               matched_ticker = ticker
                               break
                               
-                      # If we didn't find a company name, skip it completely!
                       if not matched_ticker:
-                          continue
+                          continue # Skip if it's just "Customer Feedback" etc.
 
-                      # Make absolute URL
                       if href.startswith('/'):
                           href = "https://www.bse.co.bw" + href
                               
@@ -144,7 +125,6 @@ jobs:
                           "summary": "Click to view the official BSE disclosure document."
                       })
 
-              # Remove duplicates
               unique_news = list({v['title']:v for v in news_items}.values())
 
               if len(unique_news) > 0:
