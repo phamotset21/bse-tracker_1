@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (Strict Box Proximity Scraper)
+      # 2. FETCH NEWS (Strict Blacklist + PDF check)
       - name: Scrape BSE News
         run: |
           pip install beautifulsoup4 requests
@@ -65,34 +65,42 @@ jobs:
               
               news_items = []
               
-              # Look at EVERY link on the page
-              for a_tag in soup.find_all('a'):
-                  # Get the text of the link, joining broken lines with a space
-                  title = a_tag.get_text(" ", strip=True)
-                  
-                  # Skip short links or obvious menu items
-                  if len(title) < 10 or "Skip to" in title or "Overview" in title:
-                      continue
-                      
-                  # Now, check the link itself and its parent boxes (up to 3 levels up)
-                  # We are looking for the specific BSE date format
-                  found_date = None
-                  current_node = a_tag
-                  
-                  for _ in range(4):
-                      if not current_node:
-                          break
-                      text_content = current_node.get_text(" ")
-                      # Regex matches: YYYY-MM-DD HH:MM AM/PM GMT+2
-                      match = re.search(r'(\d{4}-\d{2}-\d{2}) \d{2}:\d{2} [AP]M GMT\+2', text_content)
-                      if match:
-                          found_date = match.group(1)
-                          break
-                      current_node = current_node.parent
+              # STRICT BLACKLIST: If the title contains any of these words, ignore it.
+              blacklist = [
+                  "skip to", "overview", "history", "mission", "vision", "values", 
+                  "partners", "associations", "corporate social", "objectives", 
+                  "areas of focus", "adopt a school", "graduate trainee", 
+                  "contact", "privacy", "home", "about us", "market data", 
+                  "listed companies", "investor relations", "media", "faqs"
+              ]
+              
+              # Find all text nodes matching the BSE date format
+              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
+              date_elements = soup.find_all(string=date_pattern)
 
-                  # If we found a date in the same box, it's definitely a news item!
-                  if found_date:
-                      href = a_tag.get('href', '#')
+              for date_el in date_elements:
+                  # Look closely at the parent element of this date
+                  parent = date_el.parent
+                  if not parent: continue
+                  
+                  # Find the <a> tag inside the same container as the date
+                  link_tag = parent.find('a')
+                  if not link_tag:
+                      # Sometimes it's one level up
+                      link_tag = parent.parent.find('a') if parent.parent else None
+                      
+                  if link_tag:
+                      title = link_tag.get_text(" ", strip=True)
+                      href = link_tag.get('href', '#')
+                      
+                      # Skip if title is too short
+                      if len(title) < 10: continue
+                      
+                      # Skip if title is in the blacklist
+                      is_junk = any(word in title.lower() for word in blacklist)
+                      if is_junk: continue
+
+                      # Make absolute URL
                       if href.startswith('/'):
                           href = "https://www.bse.co.bw" + href
                           
@@ -104,11 +112,14 @@ jobs:
                               ticker = sym
                               break
                               
+                      # Clean date
+                      date_str = date_el.strip()[:10]
+
                       news_items.append({
                           "symbol": ticker,
                           "title": title,
                           "link": href,
-                          "date": found_date,
+                          "date": date_str,
                           "summary": "Click to view the official BSE disclosure document."
                       })
 
@@ -123,7 +134,7 @@ jobs:
                   for n in final_news:
                       print(f"- {n['date']} | {n['title']}")
               else:
-                  print("CRITICAL: Found 0 news items.")
+                  print("CRITICAL: Found 0 valid news items. The site structure may have changed.")
                   
           except Exception as e:
               print(f"News Error: {e}")
