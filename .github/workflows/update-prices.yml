@@ -46,7 +46,7 @@ jobs:
               print(f"Price Error: {e}")
           PY
 
-      # 2. FETCH NEWS (Strict Blacklist + PDF check)
+      # 2. FETCH NEWS (PDF Link Targeting)
       - name: Scrape BSE News
         run: |
           pip install beautifulsoup4 requests
@@ -65,63 +65,46 @@ jobs:
               
               news_items = []
               
-              # STRICT BLACKLIST: If the title contains any of these words, ignore it.
-              blacklist = [
-                  "skip to", "overview", "history", "mission", "vision", "values", 
-                  "partners", "associations", "corporate social", "objectives", 
-                  "areas of focus", "adopt a school", "graduate trainee", 
-                  "contact", "privacy", "home", "about us", "market data", 
-                  "listed companies", "investor relations", "media", "faqs"
-              ]
-              
-              # Find all text nodes matching the BSE date format
-              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
-              date_elements = soup.find_all(string=date_pattern)
-
-              for date_el in date_elements:
-                  # Look closely at the parent element of this date
-                  parent = date_el.parent
-                  if not parent: continue
+              # Look at EVERY link on the page
+              for a_tag in soup.find_all('a'):
+                  href = a_tag.get('href', '')
+                  title = a_tag.get_text(" ", strip=True)
                   
-                  # Find the <a> tag inside the same container as the date
-                  link_tag = parent.find('a')
-                  if not link_tag:
-                      # Sometimes it's one level up
-                      link_tag = parent.parent.find('a') if parent.parent else None
+                  # THE FIX: If the link does NOT point to a PDF file, skip it!
+                  # BSE disclosures are always PDFs.
+                  if '.pdf' not in href.lower():
+                      continue
                       
-                  if link_tag:
-                      title = link_tag.get_text(" ", strip=True)
-                      href = link_tag.get('href', '#')
+                  # If the title is too short, skip it
+                  if len(title) < 10:
+                      continue
                       
-                      # Skip if title is too short
-                      if len(title) < 10: continue
-                      
-                      # Skip if title is in the blacklist
-                      is_junk = any(word in title.lower() for word in blacklist)
-                      if is_junk: continue
+                  # Make absolute URL just in case
+                  if href.startswith('/'):
+                      href = "https://www.bse.co.bw" + href
 
-                      # Make absolute URL
-                      if href.startswith('/'):
-                          href = "https://www.bse.co.bw" + href
+                  # Try to find the date in the text surrounding the PDF link
+                  date_str = "2026-11-13" # Default to today if not found
+                  parent_text = a_tag.parent.get_text(" ")
+                  date_match = re.search(r'(\d{4}-\d{2}-\d{2})', parent_text)
+                  if date_match:
+                      date_str = date_match.group(1)
+
+                  # Guess the ticker
+                  ticker = "BSE"
+                  upper_title = title.upper()
+                  for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
+                      if sym in upper_title:
+                          ticker = sym
+                          break
                           
-                      # Guess the ticker
-                      ticker = "BSE"
-                      upper_title = title.upper()
-                      for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
-                          if sym in upper_title:
-                              ticker = sym
-                              break
-                              
-                      # Clean date
-                      date_str = date_el.strip()[:10]
-
-                      news_items.append({
-                          "symbol": ticker,
-                          "title": title,
-                          "link": href,
-                          "date": date_str,
-                          "summary": "Click to view the official BSE disclosure document."
-                      })
+                  news_items.append({
+                      "symbol": ticker,
+                      "title": title,
+                      "link": href,
+                      "date": date_str,
+                      "summary": "Click to view the official BSE disclosure document."
+                  })
 
               # Remove duplicates
               unique_news = list({v['title']:v for v in news_items}.values())
@@ -134,7 +117,7 @@ jobs:
                   for n in final_news:
                       print(f"- {n['date']} | {n['title']}")
               else:
-                  print("CRITICAL: Found 0 valid news items. The site structure may have changed.")
+                  print("CRITICAL: Found 0 PDF links. Keeping existing news.json.")
                   
           except Exception as e:
               print(f"News Error: {e}")
