@@ -1,6 +1,14 @@
 [
   {
     "symbol": "BSE",
+    "title": "ANNOUNCEMENT – RESIGNATION OF HEAD OF LEGAL AND COMPANY SECRETARY",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7473.pdf",
+    "date": "2026-11-16",
+    "time": "11:26",
+    "summary": "BSE: ANNOUNCEMENT – RESIGNATION OF HEAD OF LEGAL AND COMPANY SECRETARY"
+  },
+  {
+    "symbol": "BSE",
     "title": "CAUTIONARY ANNOUNCEMENT: UNAUDITED HALF YEAR RESULTS FOR THE PERIOD ENDED  30 SEPTEMBER 2026",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7472.pdf",
     "date": "2026-11-16",
@@ -70,13 +78,5 @@
     "date": "2026-11-16",
     "time": "10:01",
     "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 380"
-  },
-  {
-    "symbol": "LETSHEGO",
-    "title": "APPLICABLE PRICING SUPPLEMENT 381",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7463.pdf",
-    "date": "2026-11-16",
-    "time": "10:01",
-    "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 381"
   }
 ]
