@@ -335,7 +335,6 @@ function loadPreferences() {
     }
 }
 
-// Live sync with GitHub Actions JSON outputs
 async function fetchLiveMarketData(manual = false) {
     const btn = document.getElementById('refresh-news-btn');
     if (btn && manual) btn.innerText = '↻ Syncing...';
@@ -348,8 +347,6 @@ async function fetchLiveMarketData(manual = false) {
 
         if (priceRes && priceRes.ok) {
             const livePrices = await priceRes.json();
-            
-            // Ticker Map
             const tickerMap = {
                 "LETS": "LETSHEGO", "ANG": "ANGLO", "BARC": "ABSA", "BOTA": "BOTALA",
                 "CA-SALES": "CA SALES", "CHOP": "CHOPPIES", "ENGE": "ENGEN", "INV": "INVESTEC",
@@ -787,10 +784,13 @@ function update12MonthChart() {
 
 function renderPinnedNews() {
     const container = document.getElementById('pinned-news-container');
-    if (activeNews.length === 0) {
+    if (!container) return;
+    
+    if (!activeNews || activeNews.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size:0.8rem;">No news available.</div>`;
         return;
     }
+    
     container.innerHTML = '';
     const holdingSymbols = holdings.map(h => h.symbol);
     const sortedNews = [...activeNews].sort((a, b) => {
@@ -801,10 +801,8 @@ function renderPinnedNews() {
         return new Date(b.date) - new Date(a.date);
     });
 
-    // Limit to the top 10 news items
-    
-
-    topNews.forEach(n => {
+    // Show all news items
+    sortedNews.forEach(n => {
         const isOwned = holdingSymbols.includes(n.symbol);
         const item = document.createElement('div');
         item.className = 'news-item';
@@ -814,12 +812,12 @@ function renderPinnedNews() {
         
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="news-tag">${n.symbol}</span>
+                <span class="news-tag">${n.symbol || 'BSE'}</span>
                 ${isOwned ? '<span style="font-size:0.65rem; background:var(--accent-glow); color:var(--accent-orange); padding:2px 6px; border-radius:4px; font-weight:bold;">PORTFOLIO</span>' : ''}
             </div>
-            <div><a href="${newsLink}" target="_blank" class="news-link"><strong>${n.title} ↗</strong></a></div>
-            <div style="font-size:0.75rem; color:var(--text-main); margin-top:4px;">${n.summary}</div>
-            <div class="news-date">${n.date}${timeStr} • BSE X-News Portal</div>
+            <div><a href="${newsLink}" target="_blank" class="news-link"><strong>${n.title || 'Market Update'} ↗</strong></a></div>
+            <div style="font-size:0.75rem; color:var(--text-main); margin-top:4px;">${n.summary || 'Click to view details.'}</div>
+            <div class="news-date">${n.date || ''}${timeStr} • BSE X-News Portal</div>
         `;
         container.appendChild(item);
     });
@@ -974,7 +972,6 @@ function resetAllData() {
     }
 }
 
-// --- HISTORICAL CHART LOGIC ---
 let modalChartInstance = null;
 let currentChartSymbol = "";
 let currentChartPrice = 0;
