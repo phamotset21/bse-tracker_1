@@ -802,7 +802,7 @@ function renderPinnedNews() {
     });
 
     // Limit to the top 10 news items
-    const topNews = sortedNews.slice(0, 10);
+    
 
     topNews.forEach(n => {
         const isOwned = holdingSymbols.includes(n.symbol);
