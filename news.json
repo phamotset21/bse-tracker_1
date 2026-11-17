@@ -1,6 +1,14 @@
 [
   {
     "symbol": "BSE",
+    "title": "PREFERENCE SHARE DIVIDEND ANNOUNCEMENT",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7476.pdf",
+    "date": "2026-11-17",
+    "time": "16:30",
+    "summary": "BSE: PREFERENCE SHARE DIVIDEND ANNOUNCEMENT"
+  },
+  {
+    "symbol": "BSE",
     "title": "DIRECTOR DECLARATION",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7475.pdf",
     "date": "2026-11-17",
@@ -70,13 +78,5 @@
     "date": "2026-11-16",
     "time": "10:01",
     "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 379"
-  },
-  {
-    "symbol": "LETSHEGO",
-    "title": "APPLICABLE PRICING SUPPLEMENT 376",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7458.pdf",
-    "date": "2026-11-16",
-    "time": "10:01",
-    "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 376"
   }
 ]
