@@ -1,6 +1,14 @@
 [
   {
     "symbol": "BSE",
+    "title": "VOTING RESULTS OF THE ANNUAL GENERAL MEETING FOR ACCESS BANK BOTSWANA  LIMITED HELD ON THE 16 NOVEMBER 2026",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7474.pdf",
+    "date": "2026-11-17",
+    "time": "11:24",
+    "summary": "BSE: VOTING RESULTS OF THE ANNUAL GENERAL MEETING FOR ACCESS BANK BOTSWANA  LIMITED HELD ON THE 16 NOVEMBER 2026"
+  },
+  {
+    "symbol": "BSE",
     "title": "ANNOUNCEMENT – RESIGNATION OF HEAD OF LEGAL AND COMPANY SECRETARY",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7473.pdf",
     "date": "2026-11-16",
@@ -70,13 +78,5 @@
     "date": "2026-11-16",
     "time": "10:01",
     "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 377"
-  },
-  {
-    "symbol": "LETSHEGO",
-    "title": "APPLICABLE PRICING SUPPLEMENT 380",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7462.pdf",
-    "date": "2026-11-16",
-    "time": "10:01",
-    "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 380"
   }
 ]
