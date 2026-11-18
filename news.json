@@ -1,6 +1,22 @@
 [
   {
     "symbol": "BSE",
+    "title": "KEY PERSON’S DEALING IN SHARES",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7478.pdf",
+    "date": "2026-11-18",
+    "time": "08:37",
+    "summary": "BSE: KEY PERSON’S DEALING IN SHARES"
+  },
+  {
+    "symbol": "BSE",
+    "title": "UPDATE ON TRANSACTION TIMETABLE AND ANNOUNCEMENT OF OFFER  RESULTS RELATED TO THE PUBLIC OFFER",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7477.pdf",
+    "date": "2026-11-18",
+    "time": "08:37",
+    "summary": "BSE: UPDATE ON TRANSACTION TIMETABLE AND ANNOUNCEMENT OF OFFER  RESULTS RELATED TO THE PUBLIC OFFER"
+  },
+  {
+    "symbol": "BSE",
     "title": "PREFERENCE SHARE DIVIDEND ANNOUNCEMENT",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7476.pdf",
     "date": "2026-11-17",
@@ -62,21 +78,5 @@
     "date": "2026-11-16",
     "time": "10:01",
     "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 378"
-  },
-  {
-    "symbol": "LETSHEGO",
-    "title": "APPLICABLE PRICING SUPPLEMENT 375",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7457.pdf",
-    "date": "2026-11-16",
-    "time": "10:01",
-    "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 375"
-  },
-  {
-    "symbol": "LETSHEGO",
-    "title": "APPLICABLE PRICING SUPPLEMENT 379",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7461.pdf",
-    "date": "2026-11-16",
-    "time": "10:01",
-    "summary": "LETSHEGO: APPLICABLE PRICING SUPPLEMENT 379"
   }
 ]
