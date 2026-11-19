@@ -1,5 +1,29 @@
 [
   {
+    "symbol": "BSE",
+    "title": "TRADING NOTICE - FINANCIAL RESULTS FOR THE YEAR ENDED 31 AUGUST 2026",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7487.pdf",
+    "date": "2026-11-19",
+    "time": "16:21",
+    "summary": "BSE: TRADING NOTICE - FINANCIAL RESULTS FOR THE YEAR ENDED 31 AUGUST 2026"
+  },
+  {
+    "symbol": "BSE",
+    "title": "CAUTIONARY ANNOUNCEMENT",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7486.pdf",
+    "date": "2026-11-19",
+    "time": "16:08",
+    "summary": "BSE: CAUTIONARY ANNOUNCEMENT"
+  },
+  {
+    "symbol": "FNBB",
+    "title": "VOTING RESULTS OF THE ANNUAL GENERAL MEETING FOR FIRST NATIONAL BANK OF  BOTSWANA LIMITED (FNBB) HELD ON THE 18th NOVEMBER 2026",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7485.pdf",
+    "date": "2026-11-19",
+    "time": "15:54",
+    "summary": "FNBB: VOTING RESULTS OF THE ANNUAL GENERAL MEETING FOR FIRST NATIONAL BANK OF  BOTSWANA LIMITED (FNBB) HELD ON THE 18th NOVEMBER 2026"
+  },
+  {
     "symbol": "INVESTEC",
     "title": "DIRECTOR APPOINTMENT TO THE BOARD OF INVESTEC BANK LIMITED (the “BOARD”)",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7484.pdf",
@@ -54,29 +78,5 @@
     "date": "2026-11-18",
     "time": "08:37",
     "summary": "BSE: KEY PERSON’S DEALING IN SHARES"
-  },
-  {
-    "symbol": "BSE",
-    "title": "UPDATE ON TRANSACTION TIMETABLE AND ANNOUNCEMENT OF OFFER  RESULTS RELATED TO THE PUBLIC OFFER",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7477.pdf",
-    "date": "2026-11-18",
-    "time": "08:37",
-    "summary": "BSE: UPDATE ON TRANSACTION TIMETABLE AND ANNOUNCEMENT OF OFFER  RESULTS RELATED TO THE PUBLIC OFFER"
-  },
-  {
-    "symbol": "BSE",
-    "title": "PREFERENCE SHARE DIVIDEND ANNOUNCEMENT",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7476.pdf",
-    "date": "2026-11-17",
-    "time": "16:30",
-    "summary": "BSE: PREFERENCE SHARE DIVIDEND ANNOUNCEMENT"
-  },
-  {
-    "symbol": "BSE",
-    "title": "DIRECTOR DECLARATION",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7475.pdf",
-    "date": "2026-11-17",
-    "time": "13:30",
-    "summary": "BSE: DIRECTOR DECLARATION"
   }
 ]
