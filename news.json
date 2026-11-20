@@ -1,6 +1,46 @@
 [
   {
     "symbol": "BSE",
+    "title": "FURTHER UPDATE ON TRANSACTION TIMETABLE AND ANNOUNCEMENT  OF OFFER RESULTS RELATED TO THE PUBLIC OFFER AND SUBSEQUENT LISTING OF  UNSPONSORED BOTSWANA DEPOSITORY RECEIPTS",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7493.pdf",
+    "date": "2026-11-20",
+    "time": "17:00",
+    "summary": "BSE: FURTHER UPDATE ON TRANSACTION TIMETABLE AND ANNOUNCEMENT  OF OFFER RESULTS RELATED TO THE PUBLIC OFFER AND SUBSEQUENT LISTING OF  UNSPONSORED BOTSWANA DEPOSITORY RECEIPTS"
+  },
+  {
+    "symbol": "BSE",
+    "title": "TR-1: STANDARD FOR NOTIFICATION OF MAJOR HOLDINGS",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7492.pdf",
+    "date": "2026-11-20",
+    "time": "16:30",
+    "summary": "BSE: TR-1: STANDARD FOR NOTIFICATION OF MAJOR HOLDINGS"
+  },
+  {
+    "symbol": "BSE",
+    "title": "DEALING IN SECURITIES BY DIRECTORS",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7491.pdf",
+    "date": "2026-11-20",
+    "time": "16:00",
+    "summary": "BSE: DEALING IN SECURITIES BY DIRECTORS"
+  },
+  {
+    "symbol": "BSE",
+    "title": "TRADING STATEMENT – HALF YEAR ENDED 30 SEPTEMBER 2026  FINANCIAL RESULTS",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7490.pdf",
+    "date": "2026-11-20",
+    "time": "14:16",
+    "summary": "BSE: TRADING STATEMENT – HALF YEAR ENDED 30 SEPTEMBER 2026  FINANCIAL RESULTS"
+  },
+  {
+    "symbol": "LETSHEGO",
+    "title": "ANNOUNCEMENT – LISTING OF RIGHTS OFFER SHARES",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7489.pdf",
+    "date": "2026-11-20",
+    "time": "12:31",
+    "summary": "LETSHEGO: ANNOUNCEMENT – LISTING OF RIGHTS OFFER SHARES"
+  },
+  {
+    "symbol": "BSE",
     "title": "FURTHER CAUTIONARY ANNOUNCEMENT",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7488.pdf",
     "date": "2026-11-20",
@@ -38,45 +78,5 @@
     "date": "2026-11-19",
     "time": "11:00",
     "summary": "INVESTEC: DIRECTOR APPOINTMENT TO THE BOARD OF INVESTEC BANK LIMITED (the “BOARD”)"
-  },
-  {
-    "symbol": "BSE",
-    "title": "REVIEWED CONDENSED COMBINED CONSOLIDATED FINANCIAL RESULTS FOR THE SIX MONTHS 30 SEPTEMBER 2026 AND CASH DIVIDEND DECLARATION",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7483.pdf",
-    "date": "2026-11-19",
-    "time": "09:27",
-    "summary": "BSE: REVIEWED CONDENSED COMBINED CONSOLIDATED FINANCIAL RESULTS FOR THE SIX MONTHS 30 SEPTEMBER 2026 AND CASH DIVIDEND DECLARATION"
-  },
-  {
-    "symbol": "BSE",
-    "title": "INDEPENDENT AUDITOR'S REPORT",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7482.pdf",
-    "date": "2026-11-19",
-    "time": "08:46",
-    "summary": "BSE: INDEPENDENT AUDITOR'S REPORT"
-  },
-  {
-    "symbol": "BSE",
-    "title": "ABRIDGED AUDITED GROUP AND COMPANY FINANCIAL STATEMENTS FOR THE YEAR ENDED 30 JUNE 2026",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7481.pdf",
-    "date": "2026-11-19",
-    "time": "08:45",
-    "summary": "BSE: ABRIDGED AUDITED GROUP AND COMPANY FINANCIAL STATEMENTS FOR THE YEAR ENDED 30 JUNE 2026"
-  },
-  {
-    "symbol": "BSE",
-    "title": "FMO BACKS SEED CO TO STRENGTHEN CLIMATE ADAPTATION AND FOOD SECURITY IN AFRICA",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7480.pdf",
-    "date": "2026-11-18",
-    "time": "15:13",
-    "summary": "BSE: FMO BACKS SEED CO TO STRENGTHEN CLIMATE ADAPTATION AND FOOD SECURITY IN AFRICA"
-  },
-  {
-    "symbol": "BSE",
-    "title": "NOTIFICATION OF TRANSACTIONS BY DIRECTORS AND PDMRs",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7479.pdf",
-    "date": "2026-11-18",
-    "time": "14:30",
-    "summary": "BSE: NOTIFICATION OF TRANSACTIONS BY DIRECTORS AND PDMRs"
   }
 ]
