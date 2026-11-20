@@ -1,6 +1,14 @@
 [
   {
     "symbol": "BSE",
+    "title": "FURTHER CAUTIONARY ANNOUNCEMENT",
+    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7488.pdf",
+    "date": "2026-11-20",
+    "time": "10:02",
+    "summary": "BSE: FURTHER CAUTIONARY ANNOUNCEMENT"
+  },
+  {
+    "symbol": "BSE",
     "title": "TRADING NOTICE - FINANCIAL RESULTS FOR THE YEAR ENDED 31 AUGUST 2026",
     "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7487.pdf",
     "date": "2026-11-19",
@@ -70,13 +78,5 @@
     "date": "2026-11-18",
     "time": "14:30",
     "summary": "BSE: NOTIFICATION OF TRANSACTIONS BY DIRECTORS AND PDMRs"
-  },
-  {
-    "symbol": "BSE",
-    "title": "KEY PERSON’S DEALING IN SHARES",
-    "link": "https://apis.bse.co.bw/storage/disclosures/11/2026/7478.pdf",
-    "date": "2026-11-18",
-    "time": "08:37",
-    "summary": "BSE: KEY PERSON’S DEALING IN SHARES"
   }
 ]
