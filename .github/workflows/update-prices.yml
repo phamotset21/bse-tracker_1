@@ -1,144 +1,88 @@
-name: Update Stock Prices & News
+import json, os, requests, urllib.request, re
+from bs4 import BeautifulSoup
 
-permissions:
-  contents: write
+SUPABASE_URL = os.environ['SUPABASE_URL']
+SUPABASE_KEY = os.environ['SUPABASE_KEY']
+MANSA_API_KEY = os.environ['MANSA_API_KEY']
 
-on:
-  push:
-  schedule:
-    - cron: '0 * * * *' # Runs every hour
-  workflow_dispatch: # Allows manual triggers
+headers = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+    "Prefer": "resolution=merge-duplicates" 
+}
 
-jobs:
-  update-prices-and-news:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+# 1. SYNC PRICES
+print("Starting Price Sync...")
+try:
+    url = "https://mansaapi.com/api/v1/markets/exchanges/BSE/stocks?limit=200"
+    req = urllib.request.Request(url, headers={'Authorization': f'Bearer {MANSA_API_KEY}', 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0'})
+    
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode('utf-8')).get('data', [])
+        payload = []
+        for s in data:
+            if s.get('ticker') and s.get('price') is not None:
+                payload.append({
+                    "ticker": s['ticker'],
+                    "company_name": s.get('name', s['ticker']),
+                    "current_price": float(s['price'])
+                })
+        
+        if payload:
+            r = requests.post(f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", headers=headers, json=payload)
+            print(f"Supabase Prices Push Status: {r.status_code}")
+            if r.status_code >= 400: print(f"Error details: {r.text}")
+except Exception as e:
+    print("Price Sync Error:", e)
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Fetch Data and Push to Supabase
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          MANSA_API_KEY: ${{ secrets.MANSA_API_KEY }}
-        run: |
-          pip install requests beautifulsoup4
-          python - <<'PY'
-          import json, os, requests, urllib.request, re
-          from bs4 import BeautifulSoup
-
-          SUPABASE_URL = os.environ['SUPABASE_URL']
-          SUPABASE_KEY = os.environ['SUPABASE_KEY']
-          MANSA_API_KEY = os.environ['MANSA_API_KEY']
-
-          headers = {
-              "apikey": SUPABASE_KEY,
-              "Authorization": f"Bearer {SUPABASE_KEY}",
-              "Content-Type": "application/json",
-              "Prefer": "resolution=merge-duplicates" # Upsert mode
-          }
-
-          # 1. SYNC PRICES
-          print("Starting Price Sync...")
-          try:
-              url = "https://mansaapi.com/api/v1/markets/exchanges/BSE/stocks?limit=200"
-              req = urllib.request.Request(url, headers={
-                  'Authorization': f'Bearer {MANSA_API_KEY}',
-                  'Accept': 'application/json',
-                  'User-Agent': 'Mozilla/5.0'
-              })
-              
-              with urllib.request.urlopen(req) as response:
-                  data = json.loads(response.read().decode('utf-8')).get('data', [])
-                  
-                  payload = []
-                  for s in data:
-                      if s.get('ticker') and s.get('price') is not None:
-                          payload.append({
-                              "ticker": s['ticker'],
-                              "company_name": s.get('name', s['ticker']),
-                              "current_price": float(s['price'])
-                          })
-                  
-                  if payload:
-                      # on_conflict ensures it updates existing tickers rather than failing
-                      r = requests.post(
-                          f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", 
-                          headers=headers, 
-                          json=payload
-                      )
-                      print(f"Supabase Prices Push Status: {r.status_code}")
-                      if r.status_code >= 400:
-                          print(f"Error details: {r.text}")
-                  else:
-                      print("No valid prices found in API response.")
-          except Exception as e:
-              print("Price Sync Error:", e)
-
-          # 2. SYNC NEWS
-          print("\nStarting News Sync...")
-          try:
-              res = requests.get("https://www.bse.co.bw/xnews/", headers={'User-Agent': 'Mozilla/5.0'})
-              soup = BeautifulSoup(res.text, 'html.parser')
-              
-              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
-              date_elements = soup.find_all(string=date_pattern)
-              
-              news_payload = []
-              for date_el in date_elements:
-                  container = date_el.parent
-                  for _ in range(3):
-                      if not container: break
-                      link_tag = container.find('a')
-                      if link_tag: break
-                      container = container.parent
-                      
-                  if link_tag:
-                      title = link_tag.get_text(" ", strip=True)
-                      href = link_tag.get('href', '#')
-                      
-                      if len(title) < 10: continue
-                      if href.startswith('/'): href = "https://www.bse.co.bw" + href
-                      
-                      date_str = date_el.strip()[:10]
-                      iso_date = f"{date_str}T00:00:00Z"
-                      
-                      # Guess Ticker based on title
-                      ticker = "BSE"
-                      upper_title = title.upper()
-                      for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
-                          if sym in upper_title:
-                              ticker = sym
-                              break
-                              
-                      news_payload.append({
-                          "ticker": ticker,
-                          "published_at": iso_date,
-                          "raw_headline": title,
-                          "pdf_url": href
-                      })
-              
-              # Deduplicate payload before sending
-              unique_news = list({v['pdf_url']:v for v in news_payload}.values())
-              
-              if unique_news:
-                  # on_conflict ensures it ignores duplicate PDFs already in the DB
-                  r = requests.post(
-                      f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", 
-                      headers=headers, 
-                      json=unique_news
-                  )
-                  print(f"Supabase News Push Status: {r.status_code}")
-                  if r.status_code >= 400:
-                      print(f"Error details: {r.text}")
-              else:
-                  print("No valid news found in scrape.")
-                  
-          except Exception as e:
-              print("News Sync Error:", e)
-          PY
+# 2. SYNC NEWS
+print("\nStarting News Sync...")
+try:
+    res = requests.get("https://www.bse.co.bw/xnews/", headers={'User-Agent': 'Mozilla/5.0'})
+    soup = BeautifulSoup(res.text, 'html.parser')
+    
+    # More forgiving regex to catch the date even if spacing changed
+    date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+[AP]M\s+GMT\+2')
+    date_elements = soup.find_all(string=date_pattern)
+    
+    news_payload = []
+    for date_el in date_elements:
+        container = date_el.parent
+        for _ in range(3):
+            if not container: break
+            link_tag = container.find('a')
+            if link_tag: break
+            container = container.parent
+            
+        if link_tag:
+            title = link_tag.get_text(" ", strip=True)
+            href = link_tag.get('href', '#')
+            
+            if len(title) < 10: continue
+            if href.startswith('/'): href = "https://www.bse.co.bw" + href
+            
+            date_str = date_el.strip()[:10]
+            iso_date = f"{date_str}T00:00:00Z"
+            
+            ticker = "BSE"
+            upper_title = title.upper()
+            for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
+                if sym in upper_title:
+                    ticker = sym
+                    break
+                    
+            news_payload.append({
+                "ticker": ticker,
+                "published_at": iso_date,
+                "raw_headline": title,
+                "pdf_url": href
+            })
+    
+    unique_news = list({v['pdf_url']:v for v in news_payload}.values())
+    if unique_news:
+        r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
+        print(f"Supabase News Push Status: {r.status_code}")
+        if r.status_code >= 400: print(f"Error details: {r.text}")
+except Exception as e:
+    print("News Sync Error:", e)
