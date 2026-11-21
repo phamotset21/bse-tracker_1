@@ -28,6 +28,7 @@ jobs:
           python - <<'PY'
           import json, os, requests, urllib.request, re
           from bs4 import BeautifulSoup
+          from datetime import datetime
 
           SUPABASE_URL = os.environ['SUPABASE_URL']
           SUPABASE_KEY = os.environ['SUPABASE_KEY']
@@ -63,26 +64,23 @@ jobs:
           except Exception as e:
               print("Price Sync Error:", e)
 
-          # 2. SYNC NEWS (Deep Row Scraper)
+          # 2. SYNC NEWS
           print("\nStarting News Sync...")
           
-          # Massive mapping of company names and tickers
           ticker_map = {
-              "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB", "FNBB BANK": "FNBB",
-              "ABSA": "ABSA", "BARCLAYS": "ABSA", "ABSA BANK": "ABSA",
-              "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL", "BOTSWANA TELECOM": "BTCL",
+              "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
+              "ABSA": "ABSA", "BARCLAYS": "ABSA",
+              "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL",
               "TURNSTAR": "TURNSTAR", "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
               "LETSHEGO": "LETSHEGO", "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
               "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL", "NAP": "NAP", 
               "NEW AFRICAN PROPERTIES": "NAP", "RDC": "RDCP", "RDC PROPERTIES": "RDCP",
               "ENGEN": "ENGEN", "MINERGY": "MINERGY", "BOTALA": "BOTALA", "SHUMBA": "SHUMBA",
-              "TLOU": "TLOU", "TLOU ENERGY": "TLOU", "CHOBE": "CHOBE", "CHOBE HOLDINGS": "CHOBE",
-              "CRESTA": "CRESTA", "CRESTA MARAKANELO": "CRESTA", "G4S": "G4S", 
-              "LETLOLE": "LETLOLE", "LETLOLE LA RONA": "LETLOLE", "PRIMETIME": "PRIMETIME", 
-              "PRIMETIME PROPERTY": "PRIMETIME", "ACCESS": "ACCESS", "ACCESS BANK": "ACCESS",
+              "TLOU": "TLOU", "CHOBE": "CHOBE", "CRESTA": "CRESTA", "G4S": "G4S", 
+              "LETLOLE": "LETLOLE", "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS",
               "SEEDCO": "SEEDCO", "STANCHART": "STANCHART", "STANDARD CHARTERED": "STANCHART",
               "OLYMPIA": "OLYMPIA", "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO",
-              "ANGLO AMERICAN": "ANGLO", "GAIA": "GAIA", "CA SALES": "CA SALES"
+              "CA SALES": "CA SALES", "GAIA": "GAIA"
           }
 
           try:
@@ -98,28 +96,26 @@ jobs:
                   
                   if ('.pdf' in href.lower() or 'disclosure' in href.lower()) and len(title) > 15:
                       
-                      # 1. Find the closest table row or list item containing this link
-                      row = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
-                      
-                      # 2. Extract text and image alt tags from the entire row
+                      # Find the parent container to grab the logo alt text
                       row_text = ""
+                      row = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
                       if row:
                           row_text = row.get_text(" ", strip=True).upper()
                           for img in row.find_all('img'):
                               alt = img.get('alt')
                               if alt: row_text += " " + alt.upper()
                       
-                      # 3. Match ticker based on Title + Row Text (including Logo alt text)
-                      ticker = "BSE" # Default fallback
-                      combined_text = title.upper() + " " + row_text
+                      # Combine Title + Logo Alt Text + URL to find the ticker
+                      combined_text = title.upper() + " " + row_text + " " + href.upper()
                       
+                      ticker = "BSE" # Default fallback
                       for key, sym in ticker_map.items():
                           if key in combined_text:
                               ticker = sym
                               break
                               
-                      # 4. Find date
-                      date_str = "2026-11-21" # Default to today
+                      # Find Date
+                      date_str = datetime.today().strftime('%Y-%m-%d') # Default to today
                       parent = link.parent
                       for _ in range(4):
                           if not parent: break
@@ -143,6 +139,7 @@ jobs:
               if unique_news:
                   r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
                   print(f"Supabase News Push Status: {r.status_code}")
+                  if r.status_code >= 400: print(f"Error details: {r.text}")
                   print(f"Found {len(unique_news)} news items.")
               else:
                   print("No news links found on the page.")
