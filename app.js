@@ -1,12 +1,11 @@
 // Initialize Supabase
-const SUPABASE_URL = 'https://thwpjtxdftwrmskfksxk.supabase.co'; // Your URL
-const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf'// Your full Publishable Key
+const SUPABASE_URL = 'https://thwpjtxdftwrmskfksxk.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 Chart.register(ChartDataLabels);
-// ... rest of your STOCKS array ...
-Chart.register(ChartDataLabels);
 
+// Fallback data (used only if Supabase is unreachable or empty)
 const STOCKS = [
     { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.028, divAmount: 0.059, divDate: "2025-04-22", exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
     { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.074, divAmount: 0.5774, divDate: "2026-06-29", exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
@@ -347,47 +346,54 @@ async function fetchLiveMarketData(manual = false) {
     if (btn && manual) btn.innerText = '↻ Syncing...';
 
     try {
-        const [priceRes, newsRes] = await Promise.all([
-            fetch('prices.json?t=' + Date.now()).catch(() => null),
-            fetch('news.json?t=' + Date.now()).catch(() => null)
-        ]);
+        // 1. Fetch Tickers from Supabase
+        const { data: tickers, error: tickerError } = await supabase
+            .from('bse_tickers')
+            .select('*')
+            .eq('is_active', true);
 
-        if (priceRes && priceRes.ok) {
-            const livePrices = await priceRes.json();
-            const tickerMap = {
-                "LETS": "LETSHEGO", "ANG": "ANGLO", "BARC": "ABSA", "BOTA": "BOTALA",
-                "CA-SALES": "CA SALES", "CHOP": "CHOPPIES", "ENGE": "ENGEN", "INV": "INVESTEC",
-                "MIN": "MINERGY", "NEWG": "NEWGOLD", "NGPL": "NEWPALLADIUM", "NGPT": "NEWPLATINUM",
-                "OLYM": "OLYMPIA", "PRIM": "PRIMETIME", "SCIL": "SEEDCO", "SEFA": "SEFALANA",
-                "SHU": "SHUMBA", "LUCA": "LUC", "STAN": "STANCHART"
-            };
+        if (tickerError) throw tickerError;
 
-            STOCKS.forEach(s => {
-                let apiSymbol = s.symbol;
-                for (const [apiKey, appKey] of Object.entries(tickerMap)) {
-                    if (appKey === s.symbol) {
-                        apiSymbol = apiKey;
-                        break;
-                    }
-                }
-                if (livePrices[apiSymbol] !== undefined) {
-                    s.price = parseFloat(livePrices[apiSymbol]);
-                }
+        if (tickers && tickers.length > 0) {
+            STOCKS.length = 0; // Clear the fallback array
+            tickers.forEach(t => {
+                STOCKS.push({
+                    symbol: t.ticker,
+                    name: t.company_name,
+                    type: t.board || "Domestic Equity",
+                    price: t.current_price || 0,
+                    divYield: (t.annual_dividend_yield || 0) / 100,
+                    divAmount: 0, // Static fallback; can be updated via events
+                    divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1
+                });
             });
         }
 
-        if (newsRes && newsRes.ok) {
-            const liveNews = await newsRes.json();
-            if (Array.isArray(liveNews) && liveNews.length > 0) {
-                activeNews = liveNews;
-            }
+        // 2. Fetch News from Supabase
+        const { data: news, error: newsError } = await supabase
+            .from('xnews_disclosures')
+            .select('*')
+            .order('published_at', { ascending: false })
+            .limit(50);
+
+        if (newsError) throw newsError;
+
+        if (news && news.length > 0) {
+            activeNews = news.map(n => ({
+                symbol: n.ticker || 'BSE',
+                title: n.raw_headline,
+                date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
+                summary: n.ai_summary || "Click to view the official BSE disclosure document.",
+                link: n.pdf_url
+            }));
         }
-    } catch (e) {
-        console.log('Using cached fallback data.');
+    } catch (error) {
+        console.error('Error fetching from Supabase:', error);
     }
 
     initDatalist();
     saveAndRender();
+    
     if (btn && manual) {
         btn.innerText = '✓ Updated';
         setTimeout(() => { btn.innerText = '↻ Refresh'; }, 1500);
@@ -808,7 +814,7 @@ function renderPinnedNews() {
         return new Date(b.date) - new Date(a.date);
     });
 
-    // Show all news items
+    // Show all news items (unlimited)
     sortedNews.forEach(n => {
         const isOwned = holdingSymbols.includes(n.symbol);
         const item = document.createElement('div');
