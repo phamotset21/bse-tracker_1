@@ -1,6 +1,6 @@
 // Initialize Supabase
-const SUPABASE_URL = 'https://thwpjtxdftwrmskfksxk.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf';
+const SUPABASE_URL = 'https://apuzvlsktobobdgdufbc.supabase.co'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf'; // Make sure this is from the SAME project!
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 Chart.register(ChartDataLabels);
@@ -363,7 +363,7 @@ async function fetchLiveMarketData(manual = false) {
                     type: t.board || "Domestic Equity",
                     price: t.current_price || 0,
                     divYield: (t.annual_dividend_yield || 0) / 100,
-                    divAmount: 0, // Static fallback; can be updated via events
+                    divAmount: 0, 
                     divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1
                 });
             });
@@ -814,7 +814,6 @@ function renderPinnedNews() {
         return new Date(b.date) - new Date(a.date);
     });
 
-    // Show all news items (unlimited)
     sortedNews.forEach(n => {
         const isOwned = holdingSymbols.includes(n.symbol);
         const item = document.createElement('div');
