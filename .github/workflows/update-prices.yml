@@ -63,26 +63,63 @@ jobs:
           except Exception as e:
               print("Price Sync Error:", e)
 
-          # 2. SYNC NEWS (Aggressive Link Scraper)
+          # 2. SYNC NEWS
           print("\nStarting News Sync...")
+          
+          # Expanded mapping of company names and tickers to catch more headlines
+          ticker_map = {
+              "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
+              "ABSA": "ABSA", "BARCLAYS": "ABSA",
+              "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL",
+              "TURNSTAR": "TURNSTAR", "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
+              "LETSHEGO": "LETSHEGO", "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
+              "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL", "NAP": "NAP", 
+              "NEW AFRICAN PROPERTIES": "NAP", "RDC": "RDCP", "RDC PROPERTIES": "RDCP",
+              "ENGEN": "ENGEN", "MINERGY": "MINERGY", "BOTALA": "BOTALA", "SHUMBA": "SHUMBA",
+              "TLOU": "TLOU", "TLOU ENERGY": "TLOU", "CHOBE": "CHOBE", "CRESTA": "CRESTA",
+              "G4S": "G4S", "LETLOLE": "LETLOLE", "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS",
+              "SEEDCO": "SEEDCO", "STANCHART": "STANCHART", "STANDARD CHARTERED": "STANCHART",
+              "OLYMPIA": "OLYMPIA", "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO"
+          }
+
           try:
-              # Fetch the main disclosures page
               res = requests.get("https://www.bse.co.bw/company-disclosures/", headers={'User-Agent': 'Mozilla/5.0'})
               soup = BeautifulSoup(res.text, 'html.parser')
               
               news_payload = []
-              # Find EVERY link on the page
               links = soup.find_all('a')
               
               for link in links:
                   title = link.get_text(" ", strip=True)
                   href = link.get('href', '')
                   
-                  # Only grab links that look like PDFs or disclosures
                   if ('.pdf' in href.lower() or 'disclosure' in href.lower()) and len(title) > 15:
                       
-                      # Try to find a date near the link (up to 3 parents up)
-                      date_str = "2026-11-21" # Default to today if no date found
+                      # 1. Find the parent container to scan for logos/tickers
+                      container = link.parent
+                      for _ in range(4):
+                          if not container: break
+                          # Check if this container has an image (logo)
+                          if container.find('img'): break
+                          container = container.parent
+                      
+                      container_text = container.get_text(" ", strip=True).upper() if container else ""
+                      if container:
+                          for img in container.find_all('img'):
+                              alt = img.get('alt')
+                              if alt: container_text += " " + alt.upper()
+                      
+                      # 2. Match ticker based on title OR container text
+                      ticker = "BSE" # Default
+                      combined_text = title.upper() + " " + container_text
+                      
+                      for key, sym in ticker_map.items():
+                          if key in combined_text:
+                              ticker = sym
+                              break
+                              
+                      # 3. Find date
+                      date_str = "2026-11-21" # Default to today
                       parent = link.parent
                       for _ in range(4):
                           if not parent: break
@@ -91,16 +128,7 @@ jobs:
                               date_str = match.group(1)
                               break
                           parent = parent.parent
-                      
-                      # Guess the ticker from the title
-                      ticker = "BSE"
-                      upper_title = title.upper()
-                      for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
-                          if sym in upper_title:
-                              ticker = sym
-                              break
                               
-                      # Make absolute URL
                       if href.startswith('/'): href = "https://www.bse.co.bw" + href
                           
                       news_payload.append({
@@ -110,7 +138,6 @@ jobs:
                           "pdf_url": href
                       })
               
-              # Deduplicate based on the PDF URL
               unique_news = list({v['pdf_url']:v for v in news_payload}.values())
               
               if unique_news:
