@@ -1,3 +1,10 @@
+// Initialize Supabase
+const SUPABASE_URL = 'https://thwpjtxdftwrmskfksxk.supabase.co'; // Your URL
+const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf'// Your full Publishable Key
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+Chart.register(ChartDataLabels);
+// ... rest of your STOCKS array ...
 Chart.register(ChartDataLabels);
 
 const STOCKS = [
