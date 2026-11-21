@@ -4,9 +4,10 @@ permissions:
   contents: write
 
 on:
+  push:
   schedule:
     - cron: '0 * * * *' # Runs every hour
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual triggers
 
 jobs:
   update-prices-and-news:
@@ -15,115 +16,129 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 1. FETCH PRICES
-      - name: Fetch Prices from Mansa API
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Fetch Data and Push to Supabase
         env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           MANSA_API_KEY: ${{ secrets.MANSA_API_KEY }}
         run: |
+          pip install requests beautifulsoup4
           python - <<'PY'
-          import json
-          import urllib.request
-          import os
-
-          api_key = os.environ.get('MANSA_API_KEY', '')
-          url = "https://mansaapi.com/api/v1/markets/exchanges/BSE/stocks?limit=200"
-          req = urllib.request.Request(url, headers={
-              'Authorization': f'Bearer {api_key}',
-              'Accept': 'application/json',
-              'User-Agent': 'Mozilla/5.0'
-          })
-
-          try:
-              with urllib.request.urlopen(req) as response:
-                  result = json.loads(response.read().decode('utf-8'))
-                  stocks_data = result.get('data', [])
-                  prices = {s.get('ticker'): s.get('price') for s in stocks_data if s.get('ticker') and s.get('price') is not None}
-                  with open('prices.json', 'w') as f:
-                      json.dump(prices, f, indent=2)
-                  print(f"Updated {len(prices)} prices.")
-          except Exception as e:
-              print(f"Price Error: {e}")
-          PY
-
-      # 2. FETCH BSE COMPANY DISCLOSURES & DIRECT PDFs
-      - name: Scrape BSE Announcements & PDFs
-        run: |
-          pip install beautifulsoup4 requests
-          python - <<'PY'
-          import json, re, sys, requests
+          import json, os, requests, urllib.request, re
           from bs4 import BeautifulSoup
-          from urllib.parse import urljoin
 
-          URL = "https://www.bse.co.bw/companydisclosures/"
-          H = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+          SUPABASE_URL = os.environ['SUPABASE_URL']
+          SUPABASE_KEY = os.environ['SUPABASE_KEY']
+          MANSA_API_KEY = os.environ['MANSA_API_KEY']
 
-          # logo file ID -> ticker (add more as they show up in the log)
-          LOGO_MAP = {"222": "LETSHEGO", "358": "FPC", "400": "TLOU"}
-
-          # fallback: keyword in the title -> ticker
-          KEYWORDS = {
-              "LETSHEGO": "LETSHEGO", "TLOU": "TLOU", "FNBB": "FNBB",
-              "ABSA": "ABSA", "BTCL": "BTCL", "TURNSTAR": "TURNSTAR",
-              "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
-              "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
-              "BIHL": "BIHL", "ENGEN": "ENGEN", "MINERGY": "MINERGY",
-              "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO",
+          headers = {
+              "apikey": SUPABASE_KEY,
+              "Authorization": f"Bearer {SUPABASE_KEY}",
+              "Content-Type": "application/json",
+              "Prefer": "resolution=merge-duplicates" # Upsert mode
           }
 
-          date_re = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})')
-
-          r = requests.get(URL, headers=H, timeout=20)
-          print("Status:", r.status_code)
-          soup = BeautifulSoup(r.text, 'html.parser')
-
-          items, seen = [], set()
-          for a in soup.find_all('a', href=re.compile(r'/storage/disclosures/', re.I)):
-              link = urljoin(URL, a['href'].strip())
-              if link in seen:
-                  continue
-              seen.add(link)
-
-              row = a.find_parent('tr') or a.parent
-              m = date_re.search(row.get_text(" ", strip=True))
-              if not m:
-                  continue
-
-              title = a.get_text(" ", strip=True)
-              img = row.find('img')
-              logo = re.search(r'/logos/(\d+)\.', img.get('src', '')) if img else None
-              logo_id = logo.group(1) if logo else None
-
-              ticker = LOGO_MAP.get(logo_id)
-              if not ticker:
-                  ticker = next((t for k, t in KEYWORDS.items() if k in title.upper()), "BSE")
-                  print(f"Unmapped logo {logo_id} -> '{title}' (guessed {ticker})")
-
-              items.append({
-                  "symbol": ticker,
-                  "title": title,
-                  "link": link,
-                  "date": m.group(1),
-                  "time": m.group(2),
-                  "summary": f"{ticker}: {title}"
+          # 1. SYNC PRICES
+          print("Starting Price Sync...")
+          try:
+              url = "https://mansaapi.com/api/v1/markets/exchanges/BSE/stocks?limit=200"
+              req = urllib.request.Request(url, headers={
+                  'Authorization': f'Bearer {MANSA_API_KEY}',
+                  'Accept': 'application/json',
+                  'User-Agent': 'Mozilla/5.0'
               })
+              
+              with urllib.request.urlopen(req) as response:
+                  data = json.loads(response.read().decode('utf-8')).get('data', [])
+                  
+                  payload = []
+                  for s in data:
+                      if s.get('ticker') and s.get('price') is not None:
+                          payload.append({
+                              "ticker": s['ticker'],
+                              "company_name": s.get('name', s['ticker']),
+                              "current_price": float(s['price'])
+                          })
+                  
+                  if payload:
+                      # on_conflict ensures it updates existing tickers rather than failing
+                      r = requests.post(
+                          f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", 
+                          headers=headers, 
+                          json=payload
+                      )
+                      print(f"Supabase Prices Push Status: {r.status_code}")
+                      if r.status_code >= 400:
+                          print(f"Error details: {r.text}")
+                  else:
+                      print("No valid prices found in API response.")
+          except Exception as e:
+              print("Price Sync Error:", e)
 
-          items.sort(key=lambda x: (x['date'], x['time']), reverse=True)
-
-          if not items:
-              print("Found 0 announcements. Failing so the old file is not silently kept.")
-              sys.exit(1)
-
-          with open('news.json', 'w', encoding='utf-8') as f:
-              json.dump(items[:10], f, indent=2, ensure_ascii=False)
-          print(f"Saved {len(items[:10])} announcements.")
+          # 2. SYNC NEWS
+          print("\nStarting News Sync...")
+          try:
+              res = requests.get("https://www.bse.co.bw/xnews/", headers={'User-Agent': 'Mozilla/5.0'})
+              soup = BeautifulSoup(res.text, 'html.parser')
+              
+              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2} [AP]M GMT\+2')
+              date_elements = soup.find_all(string=date_pattern)
+              
+              news_payload = []
+              for date_el in date_elements:
+                  container = date_el.parent
+                  for _ in range(3):
+                      if not container: break
+                      link_tag = container.find('a')
+                      if link_tag: break
+                      container = container.parent
+                      
+                  if link_tag:
+                      title = link_tag.get_text(" ", strip=True)
+                      href = link_tag.get('href', '#')
+                      
+                      if len(title) < 10: continue
+                      if href.startswith('/'): href = "https://www.bse.co.bw" + href
+                      
+                      date_str = date_el.strip()[:10]
+                      iso_date = f"{date_str}T00:00:00Z"
+                      
+                      # Guess Ticker based on title
+                      ticker = "BSE"
+                      upper_title = title.upper()
+                      for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
+                          if sym in upper_title:
+                              ticker = sym
+                              break
+                              
+                      news_payload.append({
+                          "ticker": ticker,
+                          "published_at": iso_date,
+                          "raw_headline": title,
+                          "pdf_url": href
+                      })
+              
+              # Deduplicate payload before sending
+              unique_news = list({v['pdf_url']:v for v in news_payload}.values())
+              
+              if unique_news:
+                  # on_conflict ensures it ignores duplicate PDFs already in the DB
+                  r = requests.post(
+                      f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", 
+                      headers=headers, 
+                      json=unique_news
+                  )
+                  print(f"Supabase News Push Status: {r.status_code}")
+                  if r.status_code >= 400:
+                      print(f"Error details: {r.text}")
+              else:
+                  print("No valid news found in scrape.")
+                  
+          except Exception as e:
+              print("News Sync Error:", e)
           PY
-
-      # 3. COMMIT CHANGES
-      - name: Commit and Push
-        run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email "action@github.com"
-          git add prices.json news.json
-          git commit -m "Update stock prices and company disclosures cleanly" || exit 0
-          git pull --rebase origin main
-          git push
