@@ -60,45 +60,39 @@ jobs:
                   if payload:
                       r = requests.post(f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", headers=headers, json=payload)
                       print(f"Supabase Prices Push Status: {r.status_code}")
-                      if r.status_code >= 400: print(f"Error details: {r.text}")
           except Exception as e:
               print("Price Sync Error:", e)
 
-          # 2. SYNC NEWS (With Debug Output)
+          # 2. SYNC NEWS (Aggressive Link Scraper)
           print("\nStarting News Sync...")
           try:
-              res = requests.get("https://www.bse.co.bw/xnews/", headers={'User-Agent': 'Mozilla/5.0'})
-              print(f"BSE Website Status: {res.status_code}") 
-              
+              # Fetch the main disclosures page
+              res = requests.get("https://www.bse.co.bw/company-disclosures/", headers={'User-Agent': 'Mozilla/5.0'})
               soup = BeautifulSoup(res.text, 'html.parser')
               
-              # More forgiving regex to catch the date even if spacing changed
-              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}.*?GMT\+2')
-              date_elements = soup.find_all(string=date_pattern)
-              
-              if not date_elements:
-                  print("Debug: Found 0 date elements on the page.")
-                  print(f"HTML Preview: {res.text[:300]}") # Shows raw HTML if it fails
-              
               news_payload = []
-              for date_el in date_elements:
-                  container = date_el.parent
-                  for _ in range(3):
-                      if not container: break
-                      link_tag = container.find('a')
-                      if link_tag: break
-                      container = container.parent
+              # Find EVERY link on the page
+              links = soup.find_all('a')
+              
+              for link in links:
+                  title = link.get_text(" ", strip=True)
+                  href = link.get('href', '')
+                  
+                  # Only grab links that look like PDFs or disclosures
+                  if ('.pdf' in href.lower() or 'disclosure' in href.lower()) and len(title) > 15:
                       
-                  if link_tag:
-                      title = link_tag.get_text(" ", strip=True)
-                      href = link_tag.get('href', '#')
+                      # Try to find a date near the link (up to 3 parents up)
+                      date_str = "2026-11-21" # Default to today if no date found
+                      parent = link.parent
+                      for _ in range(4):
+                          if not parent: break
+                          match = re.search(r'(\d{4}-\d{2}-\d{2})', parent.get_text())
+                          if match:
+                              date_str = match.group(1)
+                              break
+                          parent = parent.parent
                       
-                      if len(title) < 10: continue
-                      if href.startswith('/'): href = "https://www.bse.co.bw" + href
-                      
-                      date_str = date_el.strip()[:10]
-                      iso_date = f"{date_str}T00:00:00Z"
-                      
+                      # Guess the ticker from the title
                       ticker = "BSE"
                       upper_title = title.upper()
                       for sym in ["FNBB", "ABSA", "BTCL", "TURNSTAR", "SECHABA", "SEFALANA", "LETSHEGO", "CHOPPIES", "STANBIC", "BIHL", "NAP", "RDC", "ENGEN", "MINERGY", "BOTALA", "SHUMBA", "TLOU", "CHOBE", "CRESTA", "G4S", "LETLOLE", "PRIMETIME", "ACCESS"]:
@@ -106,20 +100,26 @@ jobs:
                               ticker = sym
                               break
                               
+                      # Make absolute URL
+                      if href.startswith('/'): href = "https://www.bse.co.bw" + href
+                          
                       news_payload.append({
                           "ticker": ticker,
-                          "published_at": iso_date,
+                          "published_at": date_str + "T00:00:00Z",
                           "raw_headline": title,
                           "pdf_url": href
                       })
               
+              # Deduplicate based on the PDF URL
               unique_news = list({v['pdf_url']:v for v in news_payload}.values())
+              
               if unique_news:
                   r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
                   print(f"Supabase News Push Status: {r.status_code}")
-                  if r.status_code >= 400: print(f"Error details: {r.text}")
+                  print(f"Found {len(unique_news)} news items.")
               else:
-                  print("No valid news payload was built.")
+                  print("No news links found on the page.")
+                  
           except Exception as e:
               print("News Sync Error:", e)
           PY
