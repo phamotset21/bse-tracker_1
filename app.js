@@ -302,36 +302,56 @@ window.fetchLiveMarketData = async function(manual = false) {
     const btn = document.getElementById('refresh-news-btn');
     if (btn && manual) btn.innerText = '↻ Syncing...';
 
-    if (!supabaseClient) {
-        if (btn && manual) btn.innerText = '✓ Local Data';
-        setTimeout(() => { if(btn) btn.innerText = '↻ Refresh'; }, 1500);
-        saveAndRender();
-        return;
+    // 1. Try to get Prices from Supabase
+    if (supabaseClient) {
+        try {
+            const { data: tickers } = await supabaseClient.from('bse_tickers').select('*').eq('is_active', true);
+            if (tickers && tickers.length > 0) {
+                STOCKS.length = 0;
+                tickers.forEach(t => {
+                    STOCKS.push({
+                        symbol: t.ticker, name: t.company_name, type: t.board || "Domestic Equity",
+                        price: t.current_price || 0, divYield: (t.annual_dividend_yield || 0) / 100,
+                        divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('Supabase price fetch error:', error);
+        }
     }
 
-    try {
-        const { data: tickers } = await supabaseClient.from('bse_tickers').select('*').eq('is_active', true);
-        if (tickers && tickers.length > 0) {
-            STOCKS.length = 0;
-            tickers.forEach(t => {
-                STOCKS.push({
-                    symbol: t.ticker, name: t.company_name, type: t.board || "Domestic Equity",
-                    price: t.current_price || 0, divYield: (t.annual_dividend_yield || 0) / 100,
-                    divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1
-                });
-            });
+    // 2. Try to get News from Supabase
+    let gotSupabaseNews = false;
+    if (supabaseClient) {
+        try {
+            const { data: news } = await supabaseClient.from('xnews_disclosures').select('*').order('published_at', { ascending: false }).limit(50);
+            if (news && news.length > 0) {
+                activeNews = news.map(n => ({
+                    symbol: n.ticker || 'BSE', title: n.raw_headline,
+                    date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
+                    summary: n.ai_summary || "Click to view the official BSE disclosure document.", link: n.pdf_url || "#"
+                }));
+                gotSupabaseNews = true;
+            }
+        } catch (error) {
+            console.error('Supabase news fetch error:', error);
         }
+    }
 
-        const { data: news } = await supabaseClient.from('xnews_disclosures').select('*').order('published_at', { ascending: false }).limit(50);
-        if (news && news.length > 0) {
-            activeNews = news.map(n => ({
-                symbol: n.ticker || 'BSE', title: n.raw_headline,
-                date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
-                summary: n.ai_summary || "Click to view the official BSE disclosure document.", link: n.pdf_url || "#"
-            }));
+    // 3. If Supabase news was empty, try to get News from news.json
+    if (!gotSupabaseNews) {
+        try {
+            const res = await fetch('news.json?t=' + Date.now());
+            if (res.ok) {
+                const jsonNews = await res.json();
+                if (jsonNews && jsonNews.length > 0) {
+                    activeNews = jsonNews;
+                }
+            }
+        } catch (e) {
+            console.log("news.json fetch failed, using hardcoded fallback.");
         }
-    } catch (error) {
-        console.error('Fetch Error:', error);
     }
 
     saveAndRender();
