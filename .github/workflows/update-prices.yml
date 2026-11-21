@@ -63,23 +63,26 @@ jobs:
           except Exception as e:
               print("Price Sync Error:", e)
 
-          # 2. SYNC NEWS
+          # 2. SYNC NEWS (Deep Row Scraper)
           print("\nStarting News Sync...")
           
-          # Expanded mapping of company names and tickers to catch more headlines
+          # Massive mapping of company names and tickers
           ticker_map = {
-              "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB",
-              "ABSA": "ABSA", "BARCLAYS": "ABSA",
-              "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL",
+              "FNBB": "FNBB", "FIRST NATIONAL BANK": "FNBB", "FNBB BANK": "FNBB",
+              "ABSA": "ABSA", "BARCLAYS": "ABSA", "ABSA BANK": "ABSA",
+              "BTCL": "BTCL", "BOTSWANA TELECOMMUNICATIONS": "BTCL", "BOTSWANA TELECOM": "BTCL",
               "TURNSTAR": "TURNSTAR", "SECHABA": "SECHABA", "SEFALANA": "SEFALANA",
               "LETSHEGO": "LETSHEGO", "CHOPPIES": "CHOPPIES", "STANBIC": "STANBIC",
               "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL", "NAP": "NAP", 
               "NEW AFRICAN PROPERTIES": "NAP", "RDC": "RDCP", "RDC PROPERTIES": "RDCP",
               "ENGEN": "ENGEN", "MINERGY": "MINERGY", "BOTALA": "BOTALA", "SHUMBA": "SHUMBA",
-              "TLOU": "TLOU", "TLOU ENERGY": "TLOU", "CHOBE": "CHOBE", "CRESTA": "CRESTA",
-              "G4S": "G4S", "LETLOLE": "LETLOLE", "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS",
+              "TLOU": "TLOU", "TLOU ENERGY": "TLOU", "CHOBE": "CHOBE", "CHOBE HOLDINGS": "CHOBE",
+              "CRESTA": "CRESTA", "CRESTA MARAKANELO": "CRESTA", "G4S": "G4S", 
+              "LETLOLE": "LETLOLE", "LETLOLE LA RONA": "LETLOLE", "PRIMETIME": "PRIMETIME", 
+              "PRIMETIME PROPERTY": "PRIMETIME", "ACCESS": "ACCESS", "ACCESS BANK": "ACCESS",
               "SEEDCO": "SEEDCO", "STANCHART": "STANCHART", "STANDARD CHARTERED": "STANCHART",
-              "OLYMPIA": "OLYMPIA", "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO"
+              "OLYMPIA": "OLYMPIA", "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO",
+              "ANGLO AMERICAN": "ANGLO", "GAIA": "GAIA", "CA SALES": "CA SALES"
           }
 
           try:
@@ -95,30 +98,27 @@ jobs:
                   
                   if ('.pdf' in href.lower() or 'disclosure' in href.lower()) and len(title) > 15:
                       
-                      # 1. Find the parent container to scan for logos/tickers
-                      container = link.parent
-                      for _ in range(4):
-                          if not container: break
-                          # Check if this container has an image (logo)
-                          if container.find('img'): break
-                          container = container.parent
+                      # 1. Find the closest table row or list item containing this link
+                      row = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
                       
-                      container_text = container.get_text(" ", strip=True).upper() if container else ""
-                      if container:
-                          for img in container.find_all('img'):
+                      # 2. Extract text and image alt tags from the entire row
+                      row_text = ""
+                      if row:
+                          row_text = row.get_text(" ", strip=True).upper()
+                          for img in row.find_all('img'):
                               alt = img.get('alt')
-                              if alt: container_text += " " + alt.upper()
+                              if alt: row_text += " " + alt.upper()
                       
-                      # 2. Match ticker based on title OR container text
-                      ticker = "BSE" # Default
-                      combined_text = title.upper() + " " + container_text
+                      # 3. Match ticker based on Title + Row Text (including Logo alt text)
+                      ticker = "BSE" # Default fallback
+                      combined_text = title.upper() + " " + row_text
                       
                       for key, sym in ticker_map.items():
                           if key in combined_text:
                               ticker = sym
                               break
                               
-                      # 3. Find date
+                      # 4. Find date
                       date_str = "2026-11-21" # Default to today
                       parent = link.parent
                       for _ in range(4):
