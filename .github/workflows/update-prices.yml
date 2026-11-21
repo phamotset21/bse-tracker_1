@@ -1,8 +1,5 @@
 name: Update Stock Prices & News
 
-permissions:
-  contents: write
-
 on:
   push:
   schedule:
@@ -67,14 +64,21 @@ jobs:
           except Exception as e:
               print("Price Sync Error:", e)
 
-          # 2. SYNC NEWS
+          # 2. SYNC NEWS (With Debug Output)
           print("\nStarting News Sync...")
           try:
               res = requests.get("https://www.bse.co.bw/xnews/", headers={'User-Agent': 'Mozilla/5.0'})
+              print(f"BSE Website Status: {res.status_code}") 
+              
               soup = BeautifulSoup(res.text, 'html.parser')
               
-              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+[AP]M\s+GMT\+2')
+              # More forgiving regex to catch the date even if spacing changed
+              date_pattern = re.compile(r'\d{4}-\d{2}-\d{2}.*?GMT\+2')
               date_elements = soup.find_all(string=date_pattern)
+              
+              if not date_elements:
+                  print("Debug: Found 0 date elements on the page.")
+                  print(f"HTML Preview: {res.text[:300]}") # Shows raw HTML if it fails
               
               news_payload = []
               for date_el in date_elements:
@@ -115,7 +119,7 @@ jobs:
                   print(f"Supabase News Push Status: {r.status_code}")
                   if r.status_code >= 400: print(f"Error details: {r.text}")
               else:
-                  print("No valid news found in scrape.")
+                  print("No valid news payload was built.")
           except Exception as e:
               print("News Sync Error:", e)
           PY
