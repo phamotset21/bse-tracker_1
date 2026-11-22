@@ -101,8 +101,11 @@ let currentChartSymbol = "";
 let currentChartPrice = 0;
 let currentChartPeriod = "1M";
 
+// Trade State
 let currentTradeSymbol = "";
 let currentTradePrice = 0;
+let tradeMode = 'shares'; // 'shares' or 'amount'
+let uploadedProofName = "";
 
 // --- CORE 3D CHART PLUGIN ---
 const custom3DPiePlugin = {
@@ -809,69 +812,6 @@ function renderModalChart() {
 }
 
 // --- WATCHLIST & TRADE LOGIC ---
-window.addToWatchlist = function(symbol, price) {
-    const idx = holdings.findIndex(h => h.symbol === symbol);
-    if (idx !== -1) {
-        if (holdings[idx].qty === 0) {
-            alert("Already in your Watchlist!");
-        } else {
-            alert("You already own this stock!");
-        }
-        return;
-    }
-    
-    holdings.push({ symbol: symbol, qty: 0, buyPrice: price, price: price });
-    saveAndRender();
-    alert(`${symbol} added to Watchlist!`);
-};
-
-window.openTradeModal = function(symbol, price) {
-    currentTradeSymbol = symbol;
-    currentTradePrice = price;
-    
-    document.getElementById('trade-symbol').innerText = symbol;
-    document.getElementById('trade-price').innerText = formatCurrency(price);
-    document.getElementById('trade-qty').value = '';
-    
-    document.getElementById('trade-user-name').value = localStorage.getItem('trade_name') || '';
-    document.getElementById('trade-user-ref').value = localStorage.getItem('trade_ref') || '';
-    document.getElementById('trade-user-phone').value = localStorage.getItem('trade_phone') || '';
-    
-    calculateTradeTotal();
-    
-    const modal = document.getElementById('trade-modal');
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('show'), 10);
-};
-
-window.closeTradeModal = function() {
-    const modal = document.getElementById('trade-modal');
-    modal.classList.remove('show');
-    setTimeout(() => { modal.style.display = 'none'; }, 300);
-};
-
-window.calculateTradeTotal = function() {
-    const qty = parseFloat(document.getElementById('trade-qty').value) || 0;
-    
-    const gross = currentTradePrice * qty;
-    const brokerage = gross * 0.01; // 1%
-    const levies = gross * 0.0025; // BSE 0.15% + CSD 0.10%
-    const subTotal = brokerage + levies;
-    const vat = subTotal * 0.10; // 10% VAT
-    const total = gross + subTotal + vat;
-
-    document.getElementById('fee-gross').innerText = formatCurrency(gross);
-    document.getElementById('fee-brokerage').innerText = formatCurrency(brokerage);
-    document.getElementById('fee-levies').innerText = formatCurrency(levies);
-    document.getElementById('fee-vat').innerText = formatCurrency(vat);
-    document.getElementById('fee-total').innerText = formatCurrency(total);
-};
-// --- WATCHLIST & TRADE LOGIC ---
-let currentTradeSymbol = "";
-let currentTradePrice = 0;
-let tradeMode = 'shares'; // 'shares' or 'amount'
-let uploadedProofName = "";
-
 window.addToWatchlist = function(symbol, price) {
     const idx = holdings.findIndex(h => h.symbol === symbol);
     if (idx !== -1) {
