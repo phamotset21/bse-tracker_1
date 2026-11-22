@@ -866,30 +866,198 @@ window.calculateTradeTotal = function() {
     document.getElementById('fee-vat').innerText = formatCurrency(vat);
     document.getElementById('fee-total').innerText = formatCurrency(total);
 };
+// --- WATCHLIST & TRADE LOGIC ---
+let currentTradeSymbol = "";
+let currentTradePrice = 0;
+let tradeMode = 'shares'; // 'shares' or 'amount'
+let uploadedProofName = "";
+
+window.addToWatchlist = function(symbol, price) {
+    const idx = holdings.findIndex(h => h.symbol === symbol);
+    if (idx !== -1) {
+        if (holdings[idx].qty === 0) alert("Already in your Watchlist!");
+        else alert("You already own this stock!");
+        return;
+    }
+    holdings.push({ symbol: symbol, qty: 0, buyPrice: price, price: price });
+    saveAndRender();
+    alert(`${symbol} added to Watchlist!`);
+};
+
+window.openTradeModal = function(symbol, price) {
+    currentTradeSymbol = symbol;
+    currentTradePrice = price;
+    setTradeMode('shares'); // Reset to shares mode by default
+    
+    document.getElementById('trade-symbol').innerText = symbol;
+    document.getElementById('trade-price').innerText = formatCurrency(price);
+    document.getElementById('trade-input').value = '';
+    
+    // Reset file input
+    document.getElementById('trade-proof').value = '';
+    document.getElementById('proof-status').style.display = 'none';
+    uploadedProofName = "";
+    
+    // Load saved user details
+    document.getElementById('trade-user-name').value = localStorage.getItem('trade_name') || '';
+    document.getElementById('trade-user-ref').value = localStorage.getItem('trade_ref') || '';
+    document.getElementById('trade-user-phone').value = localStorage.getItem('trade_phone') || '';
+    
+    calculateTradeTotal();
+    
+    const modal = document.getElementById('trade-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.closeTradeModal = function() {
+    const modal = document.getElementById('trade-modal');
+    modal.classList.remove('show');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+};
+
+window.setTradeMode = function(mode) {
+    tradeMode = mode;
+    const inputLabel = document.getElementById('trade-input-label');
+    const inputField = document.getElementById('trade-input');
+    const btnShares = document.getElementById('btn-mode-shares');
+    const btnAmount = document.getElementById('btn-mode-amount');
+
+    if (mode === 'shares') {
+        inputLabel.innerText = "Quantity to Buy (Shares)";
+        inputField.placeholder = "e.g., 100";
+        btnShares.style.background = 'var(--bg-surface)';
+        btnShares.style.color = 'var(--text-main)';
+        btnShares.style.boxShadow = 'var(--shadow-sm)';
+        btnAmount.style.background = 'transparent';
+        btnAmount.style.color = 'var(--text-muted)';
+        btnAmount.style.boxShadow = 'none';
+    } else {
+        inputLabel.innerText = "Amount to Spend (Pula)";
+        inputField.placeholder = "e.g., 5000";
+        btnAmount.style.background = 'var(--bg-surface)';
+        btnAmount.style.color = 'var(--text-main)';
+        btnAmount.style.boxShadow = 'var(--shadow-sm)';
+        btnShares.style.background = 'transparent';
+        btnShares.style.color = 'var(--text-muted)';
+        btnShares.style.boxShadow = 'none';
+    }
+    inputField.value = ''; // clear input on toggle
+    calculateTradeTotal();
+};
+
+window.calculateTradeTotal = function() {
+    const inputVal = parseFloat(document.getElementById('trade-input').value) || 0;
+    let qty = 0;
+    let gross = 0;
+
+    // BSE Fee Structure
+    const brokerageRate = 0.01;    // 1.0%
+    const leviesRate = 0.0025;     // BSE 0.15% + CSD 0.10%
+    const vatRate = 0.10;          // 10% VAT on fees
+    const totalFeeMultiplier = (brokerageRate + leviesRate) * (1 + vatRate); // 1.01375
+
+    if (tradeMode === 'shares') {
+        qty = inputVal;
+        gross = qty * currentTradePrice;
+    } else {
+        // Calculate shares from Amount. Must floor to nearest whole share.
+        const exactQty = inputVal / (currentTradePrice * (1 + totalFeeMultiplier));
+        qty = Math.floor(exactQty);
+        gross = qty * currentTradePrice;
+    }
+
+    const brokerage = gross * brokerageRate;
+    const levies = gross * leviesRate;
+    const subTotal = brokerage + levies;
+    const vat = subTotal * vatRate;
+    const total = gross + subTotal + vat;
+
+    document.getElementById('fee-gross').innerText = formatCurrency(gross);
+    document.getElementById('fee-brokerage').innerText = formatCurrency(brokerage);
+    document.getElementById('fee-levies').innerText = formatCurrency(levies);
+    document.getElementById('fee-vat').innerText = formatCurrency(vat);
+    document.getElementById('fee-total').innerText = formatCurrency(total);
+
+    const calcLabel = document.getElementById('calculated-shares-label');
+    if (tradeMode === 'amount' && qty > 0) {
+        calcLabel.innerText = `≈ ${qty} shares for ${formatCurrency(total)}`;
+    } else if (tradeMode === 'amount' && inputVal > 0) {
+        calcLabel.innerText = `Amount too low to buy 1 share.`;
+    } else {
+        calcLabel.innerText = "";
+    }
+};
+
+window.handleProofUpload = function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        uploadedProofName = file.name;
+        const status = document.getElementById('proof-status');
+        status.innerText = `✓ Selected: ${file.name}`;
+        status.style.display = 'block';
+    } else {
+        uploadedProofName = "";
+        document.getElementById('proof-status').style.display = 'none';
+    }
+};
 
 window.generateTradeEmail = function() {
-    const qty = parseFloat(document.getElementById('trade-qty').value);
+    const inputVal = parseFloat(document.getElementById('trade-input').value);
     const name = document.getElementById('trade-user-name').value.trim();
     const ref = document.getElementById('trade-user-ref').value.trim();
     const phone = document.getElementById('trade-user-phone').value.trim();
     const brokerKey = document.getElementById('trade-broker').value;
 
-    if (!qty || qty <= 0) return alert("Please enter a valid quantity.");
+    if (!inputVal || inputVal <= 0) return alert("Please enter a valid quantity or amount.");
     if (!name || !ref || !phone) return alert("Please fill in your name, CSD/Client Reference, and phone number.");
+
+    // Recalculate final shares just to be sure
+    let finalQty = 0;
+    if (tradeMode === 'shares') {
+        finalQty = inputVal;
+    } else {
+        const totalFeeMultiplier = 0.01375;
+        finalQty = Math.floor(inputVal / (currentTradePrice * (1 + totalFeeMultiplier)));
+        if (finalQty <= 0) return alert("The amount entered is too low to buy 1 share.");
+    }
+
+    const totalCost = document.getElementById('fee-total').innerText;
 
     localStorage.setItem('trade_name', name);
     localStorage.setItem('trade_ref', ref);
     localStorage.setItem('trade_phone', phone);
 
-    const totalCost = document.getElementById('fee-total').innerText;
     let brokerEmail = brokerKey === 'imara' ? 'icssales@imara.com' : 'motswedi@motswedi.co.bw';
 
     const subject = `Request to Buy Shares – ${name} (${ref})`;
-    const body = `Good day Dealing Desk,\n\nWith the funds deposited, please Buy ${currentTradeSymbol} shares at best available market price.\n\nQuantity: ${qty}\nEstimated Total Cost: ${totalCost}\n\nProof of payment attached.\n\nClient Name: ${name}\nCSD / Client Ref: ${ref}\nContact: ${phone}\n\nSignature:\n[Insert Signature]`;
+    
+    let body = `Good day Dealing Desk,\n\nWith the funds deposited, please Buy ${currentTradeSymbol} shares at best available market price.\n\n`;
+    body += `Quantity: ${finalQty} shares\n`;
+    body += `Gross Value: P${(finalQty * currentTradePrice).toFixed(2)}\n`;
+    body += `Estimated Total Cost: ${totalCost}\n\n`;
+    
+    if (uploadedProofName) {
+        body += `Proof of payment attached (${uploadedProofName}).\n\n`;
+    } else {
+        body += `[PLEASE ATTACH PROOF OF PAYMENT HERE]\n\n`;
+    }
+
+    body += `Client Name: ${name}\n`;
+    body += `CSD / Client Ref: ${ref}\n`;
+    body += `Contact: ${phone}\n\n`;
+    body += `Signature:\n[Insert Signature]`;
 
     const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
     
+    // Add to portfolio as a pending watchlist item with the bought qty if not already there
+    const idx = holdings.findIndex(h => h.symbol === currentTradeSymbol);
+    if (idx === -1) {
+        holdings.push({ symbol: currentTradeSymbol, qty: finalQty, buyPrice: currentTradePrice, price: currentTradePrice });
+        saveAndRender();
+    }
+
     closeTradeModal();
 };
 
