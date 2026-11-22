@@ -101,6 +101,9 @@ let currentChartSymbol = "";
 let currentChartPrice = 0;
 let currentChartPeriod = "1M";
 
+let currentTradeSymbol = "";
+let currentTradePrice = 0;
+
 // --- CORE 3D CHART PLUGIN ---
 const custom3DPiePlugin = {
     id: 'custom3DPiePlugin',
@@ -390,6 +393,8 @@ window.saveAndRender = function() {
         holdings.forEach((item, i) => {
             const meta = getStockMeta(item.symbol);
             const curPrice = meta.price || item.price;
+            const isWatchlist = item.qty === 0;
+            
             const itemVal = item.qty * curPrice;
             const itemCost = item.qty * (item.buyPrice || curPrice);
             const pl = itemVal - itemCost;
@@ -400,12 +405,12 @@ window.saveAndRender = function() {
 
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><strong>${item.symbol}</strong></td>
-                <td>${item.qty}</td>
-                <td>${formatCurrency(item.buyPrice || curPrice)}<br><span style="color:var(--text-muted);">${formatCurrency(curPrice)}</span></td>
-                <td><strong>${formatCurrency(itemVal)}</strong></td>
-                <td style="color:${pl >= 0 ? 'var(--success-color)' : 'var(--danger-color)'}; font-weight:bold;">${pl >= 0 ? '+' : ''}${formatCurrency(pl)}</td>
-                <td style="color:var(--accent-orange);">+${formatCurrency(netDiv)}</td>
+                <td><strong>${item.symbol}</strong> ${isWatchlist ? '<br><span style="font-size:0.6rem; color:var(--text-muted);">WATCHLIST</span>' : ''}</td>
+                <td>${isWatchlist ? '-' : item.qty}</td>
+                <td>${isWatchlist ? '-' : formatCurrency(item.buyPrice || curPrice)}<br><span style="color:var(--text-muted);">${formatCurrency(curPrice)}</span></td>
+                <td><strong>${isWatchlist ? 'P0.00' : formatCurrency(itemVal)}</strong></td>
+                <td style="color:${pl >= 0 ? 'var(--success-color)' : 'var(--danger-color)'}; font-weight:bold;">${isWatchlist ? '-' : (pl >= 0 ? '+' : '') + formatCurrency(pl)}</td>
+                <td style="color:var(--accent-orange);">${isWatchlist ? '-' : '+' + formatCurrency(netDiv)}</td>
                 <td><button class="delete-btn" onclick="deleteHolding(${i})">✕</button></td>
             `;
             tbody.appendChild(row);
@@ -423,7 +428,7 @@ window.saveAndRender = function() {
             dashPl.innerText = (totalPL >= 0 ? '+' : '') + formatCurrency(totalPL);
             dashPl.style.color = totalPL >= 0 ? 'var(--success-color)' : 'var(--danger-color)';
         }
-        if (dashCount) dashCount.innerText = holdings.length;
+        if (dashCount) dashCount.innerText = holdings.filter(h => h.qty > 0).length;
 
         const warnBox = document.getElementById('risk-warning-container');
         if (warnBox) {
@@ -451,9 +456,10 @@ function updateAllocationChart() {
     if (portfolioChart) portfolioChart.destroy();
 
     let labels = [], data = [], bgColors = [];
-    let totalVal = holdings.reduce((acc, h) => acc + (h.qty * getStockMeta(h.symbol).price), 0);
+    const activeHoldings = holdings.filter(h => h.qty > 0);
+    let totalVal = activeHoldings.reduce((acc, h) => acc + (h.qty * getStockMeta(h.symbol).price), 0);
 
-    holdings.forEach((h, i) => {
+    activeHoldings.forEach((h, i) => {
         const meta = getStockMeta(h.symbol);
         const val = h.qty * meta.price;
         const pct = totalVal > 0 ? ((val / totalVal) * 100).toFixed(1) : 0;
@@ -499,7 +505,8 @@ function updateDividendSection() {
     const container = document.getElementById('dividends-schedule-container');
     if (!container) return;
     container.innerHTML = '';
-    if (holdings.length === 0) {
+    const activeHoldings = holdings.filter(h => h.qty > 0);
+    if (activeHoldings.length === 0) {
         container.innerHTML = `<div class="div-card" style="text-align:center; color:var(--text-muted); font-size:0.8rem;">Add holdings to view key payout dates.</div>`;
         return;
     }
@@ -507,7 +514,7 @@ function updateDividendSection() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    holdings.forEach(h => {
+    activeHoldings.forEach(h => {
         const meta = getStockMeta(h.symbol);
         const netAnnual = (h.qty * meta.price * meta.divYield) * (1 - (taxRate / 100));
         const card = document.createElement('div');
@@ -554,7 +561,9 @@ function update12MonthChart() {
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyData = new Array(12).fill(0);
-    holdings.forEach(h => {
+    const activeHoldings = holdings.filter(h => h.qty > 0);
+    
+    activeHoldings.forEach(h => {
         const meta = getStockMeta(h.symbol);
         if (meta.payMonth >= 0 && meta.divYield > 0) {
             monthlyData[meta.payMonth] += (h.qty * meta.price * meta.divYield * (1 - (taxRate / 100)));
@@ -574,7 +583,7 @@ function renderPinnedNews() {
     if (!container) return;
     container.innerHTML = '';
     
-    const holdingSymbols = holdings.map(h => h.symbol);
+    const holdingSymbols = holdings.filter(h => h.qty > 0).map(h => h.symbol);
     const sortedNews = [...activeNews].sort((a, b) => {
         const aOwned = holdingSymbols.includes(a.symbol);
         const bOwned = holdingSymbols.includes(b.symbol);
@@ -616,12 +625,11 @@ function initMarketPricesGrid() {
                 <span>${s.symbol} • ${formatCurrency(s.price)}</span>
                 <span>${s.name}</span>
             </div>
-            <div class="price-actions">
-                <button class="btn-outline" style="padding: 6px 8px; border-radius: 8px;" onclick="openChartModal('${s.symbol}', ${s.price})" title="View Chart">
-                    <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;"><path d="M3 17l6-6 4 4 8-8"></path></svg>
+            <div class="price-actions" style="gap: 8px;">
+                <button class="btn-outline" style="padding: 6px 8px; border-radius: 8px;" onclick="addToWatchlist('${s.symbol}', ${s.price})" title="Add to Watchlist">
+                    <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
-                <input type="number" id="qty-${s.symbol}" placeholder="Qty" value="${existing ? existing.qty : ''}" step="any">
-                <button class="action-btn-sm" onclick="quickToggleHolding('${s.symbol}', ${s.price})">${existing ? 'Update' : 'Add'}</button>
+                <button class="action-btn-sm" style="background: var(--accent-orange); color: white; border: none; padding: 6px 12px;" onclick="openTradeModal('${s.symbol}', ${s.price})">Buy</button>
             </div>
         `;
         grid.appendChild(row);
@@ -694,7 +702,7 @@ function updateCustomColorsUI() {
     const list = document.getElementById('custom-color-list');
     if (!list) return;
     list.innerHTML = '';
-    holdings.forEach(h => {
+    holdings.filter(h => h.qty > 0).forEach(h => {
         const color = customColors[h.symbol] || '#888888';
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:4px 8px; background:var(--input-bg); border-radius:8px; border:1px solid var(--card-border);';
@@ -800,12 +808,125 @@ function renderModalChart() {
     });
 }
 
+// --- WATCHLIST & TRADE LOGIC ---
+window.addToWatchlist = function(symbol, price) {
+    const idx = holdings.findIndex(h => h.symbol === symbol);
+    if (idx !== -1) {
+        if (holdings[idx].qty === 0) {
+            alert("Already in your Watchlist!");
+        } else {
+            alert("You already own this stock!");
+        }
+        return;
+    }
+    
+    holdings.push({ symbol: symbol, qty: 0, buyPrice: price, price: price });
+    saveAndRender();
+    alert(`${symbol} added to Watchlist!`);
+};
+
+window.openTradeModal = function(symbol, price) {
+    currentTradeSymbol = symbol;
+    currentTradePrice = price;
+    
+    document.getElementById('trade-symbol').innerText = symbol;
+    document.getElementById('trade-price').innerText = formatCurrency(price);
+    document.getElementById('trade-qty').value = '';
+    
+    document.getElementById('trade-user-name').value = localStorage.getItem('trade_name') || '';
+    document.getElementById('trade-user-ref').value = localStorage.getItem('trade_ref') || '';
+    document.getElementById('trade-user-phone').value = localStorage.getItem('trade_phone') || '';
+    
+    calculateTradeTotal();
+    
+    const modal = document.getElementById('trade-modal');
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.closeTradeModal = function() {
+    const modal = document.getElementById('trade-modal');
+    modal.classList.remove('show');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+};
+
+window.calculateTradeTotal = function() {
+    const qty = parseFloat(document.getElementById('trade-qty').value) || 0;
+    
+    const gross = currentTradePrice * qty;
+    const brokerage = gross * 0.01; // 1%
+    const levies = gross * 0.0025; // BSE 0.15% + CSD 0.10%
+    const subTotal = brokerage + levies;
+    const vat = subTotal * 0.10; // 10% VAT
+    const total = gross + subTotal + vat;
+
+    document.getElementById('fee-gross').innerText = formatCurrency(gross);
+    document.getElementById('fee-brokerage').innerText = formatCurrency(brokerage);
+    document.getElementById('fee-levies').innerText = formatCurrency(levies);
+    document.getElementById('fee-vat').innerText = formatCurrency(vat);
+    document.getElementById('fee-total').innerText = formatCurrency(total);
+};
+
+window.generateTradeEmail = function() {
+    const qty = parseFloat(document.getElementById('trade-qty').value);
+    const name = document.getElementById('trade-user-name').value.trim();
+    const ref = document.getElementById('trade-user-ref').value.trim();
+    const phone = document.getElementById('trade-user-phone').value.trim();
+    const brokerKey = document.getElementById('trade-broker').value;
+
+    if (!qty || qty <= 0) return alert("Please enter a valid quantity.");
+    if (!name || !ref || !phone) return alert("Please fill in your name, CSD/Client Reference, and phone number.");
+
+    localStorage.setItem('trade_name', name);
+    localStorage.setItem('trade_ref', ref);
+    localStorage.setItem('trade_phone', phone);
+
+    const totalCost = document.getElementById('fee-total').innerText;
+    let brokerEmail = brokerKey === 'imara' ? 'icssales@imara.com' : 'motswedi@motswedi.co.bw';
+
+    const subject = `Request to Buy Shares – ${name} (${ref})`;
+    const body = `Good day Dealing Desk,\n\nWith the funds deposited, please Buy ${currentTradeSymbol} shares at best available market price.\n\nQuantity: ${qty}\nEstimated Total Cost: ${totalCost}\n\nProof of payment attached.\n\nClient Name: ${name}\nCSD / Client Ref: ${ref}\nContact: ${phone}\n\nSignature:\n[Insert Signature]`;
+
+    const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+    
+    closeTradeModal();
+};
+
 // --- UTILITIES & BACKUPS ---
-window.copyCSV = function() { if(holdings.length === 0) return alert("No holdings to copy."); let csv = "Symbol,Quantity,AvgBuyPrice,CurrentPrice,TotalValue\n"; holdings.forEach(h => { const meta = getStockMeta(h.symbol); const cur = meta.price || h.price; csv += `${h.symbol},${h.qty},${h.buyPrice || cur},${cur},${(h.qty * cur).toFixed(2)}\n`; }); navigator.clipboard.writeText(csv).then(() => alert("CSV copied!")); };
-window.copyBackupJSON = function() { const str = JSON.stringify({ holdings, taxRate, alertWindow, hideAmounts, compactLayout, fontSizeMode, defaultTab, chartType, chartPalette, chartLegendPosition, customColors, cardOpacity, cardBlur, ambientOrbs, theme: localStorage.getItem('bse_theme'), accent: localStorage.getItem('bse_accent') }, null, 2); navigator.clipboard.writeText(str).then(() => alert("Backup copied!")); };
-window.restoreBackupJSON = function() { const str = prompt("Paste backup JSON here:"); if (!str) return; try { const p = JSON.parse(str); if(p.holdings) { localStorage.setItem('bse_portfolio', JSON.stringify(p.holdings)); alert("Backup restored! Reloading..."); location.reload(); } } catch(e) { alert("Invalid JSON"); } };
-window.resetAllData = function() { if (confirm("Reset all data? This cannot be undone.")) { localStorage.clear(); location.reload(); } };
-window.autoFillPrice = function() { const sym = document.getElementById('asset-search').value.trim().toUpperCase(); const s = STOCKS.find(x => x.symbol === sym); if (s) { document.getElementById('asset-price').value = s.price; if (!document.getElementById('asset-buy-price').value) document.getElementById('asset-buy-price').value = s.price; } };
+window.copyCSV = function() { 
+    if(holdings.length === 0) return alert("No holdings to copy."); 
+    let csv = "Symbol,Quantity,AvgBuyPrice,CurrentPrice,TotalValue\n"; 
+    holdings.forEach(h => { 
+        const meta = getStockMeta(h.symbol); 
+        const cur = meta.price || h.price; 
+        csv += `${h.symbol},${h.qty},${h.buyPrice || cur},${cur},${(h.qty * cur).toFixed(2)}\n`; 
+    }); 
+    navigator.clipboard.writeText(csv).then(() => alert("CSV copied!")); 
+};
+window.copyBackupJSON = function() { 
+    const str = JSON.stringify({ holdings, taxRate, alertWindow, hideAmounts, compactLayout, fontSizeMode, defaultTab, chartType, chartPalette, chartLegendPosition, customColors, cardOpacity, cardBlur, ambientOrbs, theme: localStorage.getItem('bse_theme'), accent: localStorage.getItem('bse_accent') }, null, 2); 
+    navigator.clipboard.writeText(str).then(() => alert("Backup copied!")); 
+};
+window.restoreBackupJSON = function() { 
+    const str = prompt("Paste backup JSON here:"); 
+    if (!str) return; 
+    try { 
+        const p = JSON.parse(str); 
+        if(p.holdings) { localStorage.setItem('bse_portfolio', JSON.stringify(p.holdings)); alert("Backup restored! Reloading..."); location.reload(); } 
+    } catch(e) { alert("Invalid JSON"); } 
+};
+window.resetAllData = function() { 
+    if (confirm("Reset all data? This cannot be undone.")) { localStorage.clear(); location.reload(); } 
+};
+window.autoFillPrice = function() { 
+    const sym = document.getElementById('asset-search').value.trim().toUpperCase(); 
+    const s = STOCKS.find(x => x.symbol === sym); 
+    if (s) { 
+        document.getElementById('asset-price').value = s.price; 
+        if (!document.getElementById('asset-buy-price').value) document.getElementById('asset-buy-price').value = s.price; 
+    } 
+};
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
