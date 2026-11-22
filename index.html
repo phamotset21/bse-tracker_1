@@ -21,11 +21,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
-    <!-- Supabase Client (CRITICAL) -->
+    <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
+    <!-- Ambient Background Mesh Orbs -->
     <div class="ambient-bg" id="ambient-bg">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
@@ -376,6 +377,73 @@
         </div>
     </div>
 
+    <!-- TRADE MODAL -->
+    <div id="trade-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2 id="trade-modal-title" style="margin: 0; border: none; padding: 0;">EXECUTE TRADE</h2>
+                <button class="close-btn" onclick="closeTradeModal()">✕</button>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                <div>
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">ASSET</span>
+                    <div id="trade-symbol" style="font-weight: bold; font-size: 1.1rem;">FNBB</div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.7rem; color: var(--text-muted);">MARKET PRICE</span>
+                    <div id="trade-price" style="font-weight: bold; font-size: 1.1rem; color: var(--accent-orange);">P5.75</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Quantity to Buy</label>
+                <input type="number" id="trade-qty" class="form-control" placeholder="e.g., 100" oninput="calculateTradeTotal()">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Select Broker</label>
+                <select id="trade-broker" class="form-control" onchange="calculateTradeTotal()">
+                    <option value="motswedi">Motswedi Securities</option>
+                    <option value="imara">Imara Capital Securities</option>
+                </select>
+            </div>
+
+            <!-- Fee Breakdown -->
+            <div style="background: var(--input-bg); border-radius: 12px; padding: 12px; font-size: 0.8rem; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Gross Value</span><span id="fee-gross">P0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
+                    <span>Brokerage (1.0%)</span><span id="fee-brokerage">P0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
+                    <span>BSE & CSD Levies (0.25%)</span><span id="fee-levies">P0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
+                    <span>VAT (10%)</span><span id="fee-vat">P0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-weight: bold; font-size: 1rem;">
+                    <span>Total Cost</span><span id="fee-total" style="color: var(--success-color);">P0.00</span>
+                </div>
+            </div>
+
+            <!-- User Details for Email -->
+            <div class="form-group" style="margin-bottom: 15px;">
+                <input type="text" id="trade-user-name" class="form-control" placeholder="Your Full Legal Name" style="margin-bottom: 8px;">
+                <input type="text" id="trade-user-ref" class="form-control" placeholder="CSD / Client Reference" style="margin-bottom: 8px;">
+                <input type="tel" id="trade-user-phone" class="form-control" placeholder="Contact Phone Number">
+            </div>
+
+            <button class="btn btn-primary btn-full" onclick="generateTradeEmail()">
+                ✉️ Generate Order Email
+            </button>
+            <p style="font-size: 0.65rem; color: var(--text-muted); text-align: center; margin-top: 10px;">
+                This will open your email app with the order pre-filled. Ensure you attach your proof of payment.
+            </p>
+        </div>
+    </div>
+
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="switchTab('home', this)" id="nav-btn-home">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -401,4 +469,4 @@
 
     <script src="app.js"></script>
 </body>
-            </html>
+</html>
