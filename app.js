@@ -1,3 +1,15 @@
+// --- GLOBAL ERROR CATCHER ---
+window.addEventListener('error', function(e) {
+    console.error("Global Error Caught:", e.message);
+    // Don't alert for image loading errors or minor fetch fails
+    if (e.message.includes('Script error') || e.message.includes('NetworkError')) return;
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = 'position:fixed; top:10px; left:10px; right:10px; background:red; color:white; padding:15px; z-index:9999; border-radius:10px; font-family:monospace; font-size:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5);';
+    errorDiv.innerHTML = `<strong>App Error:</strong><br>${e.message}<br><br><button onclick="this.parentElement.remove()" style="background:white; color:red; border:none; padding:5px 10px; border-radius:5px; font-weight:bold;">Dismiss</button>`;
+    document.body.appendChild(errorDiv);
+});
+
 // --- SAFE SUPABASE INITIALIZATION ---
 let supabaseClient = null;
 try {
