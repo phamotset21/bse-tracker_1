@@ -26,460 +26,494 @@
 </head>
 <body>
 
-    <!-- Ambient Background Mesh Orbs -->
-    <div class="ambient-bg" id="ambient-bg">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-    </div>
-
-    <div class="header">
-        <div class="header-brand">
-            <div style="width: 38px; height: 38px; border-radius: 12px; background: var(--input-bg); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-orange); box-shadow: 0 4px 12px var(--accent-glow);">
-                <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: none; stroke: var(--accent-orange); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
-                    <path d="M3 17l6-6 4 4 8-8"></path>
-                    <circle cx="3" cy="17" r="1.5" fill="var(--accent-orange)"></circle>
-                    <circle cx="9" cy="11" r="1.5" fill="var(--accent-orange)"></circle>
-                    <circle cx="13" cy="15" r="1.5" fill="var(--accent-orange)"></circle>
-                    <circle cx="21" cy="7" r="2" fill="var(--accent-orange)"></circle>
-                </svg>
-            </div>
-            <h1>Financial Markets Online <span>BSE & Asset Tracker</span></h1>
-        </div>
-    </div>
-
-    <!-- TAB 1: HOME DASHBOARD -->
-    <div id="tab-home" class="tab-content active">
-        <div id="risk-warning-container"></div>
-
-        <div class="ipo-timer-card">
-            <div class="ipo-timer-title">Stanbic Bank Botswana IPO Closes In</div>
-            <div class="ipo-countdown-grid" id="ipo-countdown">
-                <div class="countdown-unit"><strong id="ipo-days">00</strong><span>Days</span></div>
-                <div class="countdown-unit"><strong id="ipo-hours">00</strong><span>Hours</span></div>
-                <div class="countdown-unit"><strong id="ipo-mins">00</strong><span>Mins</span></div>
-                <div class="countdown-unit"><strong id="ipo-secs">00</strong><span>Secs</span></div>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Dashboard Summary</h2>
-            <div class="metrics-grid">
-                <div class="metric-box">
-                    <span>Total Portfolio Value</span>
-                    <strong id="dash-total-val">P0.00</strong>
+    <!-- LOGIN SCREEN OVERLAY -->
+    <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-base); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="glass-card" style="width: 100%; max-width: 400px; padding: 30px; box-shadow: var(--shadow-lg); border: 1px solid var(--accent-orange);">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="width: 60px; height: 60px; border-radius: 16px; background: var(--input-bg); border: 1px solid var(--accent-orange); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px; box-shadow: 0 4px 12px var(--accent-glow);">
+                    <svg viewBox="0 0 24 24" style="width: 30px; height: 30px; fill: none; stroke: var(--accent-orange); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;"><path d="M3 17l6-6 4 4 8-8"></path><circle cx="3" cy="17" r="1.5" fill="var(--accent-orange)"></circle><circle cx="9" cy="11" r="1.5" fill="var(--accent-orange)"></circle><circle cx="13" cy="15" r="1.5" fill="var(--accent-orange)"></circle><circle cx="21" cy="7" r="2" fill="var(--accent-orange)"></circle></svg>
                 </div>
-                <div class="metric-box">
-                    <span>Est. Net Annual Div</span>
-                    <strong id="dash-total-div">P0.00</strong>
-                </div>
-                <div class="metric-box">
-                    <span>Total Unrealized P/L</span>
-                    <strong id="dash-total-pl">P0.00</strong>
-                </div>
-                <div class="metric-box">
-                    <span>Total Holdings</span>
-                    <strong id="dash-total-count" style="color:var(--text-main);">0</strong>
-                </div>
+                <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-main);" id="auth-title">Welcome Back</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;" id="auth-subtitle">Log in to sync your portfolio</p>
             </div>
-        </div>
 
-        <div class="glass-card">
-            <h2>
-              Asset Allocation
-              <div style="display:flex; gap:6px; font-size:0.7rem; font-weight:normal; flex-wrap: wrap;">
-                <select id="chart-type-select" onchange="changeChartType(this.value)" style="padding:3px 6px; font-size:0.7rem;">
-                  <option value="donut">Donut</option>
-                  <option value="pie">Pie</option>
-                  <option value="half-donut">Half Donut</option>
-                  <option value="3d-cylinder">Solid 3D Cylinder</option>
-                  <option value="3d-exploded">Exploded 3D Pie</option>
-                  <option value="bars">Bars</option>
-                </select>
-                <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:3px 6px; font-size:0.7rem;">
-                  <option value="vivid">Vivid</option>
-                  <option value="pastel">Pastel</option>
-                  <option value="neon">Neon</option>
-                  <option value="earth">Earth</option>
-                  <option value="cb-safe">Colour-blind Safe</option>
-                  <option value="custom">Custom Colors</option>
-                </select>
-                <select id="chart-legend-select" onchange="changeChartLegend(this.value)" style="padding:3px 6px; font-size:0.7rem;">
-                  <option value="bottom">Legend: Bottom</option>
-                  <option value="top">Legend: Top</option>
-                  <option value="left">Legend: Left</option>
-                  <option value="right">Legend: Right</option>
-                  <option value="hidden">Hide Legend</option>
-                </select>
-              </div>
-            </h2>
-            <div class="chart-container" id="original-chart-container">
-                <canvas id="portfolioChart"></canvas>
-            </div>
-            
-            <div id="custom-color-settings" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--card-border);">
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Customize Slice Colors:</div>
-                <div id="custom-color-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>
-                Pinned & Holdings News
-                <button onclick="fetchLiveMarketData(true)" class="btn-refresh" id="refresh-news-btn">↻ Refresh</button>
-            </h2>
-            <div id="pinned-news-container"></div>
-        </div>
-    </div>
-
-    <!-- TAB 2: PORTFOLIO BREAKDOWN -->
-    <div id="tab-portfolio" class="tab-content">
-        <div class="glass-card">
-            <h2>Add / Update Asset Holding</h2>
             <div class="form-group">
-                <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., FNBB, TURNSTAR)..." oninput="autoFillPrice()">
-                <datalist id="bse-list"></datalist>
+                <input type="email" id="auth-email" class="form-control" placeholder="Email Address" style="margin-bottom: 10px; background: var(--bg-surface);">
+                <input type="password" id="auth-password" class="form-control" placeholder="Password" style="margin-bottom: 15px; background: var(--bg-surface);">
                 
-                <input type="number" id="asset-qty" placeholder="Share Quantity" step="any">
-                <input type="number" id="asset-buy-price" placeholder="Avg Buy Price per Share (P)" step="any">
-                <input type="number" id="asset-price" placeholder="Current Price (P)" step="any">
-                <button onclick="addHolding()">Save Holding to Portfolio</button>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Holdings & Performance</h2>
-            <div class="controls-bar">
-                <div style="font-size:0.75rem; color:var(--text-muted);">Sort By:</div>
-                <select id="sort-select" onchange="saveAndRender()" style="padding:6px 10px; font-size:0.78rem;">
-                    <option value="value">Highest Value</option>
-                    <option value="yield">Highest Yield</option>
-                    <option value="az">Ticker (A–Z)</option>
-                </select>
-                <button onclick="copyCSV()" class="btn-outline" style="padding:6px 10px; font-size:0.75rem;">Copy CSV</button>
-            </div>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Asset</th>
-                            <th>Qty</th>
-                            <th>Avg / Cur</th>
-                            <th>Value</th>
-                            <th>Gain / Loss</th>
-                            <th>Yield</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="holdings-list"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 3: DIVIDENDS & PAYOUTS -->
-    <div id="tab-dividends" class="tab-content">
-        <div class="glass-card">
-            <h2>12-Month Net Dividend Projection</h2>
-            <div class="chart-container">
-                <canvas id="dividendChart"></canvas>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Dividend Schedule & Key Dates</h2>
-            <div id="dividends-schedule-container"></div>
-        </div>
-    </div>
-
-    <!-- TAB 4: MARKETS BOARD -->
-    <div id="tab-markets" class="tab-content">
-        <div class="glass-card">
-            <h2>BSE Market Board & Quick Entry</h2>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Search market tickers and adjust share positions directly:</div>
-            <input type="text" id="market-search-input" placeholder="Search Tickers or Companies..." onkeyup="filterMarketGrid()" style="margin-bottom: 12px; width: 100%;">
-            <div class="prices-grid" id="market-prices-grid"></div>
-        </div>
-    </div>
-
-    <!-- TAB 5: SETTINGS & DISPLAY -->
-    <div id="tab-settings" class="tab-content">
-        <div class="glass-card">
-            <h2>Themes & Atmosphere</h2>
-            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Base Theme:</div>
-            <div class="themes-grid">
-                <button class="theme-btn" onclick="setTheme('auto')" id="btn-auto">
-                    <span class="theme-dot" style="background:linear-gradient(135deg,#fff,#0d1117);"></span> Auto (Phone)
-                </button>
-                <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">
-                    <span class="theme-dot" style="background:#0d1117;"></span> Dark
-                </button>
-                <button class="theme-btn" onclick="setTheme('oled')" id="btn-oled">
-                    <span class="theme-dot" style="background:#000000;"></span> OLED Black
-                </button>
-                <button class="theme-btn" onclick="setTheme('light')" id="btn-light">
-                    <span class="theme-dot" style="background:#ffffff;"></span> Light
-                </button>
-                <button class="theme-btn" onclick="setTheme('midnight')" id="btn-midnight">
-                    <span class="theme-dot" style="background:#060b19;"></span> Midnight
-                </button>
-                <button class="theme-btn" onclick="setTheme('forest')" id="btn-forest">
-                    <span class="theme-dot" style="background:#06140d;"></span> Forest
-                </button>
-                <button class="theme-btn" onclick="setTheme('sand')" id="btn-sand">
-                    <span class="theme-dot" style="background:#f5efe6;"></span> Sand
-                </button>
-                <button class="theme-btn" onclick="setTheme('cyberpunk')" id="btn-cyberpunk">
-                    <span class="theme-dot" style="background:linear-gradient(135deg,#ec4899,#06b6d4);"></span> Cyberpunk
-                </button>
-                <button class="theme-btn" onclick="setTheme('plum')" id="btn-plum">
-                    <span class="theme-dot" style="background:linear-gradient(135deg,#c084fc,#f43f5e);"></span> Royal Plum
-                </button>
-                <button class="theme-btn" onclick="setTheme('slate')" id="btn-slate">
-                    <span class="theme-dot" style="background:#181c24;"></span> Slate Pro
-                </button>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Glassmorphism & Transparency</h2>
-            <div class="form-group">
-                <div class="slider-row">
-                    <div class="slider-header">
-                        <span>Card Transparency (Opacity)</span>
-                        <span class="slider-val" id="opacity-val-label">72%</span>
-                    </div>
-                    <input type="range" id="card-opacity-slider" min="20" max="100" value="72" oninput="setCardOpacity(this.value)">
-                </div>
-
-                <div class="slider-row">
-                    <div class="slider-header">
-                        <span>Frosted Glass Blur</span>
-                        <span class="slider-val" id="blur-val-label">20px</span>
-                    </div>
-                    <input type="range" id="card-blur-slider" min="0" max="40" value="20" oninput="setCardBlur(this.value)">
-                </div>
-
-                <div class="switch-row">
-                    <span style="font-size: 0.85rem;">Ambient Background Glow Orbs</span>
-                    <input type="checkbox" id="ambient-orbs-toggle" checked onchange="toggleAmbientOrbs(this.checked)">
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Accent & Highlight Colours</h2>
-            <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Presets & Custom Colour Picker:</div>
-            <div class="color-pickers">
-                <div class="color-dot" style="background-color: #ff5722;" onclick="setAccent('#ff5722')"></div>
-                <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
-                <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
-                <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
-                <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
-                <div class="color-dot" style="background-color: #f43f5e;" onclick="setAccent('#f43f5e')"></div>
-                <div class="color-dot" style="background-color: #14b8a6;" onclick="setAccent('#14b8a6')"></div>
-                <div class="color-dot" style="background-color: #8b5cf6;" onclick="setAccent('#8b5cf6')"></div>
-                <div class="color-dot" style="background-color: #eab308;" onclick="setAccent('#eab308')"></div>
-                <div class="color-dot" style="background-color: #38bdf8;" onclick="setAccent('#38bdf8')"></div>
+                <button id="auth-submit-btn" class="btn btn-primary btn-full" onclick="handleAuth()">Log In</button>
                 
-                <label style="font-size:0.75rem; color:var(--text-muted); margin-left: auto; display:flex; align-items:center; gap:6px;">
-                    Custom:
-                    <input type="color" id="custom-accent-picker" onchange="setAccent(this.value)">
-                </label>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Display Options</h2>
-            <div class="form-group">
-                <div class="switch-row">
-                    <span style="font-size: 0.85rem;">Text Size</span>
-                    <select id="font-size-select" onchange="setFontSize(this.value)" style="padding:4px 8px; font-size:0.8rem;">
-                        <option value="small">Small</option>
-                        <option value="normal" selected>Normal</option>
-                        <option value="large">Large</option>
-                    </select>
+                <div style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted);">
+                    <span id="auth-toggle-text">Don't have an account?</span> 
+                    <a href="#" onclick="toggleAuthMode(event)" id="auth-toggle-link" style="color: var(--accent-orange); font-weight: bold; text-decoration: none;">Sign Up</a>
                 </div>
-                <div class="switch-row">
-                    <span style="font-size: 0.85rem;">Compact Layout</span>
-                    <input type="checkbox" id="compact-toggle" onchange="toggleCompact(this.checked)">
-                </div>
-                <div class="switch-row">
-                    <span style="font-size: 0.85rem;">Hide Amounts (Mask Pula)</span>
-                    <input type="checkbox" id="hide-amounts-toggle" onchange="toggleHideAmounts(this.checked)">
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Preferences</h2>
-            <div class="form-group">
-                <div class="switch-row">
-                    <span style="font-size: 0.85rem;">Opening Tab</span>
-                    <select id="opening-tab-select" onchange="setOpeningTab(this.value)" style="padding:4px 8px; font-size:0.8rem;">
-                        <option value="home">Home</option>
-                        <option value="portfolio">Portfolio</option>
-                        <option value="dividends">Dividends</option>
-                        <option value="markets">Markets</option>
-                        <option value="settings">Settings</option>
-                    </select>
-                </div>
-                <div class="switch-row">
-                    <span style="font-size: 0.85rem;">Dividend Alert Window</span>
-                    <select id="alert-window-select" onchange="setAlertWindow(this.value)" style="padding:4px 8px; font-size:0.8rem;">
-                        <option value="7">7 Days</option>
-                        <option value="14" selected>14 Days</option>
-                        <option value="30">30 Days</option>
-                    </select>
-                </div>
-                <div class="switch-row">
-                    <span style="font-size: 0.85rem;">Withholding Tax Rate (%)</span>
-                    <input type="number" id="tax-rate-input" value="10" step="0.5" style="width:70px; text-align:center; padding:4px;" onchange="updateTaxRate()">
-                </div>
-            </div>
-        </div>
-
-        <div class="glass-card">
-            <h2>Data & Storage Backup</h2>
-            <div class="form-group">
-                <button onclick="copyCSV()" class="btn-outline">Copy Holdings CSV</button>
-                <button onclick="copyBackupJSON()" class="btn-outline">Copy Backup (JSON)</button>
-                <button onclick="restoreBackupJSON()" class="btn-outline">Restore Backup</button>
-                <button onclick="resetAllData()" class="btn-danger" style="margin-top:8px;">Reset All Data</button>
+                
+                <div id="auth-error" style="color: var(--danger-color); font-size: 0.75rem; text-align: center; margin-top: 10px; display: none; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 8px;"></div>
             </div>
         </div>
     </div>
 
-    <div id="toast-undo">
-        <span id="toast-msg">Holding removed</span>
-        <button onclick="undoDelete()">Undo</button>
-    </div>
+    <!-- MAIN APP (Hidden by default until logged in) -->
+    <div id="main-app" style="display: none;">
+        
+        <!-- Ambient Background Mesh Orbs -->
+        <div class="ambient-bg" id="ambient-bg">
+            <div class="orb orb-1"></div>
+            <div class="orb orb-2"></div>
+            <div class="orb orb-3"></div>
+        </div>
 
-    <!-- PRICE CHART MODAL -->
-    <div id="chart-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content glass-card">
-            <div class="modal-header">
-                <h2 id="modal-chart-title" style="margin: 0; border: none; padding: 0;">STOCK CHART</h2>
-                <button class="close-btn" onclick="closeChartModal()">✕</button>
-            </div>
-            <div class="chart-periods" id="modal-periods">
-                <button onclick="updateChartPeriod('1W')">1W</button>
-                <button onclick="updateChartPeriod('1M')" class="active">1M</button>
-                <button onclick="updateChartPeriod('6M')">6M</button>
-                <button onclick="updateChartPeriod('1Y')">1Y</button>
-            </div>
-            <div class="chart-container" style="height: 280px; margin-top: 15px;">
-                <canvas id="modalChartCanvas"></canvas>
-            </div>
-            <div style="text-align: center; font-size: 0.65rem; color: var(--text-muted); margin-top: 10px;">
-                * Simulated historical data based on current market price.
+        <div class="header">
+            <div class="header-brand">
+                <div style="width: 38px; height: 38px; border-radius: 12px; background: var(--input-bg); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; border: 1px solid var(--accent-orange); box-shadow: 0 4px 12px var(--accent-glow);">
+                    <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: none; stroke: var(--accent-orange); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;">
+                        <path d="M3 17l6-6 4 4 8-8"></path>
+                        <circle cx="3" cy="17" r="1.5" fill="var(--accent-orange)"></circle>
+                        <circle cx="9" cy="11" r="1.5" fill="var(--accent-orange)"></circle>
+                        <circle cx="13" cy="15" r="1.5" fill="var(--accent-orange)"></circle>
+                        <circle cx="21" cy="7" r="2" fill="var(--accent-orange)"></circle>
+                    </svg>
+                </div>
+                <h1>Financial Markets Online <span>BSE & Asset Tracker</span></h1>
             </div>
         </div>
-    </div>
 
-    <!-- TRADE MODAL -->
-    <div id="trade-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content glass-card">
-            <div class="modal-header">
-                <h2 id="trade-modal-title" style="margin: 0; border: none; padding: 0;">EXECUTE TRADE</h2>
-                <button class="close-btn" onclick="closeTradeModal()">✕</button>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                <div>
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">ASSET</span>
-                    <div id="trade-symbol" style="font-weight: bold; font-size: 1.1rem;">FNBB</div>
-                </div>
-                <div style="text-align: right;">
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">MARKET PRICE</span>
-                    <div id="trade-price" style="font-weight: bold; font-size: 1.1rem; color: var(--accent-orange);">P5.75</div>
+        <!-- TAB 1: HOME DASHBOARD -->
+        <div id="tab-home" class="tab-content active">
+            <div id="risk-warning-container"></div>
+
+            <div class="ipo-timer-card">
+                <div class="ipo-timer-title">Stanbic Bank Botswana IPO Closes In</div>
+                <div class="ipo-countdown-grid" id="ipo-countdown">
+                    <div class="countdown-unit"><strong id="ipo-days">00</strong><span>Days</span></div>
+                    <div class="countdown-unit"><strong id="ipo-hours">00</strong><span>Hours</span></div>
+                    <div class="countdown-unit"><strong id="ipo-mins">00</strong><span>Mins</span></div>
+                    <div class="countdown-unit"><strong id="ipo-secs">00</strong><span>Secs</span></div>
                 </div>
             </div>
 
-            <!-- Toggle Mode: Shares vs Amount -->
-            <div style="display: flex; background: var(--input-bg); border-radius: 10px; padding: 4px; margin-bottom: 15px; border: 1px solid var(--card-border);">
-                <button id="btn-mode-shares" onclick="setTradeMode('shares')" style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: var(--bg-surface); color: var(--text-main); font-weight: bold; box-shadow: var(--shadow-sm); transition: all 0.2s;">By Shares</button>
-                <button id="btn-mode-amount" onclick="setTradeMode('amount')" style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text-muted); font-weight: bold; transition: all 0.2s;">By Amount (P)</button>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" id="trade-input-label">Quantity to Buy (Shares)</label>
-                <input type="number" id="trade-input" class="form-control" placeholder="e.g., 100" oninput="calculateTradeTotal()">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Select Broker</label>
-                <select id="trade-broker" class="form-control" onchange="calculateTradeTotal()">
-                    <option value="motswedi">Motswedi Securities</option>
-                    <option value="imara">Imara Capital Securities</option>
-                </select>
-            </div>
-
-            <!-- Fee Breakdown -->
-            <div style="background: var(--input-bg); border-radius: 12px; padding: 12px; font-size: 0.8rem; margin-bottom: 15px; border: 1px solid var(--card-border);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Target Amount / Gross</span><span id="fee-gross">P0.00</span>
+            <div class="glass-card">
+                <h2>Dashboard Summary</h2>
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <span>Total Portfolio Value</span>
+                        <strong id="dash-total-val">P0.00</strong>
+                    </div>
+                    <div class="metric-box">
+                        <span>Est. Net Annual Div</span>
+                        <strong id="dash-total-div">P0.00</strong>
+                    </div>
+                    <div class="metric-box">
+                        <span>Total Unrealized P/L</span>
+                        <strong id="dash-total-pl">P0.00</strong>
+                    </div>
+                    <div class="metric-box">
+                        <span>Total Holdings</span>
+                        <strong id="dash-total-count" style="color:var(--text-main);">0</strong>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
-                    <span>Brokerage (1.0%)</span><span id="fee-brokerage">P0.00</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
-                    <span>BSE & CSD Levies (0.25%)</span><span id="fee-levies">P0.00</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
-                    <span>VAT (10%)</span><span id="fee-vat">P0.00</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-weight: bold; font-size: 1rem;">
-                    <span>Total Cost</span><span id="fee-total" style="color: var(--success-color);">P0.00</span>
-                </div>
-                <div style="text-align: right; font-size: 0.7rem; color: var(--accent-orange); margin-top: 4px;" id="calculated-shares-label"></div>
             </div>
 
-            <!-- User Details -->
-            <div class="form-group" style="margin-bottom: 15px;">
-                <input type="text" id="trade-user-name" class="form-control" placeholder="Your Full Legal Name" style="margin-bottom: 8px;">
-                <input type="text" id="trade-user-ref" class="form-control" placeholder="CSD / Client Reference" style="margin-bottom: 8px;">
-                <input type="tel" id="trade-user-phone" class="form-control" placeholder="Contact Phone Number">
+            <div class="glass-card">
+                <h2>
+                  Asset Allocation
+                  <div style="display:flex; gap:6px; font-size:0.7rem; font-weight:normal; flex-wrap: wrap;">
+                    <select id="chart-type-select" onchange="changeChartType(this.value)" style="padding:3px 6px; font-size:0.7rem;">
+                      <option value="donut">Donut</option>
+                      <option value="pie">Pie</option>
+                      <option value="half-donut">Half Donut</option>
+                      <option value="3d-cylinder">Solid 3D Cylinder</option>
+                      <option value="3d-exploded">Exploded 3D Pie</option>
+                      <option value="bars">Bars</option>
+                    </select>
+                    <select id="chart-palette-select" onchange="changeChartPalette(this.value)" style="padding:3px 6px; font-size:0.7rem;">
+                      <option value="vivid">Vivid</option>
+                      <option value="pastel">Pastel</option>
+                      <option value="neon">Neon</option>
+                      <option value="earth">Earth</option>
+                      <option value="cb-safe">Colour-blind Safe</option>
+                      <option value="custom">Custom Colors</option>
+                    </select>
+                    <select id="chart-legend-select" onchange="changeChartLegend(this.value)" style="padding:3px 6px; font-size:0.7rem;">
+                      <option value="bottom">Legend: Bottom</option>
+                      <option value="top">Legend: Top</option>
+                      <option value="left">Legend: Left</option>
+                      <option value="right">Legend: Right</option>
+                      <option value="hidden">Hide Legend</option>
+                    </select>
+                  </div>
+                </h2>
+                <div class="chart-container" id="original-chart-container">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+                
+                <div id="custom-color-settings" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--card-border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Customize Slice Colors:</div>
+                    <div id="custom-color-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
             </div>
 
-            <!-- Proof of Payment File Input -->
-            <div class="form-group" style="margin-bottom: 15px; background: rgba(255, 87, 34, 0.05); padding: 12px; border-radius: 12px; border: 1px dashed var(--accent-orange);">
-                <label class="form-label" style="color: var(--accent-orange);">Proof of Payment (POP)</label>
-                <input type="file" id="trade-proof" class="form-control" accept="image/*,.pdf" style="padding: 8px; font-size: 0.8rem;" onchange="handleProofUpload(event)">
-                <div id="proof-status" style="font-size: 0.7rem; color: var(--success-color); margin-top: 6px; display: none; font-weight: bold;">✓ File selected</div>
-                <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 6px;">
-                    Note: You must manually attach this file in your email app before sending.
-                </p>
+            <div class="glass-card">
+                <h2>
+                    Pinned & Holdings News
+                    <button onclick="fetchLiveMarketData(true)" class="btn-refresh" id="refresh-news-btn">↻ Refresh</button>
+                </h2>
+                <div id="pinned-news-container"></div>
+            </div>
+        </div>
+
+        <!-- TAB 2: PORTFOLIO BREAKDOWN -->
+        <div id="tab-portfolio" class="tab-content">
+            <div class="glass-card">
+                <h2>Add / Update Asset Holding</h2>
+                <div class="form-group">
+                    <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., FNBB, TURNSTAR)..." oninput="autoFillPrice()">
+                    <datalist id="bse-list"></datalist>
+                    
+                    <input type="number" id="asset-qty" placeholder="Share Quantity" step="any">
+                    <input type="number" id="asset-buy-price" placeholder="Avg Buy Price per Share (P)" step="any">
+                    <input type="number" id="asset-price" placeholder="Current Price (P)" step="any">
+                    <button onclick="addHolding()">Save Holding to Portfolio</button>
+                </div>
             </div>
 
-            <button class="btn btn-primary btn-full" onclick="generateTradeEmail()">
-                ✉️ Generate Order Email
+            <div class="glass-card">
+                <h2>Holdings & Performance</h2>
+                <div class="controls-bar">
+                    <div style="font-size:0.75rem; color:var(--text-muted);">Sort By:</div>
+                    <select id="sort-select" onchange="saveAndRender()" style="padding:6px 10px; font-size:0.78rem;">
+                        <option value="value">Highest Value</option>
+                        <option value="yield">Highest Yield</option>
+                        <option value="az">Ticker (A–Z)</option>
+                    </select>
+                    <button onclick="copyCSV()" class="btn-outline" style="padding:6px 10px; font-size:0.75rem;">Copy CSV</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Asset</th>
+                                <th>Qty</th>
+                                <th>Avg / Cur</th>
+                                <th>Value</th>
+                                <th>Gain / Loss</th>
+                                <th>Yield</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="holdings-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: DIVIDENDS & PAYOUTS -->
+        <div id="tab-dividends" class="tab-content">
+            <div class="glass-card">
+                <h2>12-Month Net Dividend Projection</h2>
+                <div class="chart-container">
+                    <canvas id="dividendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2>Dividend Schedule & Key Dates</h2>
+                <div id="dividends-schedule-container"></div>
+            </div>
+        </div>
+
+        <!-- TAB 4: MARKETS BOARD -->
+        <div id="tab-markets" class="tab-content">
+            <div class="glass-card">
+                <h2>BSE Market Board & Quick Entry</h2>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Search market tickers and adjust share positions directly:</div>
+                <input type="text" id="market-search-input" placeholder="Search Tickers or Companies..." onkeyup="filterMarketGrid()" style="margin-bottom: 12px; width: 100%;">
+                <div class="prices-grid" id="market-prices-grid"></div>
+            </div>
+        </div>
+
+        <!-- TAB 5: SETTINGS & DISPLAY -->
+        <div id="tab-settings" class="tab-content">
+            <div class="glass-card">
+                <h2>Themes & Atmosphere</h2>
+                <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Select Base Theme:</div>
+                <div class="themes-grid">
+                    <button class="theme-btn" onclick="setTheme('auto')" id="btn-auto">
+                        <span class="theme-dot" style="background:linear-gradient(135deg,#fff,#0d1117);"></span> Auto (Phone)
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('dark')" id="btn-dark">
+                        <span class="theme-dot" style="background:#0d1117;"></span> Dark
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('oled')" id="btn-oled">
+                        <span class="theme-dot" style="background:#000000;"></span> OLED Black
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('light')" id="btn-light">
+                        <span class="theme-dot" style="background:#ffffff;"></span> Light
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('midnight')" id="btn-midnight">
+                        <span class="theme-dot" style="background:#060b19;"></span> Midnight
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('forest')" id="btn-forest">
+                        <span class="theme-dot" style="background:#06140d;"></span> Forest
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('sand')" id="btn-sand">
+                        <span class="theme-dot" style="background:#f5efe6;"></span> Sand
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('cyberpunk')" id="btn-cyberpunk">
+                        <span class="theme-dot" style="background:linear-gradient(135deg,#ec4899,#06b6d4);"></span> Cyberpunk
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('plum')" id="btn-plum">
+                        <span class="theme-dot" style="background:linear-gradient(135deg,#c084fc,#f43f5e);"></span> Royal Plum
+                    </button>
+                    <button class="theme-btn" onclick="setTheme('slate')" id="btn-slate">
+                        <span class="theme-dot" style="background:#181c24;"></span> Slate Pro
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2>Glassmorphism & Transparency</h2>
+                <div class="form-group">
+                    <div class="slider-row">
+                        <div class="slider-header">
+                            <span>Card Transparency (Opacity)</span>
+                            <span class="slider-val" id="opacity-val-label">72%</span>
+                        </div>
+                        <input type="range" id="card-opacity-slider" min="20" max="100" value="72" oninput="setCardOpacity(this.value)">
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-header">
+                            <span>Frosted Glass Blur</span>
+                            <span class="slider-val" id="blur-val-label">20px</span>
+                        </div>
+                        <input type="range" id="card-blur-slider" min="0" max="40" value="20" oninput="setCardBlur(this.value)">
+                    </div>
+
+                    <div class="switch-row">
+                        <span style="font-size: 0.85rem;">Ambient Background Glow Orbs</span>
+                        <input type="checkbox" id="ambient-orbs-toggle" checked onchange="toggleAmbientOrbs(this.checked)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2>Accent & Highlight Colours</h2>
+                <div style="font-size: 0.75rem; margin-bottom: 10px; color: var(--text-muted);">Presets & Custom Colour Picker:</div>
+                <div class="color-pickers">
+                    <div class="color-dot" style="background-color: #ff5722;" onclick="setAccent('#ff5722')"></div>
+                    <div class="color-dot" style="background-color: #00e676;" onclick="setAccent('#00e676')"></div>
+                    <div class="color-dot" style="background-color: #00b0ff;" onclick="setAccent('#00b0ff')"></div>
+                    <div class="color-dot" style="background-color: #d4af37;" onclick="setAccent('#d4af37')"></div>
+                    <div class="color-dot" style="background-color: #e040fb;" onclick="setAccent('#e040fb')"></div>
+                    <div class="color-dot" style="background-color: #f43f5e;" onclick="setAccent('#f43f5e')"></div>
+                    <div class="color-dot" style="background-color: #14b8a6;" onclick="setAccent('#14b8a6')"></div>
+                    <div class="color-dot" style="background-color: #8b5cf6;" onclick="setAccent('#8b5cf6')"></div>
+                    <div class="color-dot" style="background-color: #eab308;" onclick="setAccent('#eab308')"></div>
+                    <div class="color-dot" style="background-color: #38bdf8;" onclick="setAccent('#38bdf8')"></div>
+                    
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-left: auto; display:flex; align-items:center; gap:6px;">
+                        Custom:
+                        <input type="color" id="custom-accent-picker" onchange="setAccent(this.value)">
+                    </label>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2>Display Options</h2>
+                <div class="form-group">
+                    <div class="switch-row">
+                        <span style="font-size: 0.85rem;">Text Size</span>
+                        <select id="font-size-select" onchange="setFontSize(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                            <option value="small">Small</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </div>
+                    <div class="switch-row">
+                        <span style="font-size: 0.85rem;">Compact Layout</span>
+                        <input type="checkbox" id="compact-toggle" onchange="toggleCompact(this.checked)">
+                    </div>
+                    <div class="switch-row">
+                        <span style="font-size: 0.85rem;">Hide Amounts (Mask Pula)</span>
+                        <input type="checkbox" id="hide-amounts-toggle" onchange="toggleHideAmounts(this.checked)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2>Preferences</h2>
+                <div class="form-group">
+                    <div class="switch-row">
+                        <span style="font-size: 0.85rem;">Opening Tab</span>
+                        <select id="opening-tab-select" onchange="setOpeningTab(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                            <option value="home">Home</option>
+                            <option value="portfolio">Portfolio</option>
+                            <option value="dividends">Dividends</option>
+                            <option value="markets">Markets</option>
+                            <option value="settings">Settings</option>
+                        </select>
+                    </div>
+                    <div class="switch-row">
+                        <span style="font-size: 0.85rem;">Dividend Alert Window</span>
+                        <select id="alert-window-select" onchange="setAlertWindow(this.value)" style="padding:4px 8px; font-size:0.8rem;">
+                            <option value="7">7 Days</option>
+                            <option value="14" selected>14 Days</option>
+                            <option value="30">30 Days</option>
+                        </select>
+                    </div>
+                    <div class="switch-row">
+                        <span style="font-size: 0.85rem;">Withholding Tax Rate (%)</span>
+                        <input type="number" id="tax-rate-input" value="10" step="0.5" style="width:70px; text-align:center; padding:4px;" onchange="updateTaxRate()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h2>Data & Storage Backup</h2>
+                <div class="form-group">
+                    <button onclick="copyCSV()" class="btn-outline">Copy Holdings CSV</button>
+                    <button onclick="copyBackupJSON()" class="btn-outline">Copy Backup (JSON)</button>
+                    <button onclick="restoreBackupJSON()" class="btn-outline">Restore Backup</button>
+                    <button onclick="resetAllData()" class="btn-danger" style="margin-top:8px;">Reset All Data</button>
+                    
+                    <!-- LOGOUT BUTTON -->
+                    <button onclick="handleLogout()" class="btn btn-outline" style="margin-top: 15px; color: var(--danger-color); border-color: var(--danger-color);">Log Out</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast-undo">
+            <span id="toast-msg">Holding removed</span>
+            <button onclick="undoDelete()">Undo</button>
+        </div>
+
+        <!-- PRICE CHART MODAL -->
+        <div id="chart-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h2 id="modal-chart-title" style="margin: 0; border: none; padding: 0;">STOCK CHART</h2>
+                    <button class="close-btn" onclick="closeChartModal()">✕</button>
+                </div>
+                <div class="chart-periods" id="modal-periods">
+                    <button onclick="updateChartPeriod('1W')">1W</button>
+                    <button onclick="updateChartPeriod('1M')" class="active">1M</button>
+                    <button onclick="updateChartPeriod('6M')">6M</button>
+                    <button onclick="updateChartPeriod('1Y')">1Y</button>
+                </div>
+                <div class="chart-container" style="height: 280px; margin-top: 15px;">
+                    <canvas id="modalChartCanvas"></canvas>
+                </div>
+                <div style="text-align: center; font-size: 0.65rem; color: var(--text-muted); margin-top: 10px;">
+                    * Simulated historical data based on current market price.
+                </div>
+            </div>
+        </div>
+
+        <!-- TRADE MODAL -->
+        <div id="trade-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h2 id="trade-modal-title" style="margin: 0; border: none; padding: 0;">EXECUTE TRADE</h2>
+                    <button class="close-btn" onclick="closeTradeModal()">✕</button>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <div>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">ASSET</span>
+                        <div id="trade-symbol" style="font-weight: bold; font-size: 1.1rem;">FNBB</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">MARKET PRICE</span>
+                        <div id="trade-price" style="font-weight: bold; font-size: 1.1rem; color: var(--accent-orange);">P5.75</div>
+                    </div>
+                </div>
+
+                <!-- Toggle Mode: Shares vs Amount -->
+                <div style="display: flex; background: var(--input-bg); border-radius: 10px; padding: 4px; margin-bottom: 15px; border: 1px solid var(--card-border);">
+                    <button id="btn-mode-shares" onclick="setTradeMode('shares')" style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: var(--bg-surface); color: var(--text-main); font-weight: bold; box-shadow: var(--shadow-sm); transition: all 0.2s;">By Shares</button>
+                    <button id="btn-mode-amount" onclick="setTradeMode('amount')" style="flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text-muted); font-weight: bold; transition: all 0.2s;">By Amount (P)</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" id="trade-input-label">Quantity to Buy (Shares)</label>
+                    <input type="number" id="trade-input" class="form-control" placeholder="e.g., 100" oninput="calculateTradeTotal()">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Select Broker</label>
+                    <select id="trade-broker" class="form-control" onchange="calculateTradeTotal()">
+                        <option value="motswedi">Motswedi Securities</option>
+                        <option value="imara">Imara Capital Securities</option>
+                    </select>
+                </div>
+
+                <!-- Fee Breakdown -->
+                <div style="background: var(--input-bg); border-radius: 12px; padding: 12px; font-size: 0.8rem; margin-bottom: 15px; border: 1px solid var(--card-border);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Target Amount / Gross</span><span id="fee-gross">P0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
+                        <span>Brokerage (1.0%)</span><span id="fee-brokerage">P0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
+                        <span>BSE & CSD Levies (0.25%)</span><span id="fee-levies">P0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--text-muted);">
+                        <span>VAT (10%)</span><span id="fee-vat">P0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-weight: bold; font-size: 1rem;">
+                        <span>Total Cost</span><span id="fee-total" style="color: var(--success-color);">P0.00</span>
+                    </div>
+                    <div style="text-align: right; font-size: 0.7rem; color: var(--accent-orange); margin-top: 4px;" id="calculated-shares-label"></div>
+                </div>
+
+                <!-- User Details -->
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <input type="text" id="trade-user-name" class="form-control" placeholder="Your Full Legal Name" style="margin-bottom: 8px;">
+                    <input type="text" id="trade-user-ref" class="form-control" placeholder="CSD / Client Reference" style="margin-bottom: 8px;">
+                    <input type="tel" id="trade-user-phone" class="form-control" placeholder="Contact Phone Number">
+                </div>
+
+                <!-- Proof of Payment File Input -->
+                <div class="form-group" style="margin-bottom: 15px; background: rgba(255, 87, 34, 0.05); padding: 12px; border-radius: 12px; border: 1px dashed var(--accent-orange);">
+                    <label class="form-label" style="color: var(--accent-orange);">Proof of Payment (POP)</label>
+                    <input type="file" id="trade-proof" class="form-control" accept="image/*,.pdf" style="padding: 8px; font-size: 0.8rem;" onchange="handleProofUpload(event)">
+                    <div id="proof-status" style="font-size: 0.7rem; color: var(--success-color); margin-top: 6px; display: none; font-weight: bold;">✓ File selected</div>
+                    <p style="font-size: 0.65rem; color: var(--text-muted); margin-top: 6px;">
+                        Note: You must manually attach this file in your email app before sending.
+                    </p>
+                </div>
+
+                <button class="btn btn-primary btn-full" onclick="generateTradeEmail()">
+                    ✉️ Generate Order Email
+                </button>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchTab('home', this)" id="nav-btn-home">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                Home
             </button>
-        </div>
+            <button class="nav-item" onclick="switchTab('portfolio', this)" id="nav-btn-portfolio">
+                <svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zm6.5 0h3v7h-3zM2 19h20v3H2zm15-9h3v7h-3zm-5-9L2 6v2h20V6z"/></svg>
+                Portfolio
+            </button>
+            <button class="nav-item" onclick="switchTab('dividends', this)" id="nav-btn-dividends">
+                <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+                Dividends
+            </button>
+            <button class="nav-item" onclick="switchTab('markets', this)" id="nav-btn-markets">
+                <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+                Markets
+            </button>
+            <button class="nav-item" onclick="switchTab('settings', this)" id="nav-btn-settings">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
+                Settings
+            </button>
+        </nav>
     </div>
-
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('home', this)" id="nav-btn-home">
-            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-            Home
-        </button>
-        <button class="nav-item" onclick="switchTab('portfolio', this)" id="nav-btn-portfolio">
-            <svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zm6.5 0h3v7h-3zM2 19h20v3H2zm15-9h3v7h-3zm-5-9L2 6v2h20V6z"/></svg>
-            Portfolio
-        </button>
-        <button class="nav-item" onclick="switchTab('dividends', this)" id="nav-btn-dividends">
-            <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
-            Dividends
-        </button>
-        <button class="nav-item" onclick="switchTab('markets', this)" id="nav-btn-markets">
-            <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
-            Markets
-        </button>
-        <button class="nav-item" onclick="switchTab('settings', this)" id="nav-btn-settings">
-            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
-            Settings
-        </button>
-    </nav>
 
     <script src="app.js"></script>
 </body>
