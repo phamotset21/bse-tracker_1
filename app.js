@@ -1,7 +1,6 @@
 // --- GLOBAL ERROR CATCHER ---
 window.addEventListener('error', function(e) {
     console.error("Global Error Caught:", e.message);
-    // Don't alert for image loading errors or minor fetch fails
     if (e.message.includes('Script error') || e.message.includes('NetworkError')) return;
     
     const errorDiv = document.createElement('div');
@@ -12,6 +11,8 @@ window.addEventListener('error', function(e) {
 
 // --- SAFE SUPABASE INITIALIZATION ---
 let supabaseClient = null;
+let currentUser = null;
+
 try {
     const SUPABASE_URL = 'https://apuzvlsktobobdgdufbc.supabase.co'; 
     const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf';
@@ -118,6 +119,163 @@ let currentTradeSymbol = "";
 let currentTradePrice = 0;
 let tradeMode = 'shares'; // 'shares' or 'amount'
 let uploadedProofName = "";
+
+// --- AUTHENTICATION LOGIC ---
+let isSignUpMode = false;
+
+window.toggleAuthMode = function(e) {
+    e.preventDefault();
+    isSignUpMode = !isSignUpMode;
+    document.getElementById('auth-title').innerText = isSignUpMode ? "Create Account" : "Welcome Back";
+    document.getElementById('auth-subtitle').innerText = isSignUpMode ? "Join to track your BSE portfolio" : "Log in to sync your portfolio";
+    document.getElementById('auth-submit-btn').innerText = isSignUpMode ? "Sign Up" : "Log In";
+    document.getElementById('auth-toggle-text').innerText = isSignUpMode ? "Already have an account?" : "Don't have an account?";
+    document.getElementById('auth-toggle-link').innerText = isSignUpMode ? "Log In" : "Sign Up";
+    document.getElementById('auth-error').style.display = 'none';
+};
+
+window.handleAuth = async function() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    const btn = document.getElementById('auth-submit-btn');
+    const errorDiv = document.getElementById('auth-error');
+
+    if (!email || !password) {
+        errorDiv.innerText = "Please enter email and password.";
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    if (!supabaseClient) return alert("Database not connected.");
+
+    btn.innerText = "Processing...";
+    btn.disabled = true;
+    errorDiv.style.display = 'none';
+
+    try {
+        if (isSignUpMode) {
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) throw error;
+            // If email confirmation is off, they are logged in immediately
+            if (data.session) {
+                checkUserSession();
+            } else {
+                alert("Check your email for the confirmation link!");
+                toggleAuthMode({ preventDefault: () => {} }); // Switch back to login
+            }
+        } else {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            checkUserSession();
+        }
+    } catch (error) {
+        errorDiv.innerText = error.message;
+        errorDiv.style.display = 'block';
+    } finally {
+        btn.innerText = isSignUpMode ? "Sign Up" : "Log In";
+        btn.disabled = false;
+    }
+};
+
+window.handleLogout = async function() {
+    if (!supabaseClient) return;
+    await supabaseClient.auth.signOut();
+    localStorage.removeItem('bse_portfolio');
+    localStorage.removeItem('trade_name');
+    localStorage.removeItem('trade_ref');
+    localStorage.removeItem('trade_phone');
+    holdings = [];
+    saveAndRender();
+    checkUserSession();
+};
+
+async function checkUserSession() {
+    if (!supabaseClient) {
+        // If DB fails, let them use the app locally
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        return;
+    }
+    
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (session) {
+            currentUser = session.user;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            
+            // Sync data from Supabase upon login
+            await syncPortfolioFromSupabase();
+            loadPreferences();
+            saveAndRender();
+            fetchLiveMarketData(false);
+        } else {
+            currentUser = null;
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+        }
+    } catch (e) {
+        console.error("Auth check failed:", e);
+        // Failsafe: show app if auth check errors out so they aren't stuck
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+    }
+}
+
+// Listen for Auth Changes (Logout/Login)
+if (supabaseClient) {
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+            checkUserSession();
+        }
+    });
+}
+
+// --- PORTFOLIO SYNC LOGIC ---
+async function syncPortfolioToSupabase() {
+    if (!currentUser || !supabaseClient) return;
+    try {
+        // Delete existing rows for this user, then insert the current state
+        await supabaseClient.from('user_holdings').delete().eq('user_id', currentUser.id);
+        
+        if (holdings.length > 0) {
+            const payload = holdings.map(h => ({
+                user_id: currentUser.id,
+                ticker: h.symbol,
+                shares_owned: h.qty,
+                avg_buy_price: h.buyPrice
+            }));
+            await supabaseClient.from('user_holdings').insert(payload);
+        }
+    } catch (e) {
+        console.error("Error syncing to DB:", e);
+    }
+}
+
+async function syncPortfolioFromSupabase() {
+    if (!currentUser || !supabaseClient) return;
+    try {
+        const { data, error } = await supabaseClient
+            .from('user_holdings')
+            .select('*')
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+            holdings = data.map(row => ({
+                symbol: row.ticker,
+                qty: row.shares_owned,
+                buyPrice: row.avg_buy_price,
+                price: row.avg_buy_price // Will be updated by live price fetch
+            }));
+            localStorage.setItem('bse_portfolio', JSON.stringify(holdings));
+        }
+    } catch (e) {
+        console.error("Error fetching from DB:", e);
+    }
+}
 
 // --- CORE 3D CHART PLUGIN ---
 const custom3DPiePlugin = {
@@ -391,6 +549,7 @@ function getStockMeta(sym) {
 
 window.saveAndRender = function() {
     localStorage.setItem('bse_portfolio', JSON.stringify(holdings));
+    syncPortfolioToSupabase(); // Sync to DB on every render
     
     // 1. Render Dashboard Table
     const tbody = document.getElementById('holdings-list');
@@ -1050,9 +1209,8 @@ window.autoFillPrice = function() {
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    loadPreferences();
-    saveAndRender();
-    fetchLiveMarketData(false);
+    // Check Auth Session first
+    checkUserSession();
     
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
     
