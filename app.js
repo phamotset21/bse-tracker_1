@@ -12,10 +12,11 @@ window.addEventListener('error', function(e) {
 // --- SAFE SUPABASE INITIALIZATION ---
 let supabaseClient = null;
 let currentUser = null;
+let notificationChannel = null;
 
 try {
     const SUPABASE_URL = 'https://apuzvlsktobobdgdufbc.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'sb_publishable_XU3aUnE6Qbt_mwuok5cJng_WmyD6ZGZ';
+    const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf';
     
     if (typeof window.supabase !== 'undefined') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -180,10 +181,17 @@ window.handleAuth = async function() {
 window.handleLogout = async function() {
     if (!supabaseClient) return;
     await supabaseClient.auth.signOut();
+    
+    // Clean up realtime channel and local data
+    if (notificationChannel) {
+        supabaseClient.removeChannel(notificationChannel);
+        notificationChannel = null;
+    }
     localStorage.removeItem('bse_portfolio');
     localStorage.removeItem('trade_name');
     localStorage.removeItem('trade_ref');
     localStorage.removeItem('trade_phone');
+    
     holdings = [];
     saveAndRender();
     checkUserSession();
@@ -210,6 +218,9 @@ async function checkUserSession() {
             loadPreferences();
             saveAndRender();
             fetchLiveMarketData(false);
+            
+            // START LISTENING FOR NOTIFICATIONS
+            initRealtimeNotifications(); 
         } else {
             currentUser = null;
             document.getElementById('login-screen').style.display = 'flex';
@@ -230,6 +241,83 @@ if (supabaseClient) {
             checkUserSession();
         }
     });
+}
+
+// --- REAL-TIME NOTIFICATIONS ---
+function initRealtimeNotifications() {
+    if (!currentUser || !supabaseClient) return;
+
+    // Unsubscribe from previous channel if it exists to avoid duplicates
+    if (notificationChannel) {
+        supabaseClient.removeChannel(notificationChannel);
+    }
+
+    // Subscribe to new rows in the notifications table for THIS user
+    notificationChannel = supabaseClient
+        .channel('public:notifications')
+        .on(
+            'postgres_changes',
+            { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'notifications', 
+                filter: `user_id=eq.${currentUser.id}` 
+            },
+            (payload) => {
+                console.log('New Notification received:', payload.new);
+                showInAppAlert(payload.new.title, payload.new.body);
+            }
+        )
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                console.log('Successfully listening for realtime notifications.');
+            }
+        });
+}
+
+function showInAppAlert(title, body) {
+    const alertDiv = document.createElement('div');
+    alertDiv.style.cssText = `
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+        background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--accent-orange); border-left: 4px solid var(--accent-orange);
+        padding: 15px; border-radius: 12px; width: 90%; max-width: 400px;
+        z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: #fff;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex; flex-direction: column; gap: 5px; cursor: pointer;
+    `;
+
+    alertDiv.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size: 0.9rem; color: var(--accent-orange); display:flex; align-items:center; gap:6px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                ${title}
+            </strong>
+            <span style="font-size: 0.65rem; color: #94a3b8;">Just now</span>
+        </div>
+        <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;">${body}</div>
+    `;
+
+    // Click to dismiss immediately
+    alertDiv.onclick = () => {
+        alertDiv.style.transform = 'translateX(-50%) translateY(-100px)';
+        setTimeout(() => alertDiv.remove(), 400);
+    };
+
+    document.body.appendChild(alertDiv);
+
+    // Animate in
+    setTimeout(() => {
+        alertDiv.style.transform = 'translateX(-50%) translateY(0)';
+    }, 100);
+
+    // Auto-dismiss after 6 seconds
+    setTimeout(() => {
+        if (document.body.contains(alertDiv)) {
+            alertDiv.style.transform = 'translateX(-50%) translateY(-100px)';
+            setTimeout(() => alertDiv.remove(), 400);
+        }
+    }, 6000);
 }
 
 // --- PORTFOLIO SYNC LOGIC ---
