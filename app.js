@@ -16,7 +16,7 @@ let notificationChannel = null;
 
 try {
     const SUPABASE_URL = 'https://apuzvlsktobobdgdufbc.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'sb_publishable_4TDrYZIO3UmK5EVNqgpBOw_nv2KUaQf';
+    const SUPABASE_ANON_KEY = 'sb_publishable_XU3aUnE6Qbt_mwuok5cJng_WmyD6ZGZ';
     
     if (typeof window.supabase !== 'undefined') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
