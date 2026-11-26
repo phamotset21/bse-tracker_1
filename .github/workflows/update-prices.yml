@@ -18,16 +18,21 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Install Dependencies
+        run: |
+          pip install requests playwright
+          playwright install chromium
+          playwright install-deps
+
       - name: Fetch Data and Push to Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           MANSA_API_KEY: ${{ secrets.MANSA_API_KEY }}
         run: |
-          pip install requests beautifulsoup4
           python - <<'PY'
-          import json, os, requests, urllib.request, re
-          from bs4 import BeautifulSoup
+          import json, os, requests
+          from playwright.sync_api import sync_playwright
           from datetime import datetime
 
           SUPABASE_URL = os.environ['SUPABASE_URL']
@@ -42,32 +47,31 @@ jobs:
           }
 
           # ==========================================
-          # 1. SYNC PRICES
+          # 1. SYNC PRICES (Using standard requests)
           # ==========================================
           print("Starting Price Sync...")
           try:
               url = "https://mansaapi.com/api/v1/markets/exchanges/BSE/stocks?limit=200"
-              req = urllib.request.Request(url, headers={'Authorization': f'Bearer {MANSA_API_KEY}', 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0'})
+              req = requests.get(url, headers={'Authorization': f'Bearer {MANSA_API_KEY}', 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0'})
+              data = req.json().get('data', [])
               
-              with urllib.request.urlopen(req) as response:
-                  data = json.loads(response.read().decode('utf-8')).get('data', [])
-                  payload = []
-                  for s in data:
-                      if s.get('ticker') and s.get('price') is not None:
-                          payload.append({
-                              "ticker": s['ticker'],
-                              "company_name": s.get('name', s['ticker']),
-                              "current_price": float(s['price'])
-                          })
-                  
-                  if payload:
-                      r = requests.post(f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", headers=headers, json=payload)
-                      print(f"Supabase Prices Push Status: {r.status_code}")
+              payload = []
+              for s in data:
+                  if s.get('ticker') and s.get('price') is not None:
+                      payload.append({
+                          "ticker": s['ticker'],
+                          "company_name": s.get('name', s['ticker']),
+                          "current_price": float(s['price'])
+                      })
+              
+              if payload:
+                  r = requests.post(f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", headers=headers, json=payload)
+                  print(f"Supabase Prices Push Status: {r.status_code}")
           except Exception as e:
               print("Price Sync Error:", e)
 
           # ==========================================
-          # 2. SYNC NEWS (Targeting X-News)
+          # 2. SYNC NEWS (Using Playwright to render JS)
           # ==========================================
           print("\nStarting News Sync...")
           
@@ -89,65 +93,88 @@ jobs:
           }
 
           try:
-              # Use the specific X-News URL
-              res = requests.get("https://www.bse.co.bw/xnews/", headers={'User-Agent': 'Mozilla/5.0'})
-              soup = BeautifulSoup(res.text, 'html.parser')
-              
-              news_payload = []
-              
-              # Junk keywords to ignore (Footer links)
-              junk_keywords = ["customer feedback", "complaints form", "daily market report", "customer complaints"]
-              
-              for link in soup.find_all('a'):
-                  title = link.get_text(" ", strip=True)
-                  href = link.get('href', '')
+              with sync_playwright() as p:
+                  browser = p.chromium.launch(headless=True)
+                  page = browser.new_page()
+                  # Go to the X-News portal
+                  page.goto("https://www.bse.co.bw/xnews/", wait_until="networkidle")
                   
-                  # Must be a real headline, not in junk list, and contain a valid link
-                  if len(title) > 15 and not any(junk in title.lower() for junk in junk_keywords):
-                      if '.pdf' in href.lower() or 'disclosure' in href.lower() or 'storage' in href.lower() or 'xnews' in href.lower():
+                  # Wait for the date text to appear to ensure JS has loaded the news
+                  page.wait_for_selector('text="GMT+2"', timeout=10000)
+                  
+                  # Extract all links and their surrounding text using browser-side JS
+                  news_items = page.evaluate("""
+                      () => {
+                          const results = [];
+                          const links = document.querySelectorAll('a');
+                          const junkKeywords = ['customer feedback', 'complaints form', 'daily market report', 'data products', 'application form'];
                           
-                          container = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
-                          if not container: container = link.parent.parent if link.parent else link
+                          links.forEach(link => {
+                              const text = link.innerText.trim();
+                              const href = link.href;
                               
-                          container_text = container.get_text(" ", strip=True) if container else ""
-                          
-                          date_match = re.search(r'(\d{4}-\d{2}-\d{2})', container_text)
-                          date_str = date_match.group(1) if date_match else datetime.today().strftime('%Y-%m-%d')
-                          
-                          combined_text = title.upper() + " " + container_text.upper()
-                          if container:
-                              for img in container.find_all('img'):
-                                  alt = img.get('alt')
-                                  if alt: combined_text += " " + alt.upper()
-                                  
-                          ticker = "BSE"
-                          for key, sym in ticker_map.items():
-                              if key in combined_text:
-                                  ticker = sym
-                                  break
-                                  
-                          if href.startswith('/'): href = "https://www.bse.co.bw" + href
+                              if (text.length > 15 && !junkKeywords.some(k => text.toLowerCase().includes(k))) {
+                                  if (href.includes('disclosure') || href.includes('.pdf') || href.includes('storage')) {
+                                      // Find the parent container
+                                      let container = link.closest('tr') || link.closest('li') || link.parentElement.parentElement;
+                                      if (container) {
+                                          const rowText = container.innerText;
+                                          const dateMatch = rowText.match(/\\d{4}-\\d{2}-\\d{2}/);
+                                          
+                                          if (dateMatch) {
+                                              const imgs = container.querySelectorAll('img');
+                                              let imgAlt = '';
+                                              imgs.forEach(img => { if (img.alt) imgAlt += ' ' + img.alt; });
+                                              
+                                              results.push({
+                                                  title: text,
+                                                  link: href,
+                                                  date: dateMatch[0],
+                                                  combined_text: text + ' ' + rowText + ' ' + imgAlt
+                                              });
+                                          }
+                                      }
+                                  }
+                              }
+                          });
+                          return results;
+                      }
+                  """)
+                  
+                  browser.close()
+                  
+                  news_payload = []
+                  for item in news_items:
+                      # Determine ticker
+                      ticker = "BSE"
+                      combined = item['combined_text'].upper()
+                      for key, sym in ticker_map.items():
+                          if key in combined:
+                              ticker = sym
+                              break
                               
-                          news_payload.append({
-                              "ticker": ticker,
-                              "published_at": date_str + "T00:00:00Z",
-                              "raw_headline": title,
-                              "pdf_url": href
-                          })
-              
-              unique_news = list({v['pdf_url']:v for v in news_payload}.values())
-              
-              if unique_news:
-                  r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
-                  print(f"Supabase News Push Status: {r.status_code}")
-                  print(f"Found {len(unique_news)} news items.")
+                      news_payload.append({
+                          "ticker": ticker,
+                          "published_at": item['date'] + "T00:00:00Z",
+                          "raw_headline": item['title'],
+                          "pdf_url": item['link']
+                      })
                   
-                  unique_news.sort(key=lambda x: x['published_at'], reverse=True)
-                  for n in unique_news[:3]: 
-                      print(f"- {n['published_at'][:10]} | {n['ticker']} | {n['raw_headline']}")
-              else:
-                  print("No valid news links found on the page.")
+                  # Deduplicate
+                  unique_news = list({v['pdf_url']:v for v in news_payload}.values())
                   
+                  if unique_news:
+                      r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
+                      print(f"Supabase News Push Status: {r.status_code}")
+                      print(f"Found {len(unique_news)} real news items.")
+                      
+                      # Sort and print top 3
+                      unique_news.sort(key=lambda x: x['published_at'], reverse=True)
+                      for n in unique_news[:3]: 
+                          print(f"- {n['published_at'][:10]} | {n['ticker']} | {n['raw_headline']}")
+                  else:
+                      print("No news items found after rendering JS.")
+
           except Exception as e:
               print("News Sync Error:", e)
           PY
