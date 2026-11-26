@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Financial Markets Online - BSE Tracker</title>
-    
+
     <!-- PWA Setup -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d1117" id="meta-theme-color">
@@ -40,14 +40,14 @@
             <div class="form-group">
                 <input type="email" id="auth-email" class="form-control" placeholder="Email Address" style="margin-bottom: 10px; background: var(--bg-surface);">
                 <input type="password" id="auth-password" class="form-control" placeholder="Password" style="margin-bottom: 15px; background: var(--bg-surface);">
-                
+
                 <button id="auth-submit-btn" class="btn btn-primary btn-full" onclick="handleAuth()">Log In</button>
-                
+
                 <div style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted);">
-                    <span id="auth-toggle-text">Don't have an account?</span> 
+                    <span id="auth-toggle-text">Don't have an account?</span>
                     <a href="#" onclick="toggleAuthMode(event)" id="auth-toggle-link" style="color: var(--accent-orange); font-weight: bold; text-decoration: none;">Sign Up</a>
                 </div>
-                
+
                 <div id="auth-error" style="color: var(--danger-color); font-size: 0.75rem; text-align: center; margin-top: 10px; display: none; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 8px;"></div>
             </div>
         </div>
@@ -55,7 +55,7 @@
 
     <!-- MAIN APP (Hidden by default until logged in) -->
     <div id="main-app" style="display: none;">
-        
+
         <!-- Ambient Background Mesh Orbs -->
         <div class="ambient-bg" id="ambient-bg">
             <div class="orb orb-1"></div>
@@ -146,7 +146,7 @@
                 <div class="chart-container" id="original-chart-container">
                     <canvas id="portfolioChart"></canvas>
                 </div>
-                
+
                 <div id="custom-color-settings" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--card-border);">
                     <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Customize Slice Colors:</div>
                     <div id="custom-color-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
@@ -169,7 +169,7 @@
                 <div class="form-group">
                     <input type="text" id="asset-search" list="bse-list" placeholder="Search Ticker (e.g., FNBB, TURNSTAR)..." oninput="autoFillPrice()">
                     <datalist id="bse-list"></datalist>
-                    
+
                     <input type="number" id="asset-qty" placeholder="Share Quantity" step="any">
                     <input type="number" id="asset-buy-price" placeholder="Avg Buy Price per Share (P)" step="any">
                     <input type="number" id="asset-price" placeholder="Current Price (P)" step="any">
@@ -311,7 +311,7 @@
                     <div class="color-dot" style="background-color: #8b5cf6;" onclick="setAccent('#8b5cf6')"></div>
                     <div class="color-dot" style="background-color: #eab308;" onclick="setAccent('#eab308')"></div>
                     <div class="color-dot" style="background-color: #38bdf8;" onclick="setAccent('#38bdf8')"></div>
-                    
+
                     <label style="font-size:0.75rem; color:var(--text-muted); margin-left: auto; display:flex; align-items:center; gap:6px;">
                         Custom:
                         <input type="color" id="custom-accent-picker" onchange="setAccent(this.value)">
@@ -376,7 +376,7 @@
                     <button onclick="copyBackupJSON()" class="btn-outline">Copy Backup (JSON)</button>
                     <button onclick="restoreBackupJSON()" class="btn-outline">Restore Backup</button>
                     <button onclick="resetAllData()" class="btn-danger" style="margin-top:8px;">Reset All Data</button>
-                    
+
                     <!-- LOGOUT BUTTON -->
                     <button onclick="handleLogout()" class="btn btn-outline" style="margin-top: 15px; color: var(--danger-color); border-color: var(--danger-color);">Log Out</button>
                 </div>
@@ -417,7 +417,7 @@
                     <h2 id="trade-modal-title" style="margin: 0; border: none; padding: 0;">EXECUTE TRADE</h2>
                     <button class="close-btn" onclick="closeTradeModal()">✕</button>
                 </div>
-                
+
                 <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                     <div>
                         <span style="font-size: 0.7rem; color: var(--text-muted);">ASSET</span>
@@ -509,12 +509,12 @@
                 Markets
             </button>
             <button class="nav-item" onclick="switchTab('settings', this)" id="nav-btn-settings">
-                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c-.5.38 1.03.7 1.62.94l.36 2.54c-.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6-3.6z"/></svg>
                 Settings
             </button>
         </nav>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=20261126"></script>
 </body>
 </html>
