@@ -34,7 +34,7 @@ jobs:
           import os, re, sys, requests
           from playwright.sync_api import sync_playwright
 
-          SUPABASE_URL = os.environ['SUPABASE_URL']
+          SUPABASE_URL = os.environ['SUPABASE_URL'].rstrip('/')
           SUPABASE_KEY = os.environ['SUPABASE_KEY']
           MANSA_API_KEY = os.environ['MANSA_API_KEY']
 
@@ -73,7 +73,7 @@ jobs:
                       valid_tickers.add(sym)
                       payload.append({
                           "ticker": sym,
-                          "company_name": s.get('name', s['ticker']).strip(),
+                          "company_name": (s.get('name') or s['ticker']).strip(),
                           "current_price": float(s['price'])
                       })
 
