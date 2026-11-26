@@ -2,7 +2,7 @@
 window.addEventListener('error', function(e) {
     console.error("Global Error Caught:", e.message);
     if (e.message.includes('Script error') || e.message.includes('NetworkError')) return;
-    
+
     const errorDiv = document.createElement('div');
     errorDiv.style.cssText = 'position:fixed; top:10px; left:10px; right:10px; background:red; color:white; padding:15px; z-index:9999; border-radius:10px; font-family:monospace; font-size:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5);';
     errorDiv.innerHTML = `<strong>App Error:</strong><br>${e.message}<br><br><button onclick="this.parentElement.remove()" style="background:white; color:red; border:none; padding:5px 10px; border-radius:5px; font-weight:bold;">Dismiss</button>`;
@@ -15,9 +15,10 @@ let currentUser = null;
 let notificationChannel = null;
 
 try {
-    const SUPABASE_URL = 'https://apuzvlsktobobdgdufbc.supabase.co'; 
+    // Replace with your Bse-tracker project's anon key from Supabase Settings -> API Keys
+    const SUPABASE_URL = 'https://thwpjtxdftwrmskfksxk.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_XU3aUnE6Qbt_mwuok5cJng_WmyD6ZGZ';
-    
+
     if (typeof window.supabase !== 'undefined') {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log("Supabase connected safely.");
@@ -157,12 +158,11 @@ window.handleAuth = async function() {
         if (isSignUpMode) {
             const { data, error } = await supabaseClient.auth.signUp({ email, password });
             if (error) throw error;
-            // If email confirmation is off, they are logged in immediately
             if (data.session) {
                 checkUserSession();
             } else {
                 alert("Check your email for the confirmation link!");
-                toggleAuthMode({ preventDefault: () => {} }); // Switch back to login
+                toggleAuthMode({ preventDefault: () => {} });
             }
         } else {
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -181,8 +181,7 @@ window.handleAuth = async function() {
 window.handleLogout = async function() {
     if (!supabaseClient) return;
     await supabaseClient.auth.signOut();
-    
-    // Clean up realtime channel and local data
+
     if (notificationChannel) {
         supabaseClient.removeChannel(notificationChannel);
         notificationChannel = null;
@@ -191,7 +190,7 @@ window.handleLogout = async function() {
     localStorage.removeItem('trade_name');
     localStorage.removeItem('trade_ref');
     localStorage.removeItem('trade_phone');
-    
+
     holdings = [];
     saveAndRender();
     checkUserSession();
@@ -199,28 +198,24 @@ window.handleLogout = async function() {
 
 async function checkUserSession() {
     if (!supabaseClient) {
-        // If DB fails, let them use the app locally
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
         return;
     }
-    
+
     try {
         const { data: { session } } = await supabaseClient.auth.getSession();
-        
+
         if (session) {
             currentUser = session.user;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'block';
-            
-            // Sync data from Supabase upon login
+
             await syncPortfolioFromSupabase();
             loadPreferences();
             saveAndRender();
             fetchLiveMarketData(false);
-            
-            // START LISTENING FOR NOTIFICATIONS
-            initRealtimeNotifications(); 
+            initRealtimeNotifications();
         } else {
             currentUser = null;
             document.getElementById('login-screen').style.display = 'flex';
@@ -228,13 +223,11 @@ async function checkUserSession() {
         }
     } catch (e) {
         console.error("Auth check failed:", e);
-        // Failsafe: show app if auth check errors out so they aren't stuck
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
     }
 }
 
-// Listen for Auth Changes (Logout/Login)
 if (supabaseClient) {
     supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
@@ -247,21 +240,19 @@ if (supabaseClient) {
 function initRealtimeNotifications() {
     if (!currentUser || !supabaseClient) return;
 
-    // Unsubscribe from previous channel if it exists to avoid duplicates
     if (notificationChannel) {
         supabaseClient.removeChannel(notificationChannel);
     }
 
-    // Subscribe to new rows in the notifications table for THIS user
     notificationChannel = supabaseClient
         .channel('public:notifications')
         .on(
             'postgres_changes',
-            { 
-                event: 'INSERT', 
-                schema: 'public', 
-                table: 'notifications', 
-                filter: `user_id=eq.${currentUser.id}` 
+            {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'notifications',
+                filter: `user_id=eq.${currentUser.id}`
             },
             (payload) => {
                 console.log('New Notification received:', payload.new);
@@ -298,7 +289,6 @@ function showInAppAlert(title, body) {
         <div style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.4;">${body}</div>
     `;
 
-    // Click to dismiss immediately
     alertDiv.onclick = () => {
         alertDiv.style.transform = 'translateX(-50%) translateY(-100px)';
         setTimeout(() => alertDiv.remove(), 400);
@@ -306,12 +296,10 @@ function showInAppAlert(title, body) {
 
     document.body.appendChild(alertDiv);
 
-    // Animate in
     setTimeout(() => {
         alertDiv.style.transform = 'translateX(-50%) translateY(0)';
     }, 100);
 
-    // Auto-dismiss after 6 seconds
     setTimeout(() => {
         if (document.body.contains(alertDiv)) {
             alertDiv.style.transform = 'translateX(-50%) translateY(-100px)';
@@ -324,9 +312,8 @@ function showInAppAlert(title, body) {
 async function syncPortfolioToSupabase() {
     if (!currentUser || !supabaseClient) return;
     try {
-        // Delete existing rows for this user, then insert the current state
         await supabaseClient.from('user_holdings').delete().eq('user_id', currentUser.id);
-        
+
         if (holdings.length > 0) {
             const payload = holdings.map(h => ({
                 user_id: currentUser.id,
@@ -356,7 +343,7 @@ async function syncPortfolioFromSupabase() {
                 symbol: row.ticker,
                 qty: row.shares_owned,
                 buyPrice: row.avg_buy_price,
-                price: row.avg_buy_price // Will be updated by live price fetch
+                price: row.avg_buy_price
             }));
             localStorage.setItem('bse_portfolio', JSON.stringify(holdings));
         }
@@ -468,7 +455,7 @@ window.setTheme = function(mode) {
     document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
     const activeBtn = document.getElementById(`btn-${mode}`);
     if (activeBtn) activeBtn.classList.add('active');
-    
+
     const metaColorMap = {
         'dark': '#0d1117', 'oled': '#000000', 'light': '#eef2f6',
         'midnight': '#060b19', 'forest': '#06140d', 'sand': '#f5efe6',
@@ -551,12 +538,12 @@ window.updateTaxRate = function() {
 };
 
 window.changeChartType = function(type) { chartType = type; localStorage.setItem('bse_chart_type', type); saveAndRender(); };
-window.changeChartPalette = function(palette) { 
-    chartPalette = palette; 
-    localStorage.setItem('bse_chart_palette', palette); 
+window.changeChartPalette = function(palette) {
+    chartPalette = palette;
+    localStorage.setItem('bse_chart_palette', palette);
     const colorSettings = document.getElementById('custom-color-settings');
     if (colorSettings) colorSettings.style.display = (palette === 'custom') ? 'block' : 'none';
-    saveAndRender(); 
+    saveAndRender();
 };
 window.changeChartLegend = function(pos) { chartLegendPosition = pos; localStorage.setItem('bse_chart_legend', pos); saveAndRender(); };
 window.setCustomColor = function(symbol, color) { customColors[symbol] = color; localStorage.setItem('bse_custom_colors', JSON.stringify(customColors)); saveAndRender(); };
@@ -566,36 +553,72 @@ window.fetchLiveMarketData = async function(manual = false) {
     const btn = document.getElementById('refresh-news-btn');
     if (btn && manual) btn.innerText = '↻ Syncing...';
 
-    // 1. Try to get Prices from Supabase
+    // 1. Fetch Prices from bse_tickers
     if (supabaseClient) {
         try {
-            const { data: tickers } = await supabaseClient.from('bse_tickers').select('*').eq('is_active', true);
+            const { data: tickers, error } = await supabaseClient
+                .from('bse_tickers')
+                .select('*')
+                .order('ticker', { ascending: true });
+
+            if (error) throw error;
+
             if (tickers && tickers.length > 0) {
-                STOCKS.length = 0;
-                tickers.forEach(t => {
-                    STOCKS.push({
-                        symbol: t.ticker, name: t.company_name, type: t.board || "Domestic Equity",
-                        price: t.current_price || 0, divYield: (t.annual_dividend_yield || 0) / 100,
-                        divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1
+                const activeTickers = tickers.filter(t => t.is_active !== false);
+                if (activeTickers.length > 0) {
+                    const fallbackMap = new Map(STOCKS.map(s => [s.symbol, s]));
+                    const nextStocks = activeTickers.map(t => {
+                        const sym = (t.ticker || '').trim().toUpperCase();
+                        const prev = fallbackMap.get(sym);
+                        return {
+                            symbol: sym,
+                            name: t.company_name || (prev ? prev.name : sym),
+                            type: t.board || (prev ? prev.type : "Domestic Equity"),
+                            price: t.current_price !== null && t.current_price !== undefined
+                                ? Number(t.current_price)
+                                : (prev ? prev.price : 0),
+                            divYield: t.annual_dividend_yield !== null && t.annual_dividend_yield !== undefined
+                                ? Number(t.annual_dividend_yield) / 100
+                                : (prev ? prev.divYield : 0),
+                            divAmount: prev ? prev.divAmount : 0,
+                            divDate: prev ? prev.divDate : "-",
+                            exDate: prev ? prev.exDate : "-",
+                            recordDate: prev ? prev.recordDate : "-",
+                            payDate: prev ? prev.payDate : "-",
+                            payMonth: prev ? prev.payMonth : -1
+                        };
                     });
-                });
+                    STOCKS.length = 0;
+                    STOCKS.push(...nextStocks);
+                }
             }
         } catch (error) {
             console.error('Supabase price fetch error:', error);
         }
     }
 
-    // 2. Try to get News from Supabase
+    // 2. Fetch News from xnews_disclosures ordered by published_at descending
     let gotSupabaseNews = false;
     if (supabaseClient) {
         try {
-            const { data: news } = await supabaseClient.from('xnews_disclosures').select('*').order('published_at', { ascending: false }).limit(50);
+            const { data: news, error } = await supabaseClient
+                .from('xnews_disclosures')
+                .select('id,ticker,published_at,raw_headline,pdf_url,ai_summary')
+                .order('published_at', { ascending: false })
+                .limit(50);
+
+            if (error) throw error;
+
             if (news && news.length > 0) {
-                activeNews = news.map(n => ({
-                    symbol: n.ticker || 'BSE', title: n.raw_headline,
-                    date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
-                    summary: n.ai_summary || "Click to view the official BSE disclosure document.", link: n.pdf_url || "#"
-                }));
+                activeNews = news
+                    .filter(n => (n.raw_headline || '').trim().toLowerCase() !== 'skip to main content')
+                    .map(n => ({
+                        symbol: (n.ticker || 'BSE').trim().toUpperCase(),
+                        title: n.raw_headline,
+                        date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
+                        summary: n.ai_summary || n.raw_headline || "Click to view the official BSE disclosure document.",
+                        link: n.pdf_url || "#"
+                    }));
                 gotSupabaseNews = true;
             }
         } catch (error) {
@@ -603,7 +626,7 @@ window.fetchLiveMarketData = async function(manual = false) {
         }
     }
 
-    // 3. If Supabase news was empty, try to get News from news.json
+    // 3. Fallback to news.json only if Supabase had no rows
     if (!gotSupabaseNews) {
         try {
             const res = await fetch('news.json?t=' + Date.now());
@@ -637,9 +660,8 @@ function getStockMeta(sym) {
 
 window.saveAndRender = function() {
     localStorage.setItem('bse_portfolio', JSON.stringify(holdings));
-    syncPortfolioToSupabase(); // Sync to DB on every render
-    
-    // 1. Render Dashboard Table
+    syncPortfolioToSupabase();
+
     const tbody = document.getElementById('holdings-list');
     if (tbody) {
         tbody.innerHTML = '';
@@ -656,12 +678,12 @@ window.saveAndRender = function() {
             const meta = getStockMeta(item.symbol);
             const curPrice = meta.price || item.price;
             const isWatchlist = item.qty === 0;
-            
+
             const itemVal = item.qty * curPrice;
             const itemCost = item.qty * (item.buyPrice || curPrice);
             const pl = itemVal - itemCost;
             const netDiv = (itemVal * meta.divYield) * (1 - (taxRate / 100));
-            
+
             totalVal += itemVal; totalCost += itemCost; totalNetDiv += netDiv;
             if (itemVal > maxVal) { maxVal = itemVal; maxAsset = item.symbol; }
 
@@ -683,7 +705,7 @@ window.saveAndRender = function() {
         const dashDiv = document.getElementById('dash-total-div');
         const dashPl = document.getElementById('dash-total-pl');
         const dashCount = document.getElementById('dash-total-count');
-        
+
         if (dashVal) dashVal.innerText = formatCurrency(totalVal);
         if (dashDiv) dashDiv.innerText = formatCurrency(totalNetDiv);
         if (dashPl) {
@@ -727,7 +749,7 @@ function updateAllocationChart() {
         const pct = totalVal > 0 ? ((val / totalVal) * 100).toFixed(1) : 0;
         labels.push(`${h.symbol} (${pct}%)`);
         data.push(val);
-        
+
         const paletteColors = PALETTES[chartPalette] || PALETTES.vivid;
         bgColors.push(chartPalette === 'custom' ? (customColors[h.symbol] || paletteColors[i % paletteColors.length]) : paletteColors[i % paletteColors.length]);
     });
@@ -781,7 +803,7 @@ function updateDividendSection() {
         const netAnnual = (h.qty * meta.price * meta.divYield) * (1 - (taxRate / 100));
         const card = document.createElement('div');
         card.className = 'div-card';
-        
+
         if (meta.divAmount === 0 || meta.payDate === '-') {
             card.innerHTML = `<div class="div-header"><div><strong>${h.symbol}</strong></div><div class="div-amount" style="color:var(--text-muted);">No Dividend</div></div><div style="font-size:0.75rem; color:var(--text-muted);">This asset does not distribute dividends.</div>`;
         } else {
@@ -792,9 +814,6 @@ function updateDividendSection() {
             const isSoon = !isPaid && diffDays <= alertWindow;
 
             if (isSoon) card.classList.add('amber-alert');
-            let statusBadge = `<span class="badge-status badge-upcoming">In ${diffDays} days</span>`;
-            if (isPaid) statusBadge = `<span class="badge-status badge-paid">Paid</span>`;
-            else if (isSoon) statusBadge = `<span class="badge-status badge-soon">Coming up soon</span>`;
 
             card.innerHTML = `
                 <div class="div-header"><div><strong>${h.symbol}</strong></div><div class="div-amount">+${formatCurrency(netAnnual)}/yr (Net)</div></div>
@@ -824,7 +843,7 @@ function update12MonthChart() {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyData = new Array(12).fill(0);
     const activeHoldings = holdings.filter(h => h.qty > 0);
-    
+
     activeHoldings.forEach(h => {
         const meta = getStockMeta(h.symbol);
         if (meta.payMonth >= 0 && meta.divYield > 0) {
@@ -832,7 +851,7 @@ function update12MonthChart() {
         }
     });
     const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-orange').trim();
-    
+
     dividendChart = new Chart(ctx, {
         type: 'bar',
         data: { labels: months, datasets: [{ data: monthlyData, backgroundColor: accent, borderRadius: 6 }] },
@@ -844,7 +863,7 @@ function renderPinnedNews() {
     const container = document.getElementById('pinned-news-container');
     if (!container) return;
     container.innerHTML = '';
-    
+
     const holdingSymbols = holdings.filter(h => h.qty > 0).map(h => h.symbol);
     const sortedNews = [...activeNews].sort((a, b) => {
         const aOwned = holdingSymbols.includes(a.symbol);
@@ -875,9 +894,8 @@ function initMarketPricesGrid() {
     const grid = document.getElementById('market-prices-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    
+
     STOCKS.forEach(s => {
-        const existing = holdings.find(h => h.symbol === s.symbol);
         const row = document.createElement('div');
         row.className = 'price-row';
         row.setAttribute('data-symbol', s.symbol);
@@ -911,7 +929,7 @@ window.addHolding = function() {
     const buyPrice = parseFloat(document.getElementById('asset-buy-price').value) || 0;
     const curPrice = parseFloat(document.getElementById('asset-price').value) || 0;
     if (!sym || isNaN(qty) || qty <= 0) return alert("Please enter a valid ticker and quantity.");
-    
+
     const idx = holdings.findIndex(h => h.symbol === sym);
     if (idx !== -1) {
         holdings[idx].qty += qty;
@@ -977,33 +995,33 @@ function updateCustomColorsUI() {
 function loadPreferences() {
     setTheme(localStorage.getItem('bse_theme') || 'dark');
     setAccent(localStorage.getItem('bse_accent') || '#ff5722');
-    
+
     const opacitySlider = document.getElementById('card-opacity-slider');
     if (opacitySlider) { opacitySlider.value = cardOpacity; setCardOpacity(cardOpacity); }
-    
+
     const blurSlider = document.getElementById('card-blur-slider');
     if (blurSlider) { blurSlider.value = cardBlur; setCardBlur(cardBlur); }
-    
+
     const orbsToggle = document.getElementById('ambient-orbs-toggle');
     if (orbsToggle) { orbsToggle.checked = ambientOrbs; toggleAmbientOrbs(ambientOrbs); }
-    
+
     const fontSelect = document.getElementById('font-size-select');
     if (fontSelect) fontSelect.value = fontSizeMode;
     setFontSize(fontSizeMode);
-    
+
     const compactToggle = document.getElementById('compact-toggle');
     if (compactToggle) compactToggle.checked = compactLayout;
     toggleCompact(compactLayout);
-    
+
     const hideAmountsToggle = document.getElementById('hide-amounts-toggle');
     if (hideAmountsToggle) hideAmountsToggle.checked = hideAmounts;
-    
+
     const taxInput = document.getElementById('tax-rate-input');
     if (taxInput) taxInput.value = taxRate;
-    
+
     const alertWindowSelect = document.getElementById('alert-window-select');
     if (alertWindowSelect) alertWindowSelect.value = alertWindow;
-    
+
     const openingTabSelect = document.getElementById('opening-tab-select');
     if (openingTabSelect) openingTabSelect.value = defaultTab;
 
@@ -1017,7 +1035,7 @@ window.openChartModal = function(symbol, price) {
     document.querySelectorAll('#modal-periods button').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.querySelector(`#modal-periods button[onclick="updateChartPeriod('1M')"]`);
     if (activeBtn) activeBtn.classList.add('active');
-    
+
     const modal = document.getElementById('chart-modal');
     if (modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); }
     renderModalChart();
@@ -1086,24 +1104,22 @@ window.addToWatchlist = function(symbol, price) {
 window.openTradeModal = function(symbol, price) {
     currentTradeSymbol = symbol;
     currentTradePrice = price;
-    setTradeMode('shares'); // Reset to shares mode by default
-    
+    setTradeMode('shares');
+
     document.getElementById('trade-symbol').innerText = symbol;
     document.getElementById('trade-price').innerText = formatCurrency(price);
     document.getElementById('trade-input').value = '';
-    
-    // Reset file input
+
     document.getElementById('trade-proof').value = '';
     document.getElementById('proof-status').style.display = 'none';
     uploadedProofName = "";
-    
-    // Load saved user details
+
     document.getElementById('trade-user-name').value = localStorage.getItem('trade_name') || '';
     document.getElementById('trade-user-ref').value = localStorage.getItem('trade_ref') || '';
     document.getElementById('trade-user-phone').value = localStorage.getItem('trade_phone') || '';
-    
+
     calculateTradeTotal();
-    
+
     const modal = document.getElementById('trade-modal');
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('show'), 10);
@@ -1141,7 +1157,7 @@ window.setTradeMode = function(mode) {
         btnShares.style.color = 'var(--text-muted)';
         btnShares.style.boxShadow = 'none';
     }
-    inputField.value = ''; // clear input on toggle
+    inputField.value = '';
     calculateTradeTotal();
 };
 
@@ -1150,17 +1166,15 @@ window.calculateTradeTotal = function() {
     let qty = 0;
     let gross = 0;
 
-    // BSE Fee Structure
-    const brokerageRate = 0.01;    // 1.0%
-    const leviesRate = 0.0025;     // BSE 0.15% + CSD 0.10%
-    const vatRate = 0.10;          // 10% VAT on fees
-    const totalFeeMultiplier = (brokerageRate + leviesRate) * (1 + vatRate); // 1.01375
+    const brokerageRate = 0.01;
+    const leviesRate = 0.0025;
+    const vatRate = 0.10;
+    const totalFeeMultiplier = (brokerageRate + leviesRate) * (1 + vatRate);
 
     if (tradeMode === 'shares') {
         qty = inputVal;
         gross = qty * currentTradePrice;
     } else {
-        // Calculate shares from Amount. Must floor to nearest whole share.
         const exactQty = inputVal / (currentTradePrice * (1 + totalFeeMultiplier));
         qty = Math.floor(exactQty);
         gross = qty * currentTradePrice;
@@ -1211,7 +1225,6 @@ window.generateTradeEmail = function() {
     if (!inputVal || inputVal <= 0) return alert("Please enter a valid quantity or amount.");
     if (!name || !ref || !phone) return alert("Please fill in your name, CSD/Client Reference, and phone number.");
 
-    // Recalculate final shares just to be sure
     let finalQty = 0;
     if (tradeMode === 'shares') {
         finalQty = inputVal;
@@ -1230,12 +1243,12 @@ window.generateTradeEmail = function() {
     let brokerEmail = brokerKey === 'imara' ? 'icssales@imara.com' : 'motswedi@motswedi.co.bw';
 
     const subject = `Request to Buy Shares – ${name} (${ref})`;
-    
+
     let body = `Good day Dealing Desk,\n\nWith the funds deposited, please Buy ${currentTradeSymbol} shares at best available market price.\n\n`;
     body += `Quantity: ${finalQty} shares\n`;
     body += `Gross Value: P${(finalQty * currentTradePrice).toFixed(2)}\n`;
     body += `Estimated Total Cost: ${totalCost}\n\n`;
-    
+
     if (uploadedProofName) {
         body += `Proof of payment attached (${uploadedProofName}).\n\n`;
     } else {
@@ -1249,8 +1262,7 @@ window.generateTradeEmail = function() {
 
     const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
-    
-    // Add to portfolio as a pending watchlist item with the bought qty if not already there
+
     const idx = holdings.findIndex(h => h.symbol === currentTradeSymbol);
     if (idx === -1) {
         holdings.push({ symbol: currentTradeSymbol, qty: finalQty, buyPrice: currentTradePrice, price: currentTradePrice });
@@ -1261,48 +1273,46 @@ window.generateTradeEmail = function() {
 };
 
 // --- UTILITIES & BACKUPS ---
-window.copyCSV = function() { 
-    if(holdings.length === 0) return alert("No holdings to copy."); 
-    let csv = "Symbol,Quantity,AvgBuyPrice,CurrentPrice,TotalValue\n"; 
-    holdings.forEach(h => { 
-        const meta = getStockMeta(h.symbol); 
-        const cur = meta.price || h.price; 
-        csv += `${h.symbol},${h.qty},${h.buyPrice || cur},${cur},${(h.qty * cur).toFixed(2)}\n`; 
-    }); 
-    navigator.clipboard.writeText(csv).then(() => alert("CSV copied!")); 
+window.copyCSV = function() {
+    if(holdings.length === 0) return alert("No holdings to copy.");
+    let csv = "Symbol,Quantity,AvgBuyPrice,CurrentPrice,TotalValue\n";
+    holdings.forEach(h => {
+        const meta = getStockMeta(h.symbol);
+        const cur = meta.price || h.price;
+        csv += `${h.symbol},${h.qty},${h.buyPrice || cur},${cur},${(h.qty * cur).toFixed(2)}\n`;
+    });
+    navigator.clipboard.writeText(csv).then(() => alert("CSV copied!"));
 };
-window.copyBackupJSON = function() { 
-    const str = JSON.stringify({ holdings, taxRate, alertWindow, hideAmounts, compactLayout, fontSizeMode, defaultTab, chartType, chartPalette, chartLegendPosition, customColors, cardOpacity, cardBlur, ambientOrbs, theme: localStorage.getItem('bse_theme'), accent: localStorage.getItem('bse_accent') }, null, 2); 
-    navigator.clipboard.writeText(str).then(() => alert("Backup copied!")); 
+window.copyBackupJSON = function() {
+    const str = JSON.stringify({ holdings, taxRate, alertWindow, hideAmounts, compactLayout, fontSizeMode, defaultTab, chartType, chartPalette, chartLegendPosition, customColors, cardOpacity, cardBlur, ambientOrbs, theme: localStorage.getItem('bse_theme'), accent: localStorage.getItem('bse_accent') }, null, 2);
+    navigator.clipboard.writeText(str).then(() => alert("Backup copied!"));
 };
-window.restoreBackupJSON = function() { 
-    const str = prompt("Paste backup JSON here:"); 
-    if (!str) return; 
-    try { 
-        const p = JSON.parse(str); 
-        if(p.holdings) { localStorage.setItem('bse_portfolio', JSON.stringify(p.holdings)); alert("Backup restored! Reloading..."); location.reload(); } 
-    } catch(e) { alert("Invalid JSON"); } 
+window.restoreBackupJSON = function() {
+    const str = prompt("Paste backup JSON here:");
+    if (!str) return;
+    try {
+        const p = JSON.parse(str);
+        if(p.holdings) { localStorage.setItem('bse_portfolio', JSON.stringify(p.holdings)); alert("Backup restored! Reloading..."); location.reload(); }
+    } catch(e) { alert("Invalid JSON"); }
 };
-window.resetAllData = function() { 
-    if (confirm("Reset all data? This cannot be undone.")) { localStorage.clear(); location.reload(); } 
+window.resetAllData = function() {
+    if (confirm("Reset all data? This cannot be undone.")) { localStorage.clear(); location.reload(); }
 };
-window.autoFillPrice = function() { 
-    const sym = document.getElementById('asset-search').value.trim().toUpperCase(); 
-    const s = STOCKS.find(x => x.symbol === sym); 
-    if (s) { 
-        document.getElementById('asset-price').value = s.price; 
-        if (!document.getElementById('asset-buy-price').value) document.getElementById('asset-buy-price').value = s.price; 
-    } 
+window.autoFillPrice = function() {
+    const sym = document.getElementById('asset-search').value.trim().toUpperCase();
+    const s = STOCKS.find(x => x.symbol === sym);
+    if (s) {
+        document.getElementById('asset-price').value = s.price;
+        if (!document.getElementById('asset-buy-price').value) document.getElementById('asset-buy-price').value = s.price;
+    }
 };
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Check Auth Session first
     checkUserSession();
-    
+
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
-    
-    // IPO Countdown
+
     setInterval(() => {
         const diff = new Date('2026-11-27T17:00:00') - new Date();
         const dEl = document.getElementById('ipo-days'), hEl = document.getElementById('ipo-hours'), mEl = document.getElementById('ipo-mins'), sEl = document.getElementById('ipo-secs');
@@ -1314,6 +1324,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 
-    // Hourly Auto Refresh
     setInterval(() => { fetchLiveMarketData(); }, 3600000);
 });
