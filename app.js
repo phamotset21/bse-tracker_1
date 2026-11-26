@@ -15,7 +15,6 @@ let currentUser = null;
 let notificationChannel = null;
 
 try {
-    // Replace with your Bse-tracker project's anon key from Supabase Settings -> API Keys
     const SUPABASE_URL = 'https://apuzvlsktobobdgdufbc.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_XU3aUnE6Qbt_mwuok5cJng_WmyD6ZGZ';
 
@@ -119,7 +118,7 @@ let currentChartPeriod = "1M";
 // Trade State
 let currentTradeSymbol = "";
 let currentTradePrice = 0;
-let tradeMode = 'shares'; // 'shares' or 'amount'
+let tradeMode = 'shares';
 let uploadedProofName = "";
 
 // --- AUTHENTICATION LOGIC ---
@@ -200,6 +199,8 @@ async function checkUserSession() {
     if (!supabaseClient) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
+        loadPreferences();
+        saveAndRender();
         return;
     }
 
@@ -214,7 +215,7 @@ async function checkUserSession() {
             await syncPortfolioFromSupabase();
             loadPreferences();
             saveAndRender();
-            fetchLiveMarketData(false);
+            await fetchLiveMarketData(false);
             initRealtimeNotifications();
         } else {
             currentUser = null;
@@ -225,11 +226,14 @@ async function checkUserSession() {
         console.error("Auth check failed:", e);
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
+        loadPreferences();
+        saveAndRender();
+        fetchLiveMarketData(false);
     }
 }
 
 if (supabaseClient) {
-    supabaseClient.auth.onAuthStateChange((event, session) => {
+    supabaseClient.auth.onAuthStateChange((event) => {
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
             checkUserSession();
         }
@@ -255,15 +259,10 @@ function initRealtimeNotifications() {
                 filter: `user_id=eq.${currentUser.id}`
             },
             (payload) => {
-                console.log('New Notification received:', payload.new);
                 showInAppAlert(payload.new.title, payload.new.body);
             }
         )
-        .subscribe((status) => {
-            if (status === 'SUBSCRIBED') {
-                console.log('Successfully listening for realtime notifications.');
-            }
-        });
+        .subscribe();
 }
 
 function showInAppAlert(title, body) {
@@ -295,11 +294,7 @@ function showInAppAlert(title, body) {
     };
 
     document.body.appendChild(alertDiv);
-
-    setTimeout(() => {
-        alertDiv.style.transform = 'translateX(-50%) translateY(0)';
-    }, 100);
-
+    setTimeout(() => { alertDiv.style.transform = 'translateX(-50%) translateY(0)'; }, 100);
     setTimeout(() => {
         if (document.body.contains(alertDiv)) {
             alertDiv.style.transform = 'translateX(-50%) translateY(-100px)';
@@ -313,7 +308,6 @@ async function syncPortfolioToSupabase() {
     if (!currentUser || !supabaseClient) return;
     try {
         await supabaseClient.from('user_holdings').delete().eq('user_id', currentUser.id);
-
         if (holdings.length > 0) {
             const payload = holdings.map(h => ({
                 user_id: currentUser.id,
@@ -427,7 +421,7 @@ function shadeColor(color, percent) {
     R = parseInt(R * (100 + percent) / 100);
     G = parseInt(G * (100 + percent) / 100);
     B = parseInt(B * (100 + percent) / 100);
-    R = (R<255)?R:255;  G = (G<255)?G:255;  B = (B<255)?B:255;
+    R = (R<255)?R:255; G = (G<255)?G:255; B = (B<255)?B:255;
     let RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16));
     let GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16));
     let BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16));
@@ -553,7 +547,7 @@ window.fetchLiveMarketData = async function(manual = false) {
     const btn = document.getElementById('refresh-news-btn');
     if (btn && manual) btn.innerText = '↻ Syncing...';
 
-    // 1. Fetch Prices from bse_tickers
+    // 1. Fetch Live Prices from bse_tickers
     if (supabaseClient) {
         try {
             const { data: tickers, error } = await supabaseClient
@@ -597,8 +591,7 @@ window.fetchLiveMarketData = async function(manual = false) {
         }
     }
 
-    // 2. Fetch News from xnews_disclosures ordered by published_at descending
-    let gotSupabaseNews = false;
+    // 2. Fetch Live News directly from xnews_disclosures (no stale news.json override)
     if (supabaseClient) {
         try {
             const { data: news, error } = await supabaseClient
@@ -619,34 +612,27 @@ window.fetchLiveMarketData = async function(manual = false) {
                         summary: n.ai_summary || n.raw_headline || "Click to view the official BSE disclosure document.",
                         link: n.pdf_url || "#"
                     }));
-                gotSupabaseNews = true;
+            } else {
+                console.warn("xnews_disclosures returned 0 rows — verify RLS SELECT policy is applied.");
             }
         } catch (error) {
             console.error('Supabase news fetch error:', error);
         }
     }
 
-    // 3. Fallback to news.json only if Supabase had no rows
-    if (!gotSupabaseNews) {
-        try {
-            const res = await fetch('news.json?t=' + Date.now());
-            if (res.ok) {
-                const jsonNews = await res.json();
-                if (jsonNews && jsonNews.length > 0) {
-                    activeNews = jsonNews;
-                }
-            }
-        } catch (e) {
-            console.log("news.json fetch failed, using hardcoded fallback.");
-        }
-    }
-
+    populateTickerDatalist();
     saveAndRender();
     if (btn && manual) {
         btn.innerText = '✓ Updated';
-        setTimeout(() => { if(btn) btn.innerText = '↻ Refresh'; }, 1500);
+        setTimeout(() => { if (btn) btn.innerText = '↻ Refresh'; }, 1500);
     }
 };
+
+function populateTickerDatalist() {
+    const dl = document.getElementById('bse-list');
+    if (!dl) return;
+    dl.innerHTML = STOCKS.map(s => `<option value="${s.symbol}">${s.name} (P${Number(s.price).toFixed(2)})</option>`).join('');
+}
 
 // --- RENDERING ---
 function formatCurrency(val) {
@@ -1274,7 +1260,7 @@ window.generateTradeEmail = function() {
 
 // --- UTILITIES & BACKUPS ---
 window.copyCSV = function() {
-    if(holdings.length === 0) return alert("No holdings to copy.");
+    if (holdings.length === 0) return alert("No holdings to copy.");
     let csv = "Symbol,Quantity,AvgBuyPrice,CurrentPrice,TotalValue\n";
     holdings.forEach(h => {
         const meta = getStockMeta(h.symbol);
@@ -1292,8 +1278,8 @@ window.restoreBackupJSON = function() {
     if (!str) return;
     try {
         const p = JSON.parse(str);
-        if(p.holdings) { localStorage.setItem('bse_portfolio', JSON.stringify(p.holdings)); alert("Backup restored! Reloading..."); location.reload(); }
-    } catch(e) { alert("Invalid JSON"); }
+        if (p.holdings) { localStorage.setItem('bse_portfolio', JSON.stringify(p.holdings)); alert("Backup restored! Reloading..."); location.reload(); }
+    } catch (e) { alert("Invalid JSON"); }
 };
 window.resetAllData = function() {
     if (confirm("Reset all data? This cannot be undone.")) { localStorage.clear(); location.reload(); }
@@ -1309,9 +1295,19 @@ window.autoFillPrice = function() {
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    checkUserSession();
+    populateTickerDatalist();
 
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Unregister stale service workers & clear old caches so mobile browsers load fresh JS
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(reg => reg.unregister());
+        }).catch(() => {});
+    }
+    if ('caches' in window) {
+        caches.keys().then(names => names.forEach(name => caches.delete(name))).catch(() => {});
+    }
+
+    checkUserSession();
 
     setInterval(() => {
         const diff = new Date('2026-11-27T17:00:00') - new Date();
@@ -1324,5 +1320,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 
-    setInterval(() => { fetchLiveMarketData(); }, 3600000);
+    setInterval(() => { fetchLiveMarketData(false); }, 3600000);
 });
