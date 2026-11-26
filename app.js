@@ -16,7 +16,7 @@ let notificationChannel = null;
 
 try {
     // Replace with your Bse-tracker project's anon key from Supabase Settings -> API Keys
-    const SUPABASE_URL = 'https://thwpjtxdftwrmskfksxk.supabase.co';
+    const SUPABASE_URL = 'https://apuzvlsktobobdgdufbc.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_XU3aUnE6Qbt_mwuok5cJng_WmyD6ZGZ';
 
     if (typeof window.supabase !== 'undefined') {
