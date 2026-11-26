@@ -47,7 +47,7 @@ jobs:
           }
 
           # ==========================================
-          # 1. SYNC PRICES (Using standard requests)
+          # 1. SYNC PRICES
           # ==========================================
           print("Starting Price Sync...")
           try:
@@ -71,7 +71,7 @@ jobs:
               print("Price Sync Error:", e)
 
           # ==========================================
-          # 2. SYNC NEWS (Using Playwright to render JS)
+          # 2. SYNC NEWS (Playwright with longer timeout)
           # ==========================================
           print("\nStarting News Sync...")
           
@@ -96,13 +96,17 @@ jobs:
               with sync_playwright() as p:
                   browser = p.chromium.launch(headless=True)
                   page = browser.new_page()
-                  # Go to the X-News portal
+                  
+                  # Set a longer navigation timeout
+                  page.set_default_timeout(30000)
+                  
                   page.goto("https://www.bse.co.bw/xnews/", wait_until="networkidle")
                   
-                  # Wait for the date text to appear to ensure JS has loaded the news
-                  page.wait_for_selector('text="GMT+2"', timeout=10000)
+                  # Wait for any element containing a date pattern (YYYY-MM-DD)
+                  # This is more robust than waiting for "GMT+2"
+                  page.wait_for_selector('text=/\\d{4}-\\d{2}-\\d{2}/', timeout=30000)
                   
-                  # Extract all links and their surrounding text using browser-side JS
+                  # Extract all links and their surrounding text
                   news_items = page.evaluate("""
                       () => {
                           const results = [];
@@ -115,7 +119,6 @@ jobs:
                               
                               if (text.length > 15 && !junkKeywords.some(k => text.toLowerCase().includes(k))) {
                                   if (href.includes('disclosure') || href.includes('.pdf') || href.includes('storage')) {
-                                      // Find the parent container
                                       let container = link.closest('tr') || link.closest('li') || link.parentElement.parentElement;
                                       if (container) {
                                           const rowText = container.innerText;
@@ -145,7 +148,6 @@ jobs:
                   
                   news_payload = []
                   for item in news_items:
-                      # Determine ticker
                       ticker = "BSE"
                       combined = item['combined_text'].upper()
                       for key, sym in ticker_map.items():
@@ -160,7 +162,6 @@ jobs:
                           "pdf_url": item['link']
                       })
                   
-                  # Deduplicate
                   unique_news = list({v['pdf_url']:v for v in news_payload}.values())
                   
                   if unique_news:
@@ -168,12 +169,11 @@ jobs:
                       print(f"Supabase News Push Status: {r.status_code}")
                       print(f"Found {len(unique_news)} real news items.")
                       
-                      # Sort and print top 3
                       unique_news.sort(key=lambda x: x['published_at'], reverse=True)
                       for n in unique_news[:3]: 
                           print(f"- {n['published_at'][:10]} | {n['ticker']} | {n['raw_headline']}")
                   else:
-                      print("No news items found after rendering JS.")
+                      print("No news items found after rendering JS. The page layout may have changed again.")
 
           except Exception as e:
               print("News Sync Error:", e)
