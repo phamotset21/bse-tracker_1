@@ -41,7 +41,9 @@ jobs:
               "Prefer": "resolution=merge-duplicates" 
           }
 
+          # ==========================================
           # 1. SYNC PRICES
+          # ==========================================
           print("Starting Price Sync...")
           try:
               url = "https://mansaapi.com/api/v1/markets/exchanges/BSE/stocks?limit=200"
@@ -61,10 +63,13 @@ jobs:
                   if payload:
                       r = requests.post(f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", headers=headers, json=payload)
                       print(f"Supabase Prices Push Status: {r.status_code}")
+                      if r.status_code >= 400: print(f"Error: {r.text}")
           except Exception as e:
               print("Price Sync Error:", e)
 
-          # 2. SYNC NEWS (Aggressive Table Scraper)
+          # ==========================================
+          # 2. SYNC NEWS (Deep Table Scraper)
+          # ==========================================
           print("\nStarting News Sync...")
           
           ticker_map = {
@@ -76,9 +81,10 @@ jobs:
               "BIHL": "BIHL", "BOTSWANA INSURANCE": "BIHL", "NAP": "NAP", 
               "NEW AFRICAN PROPERTIES": "NAP", "RDC": "RDCP", "RDC PROPERTIES": "RDCP",
               "ENGEN": "ENGEN", "MINERGY": "MINERGY", "BOTALA": "BOTALA", "SHUMBA": "SHUMBA",
-              "TLOU": "TLOU", "CHOBE": "CHOBE", "CRESTA": "CRESTA", "G4S": "G4S", 
-              "LETLOLE": "LETLOLE", "PRIMETIME": "PRIMETIME", "ACCESS": "ACCESS",
-              "SEEDCO": "SEEDCO", "STANCHART": "STANCHART", "STANDARD CHARTERED": "STANCHART",
+              "TLOU": "TLOU", "TLOU ENERGY": "TLOU", "CHOBE": "CHOBE", "CHOBE HOLDINGS": "CHOBE", 
+              "CRESTA": "CRESTA", "G4S": "G4S", "LETLOLE": "LETLOLE", "PRIMETIME": "PRIMETIME", 
+              "ACCESS": "ACCESS", "ACCESS BANK": "ACCESS", "SEEDCO": "SEEDCO", 
+              "STANCHART": "STANCHART", "STANDARD CHARTERED": "STANCHART",
               "OLYMPIA": "OLYMPIA", "LUCARA": "LUC", "INVESTEC": "INVESTEC", "ANGLO": "ANGLO",
               "CA SALES": "CA SALES", "GAIA": "GAIA"
           }
@@ -89,43 +95,42 @@ jobs:
               
               news_payload = []
               
-              # Find all links that look like news
+              # Look for all links that could be disclosures
               for link in soup.find_all('a'):
                   title = link.get_text(" ", strip=True)
                   href = link.get('href', '')
                   
-                  if len(title) > 15 and ('disclosure' in href.lower() or '.pdf' in href.lower()):
+                  # Filter out menu links and tiny text
+                  if len(title) > 15 and ('disclosure' in href.lower() or '.pdf' in href.lower() or 'storage' in href.lower()):
                       
-                      # Find the container (row or list item) to grab the date and logo
-                      container = link.find_parent('tr') or link.find_parent('div', class_=re.compile('row|item|list'))
+                      # Find the closest table row or list item container
+                      container = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
+                      
+                      # Fallback to 2 levels up if no strict container is found
                       if not container:
-                          container = link.parent.parent
+                          container = link.parent.parent if link.parent else link
                           
                       container_text = container.get_text(" ", strip=True) if container else ""
                       
-                      # Find date via Regex (YYYY-MM-DD HH:MM AM/PM GMT+2)
+                      # Find the date (YYYY-MM-DD) inside the container
                       date_match = re.search(r'(\d{4}-\d{2}-\d{2})', container_text)
-                      if not date_match:
-                          # If no date in container, try the text immediately following the link
-                          next_text = link.next_sibling
-                          if next_text and isinstance(next_text, str):
-                              date_match = re.search(r'(\d{4}-\d{2}-\d{2})', next_text)
-                      
                       date_str = date_match.group(1) if date_match else datetime.today().strftime('%Y-%m-%d')
                       
-                      # Extract company from image logo alt text or text
+                      # Combine title + container text + image alt text for ticker matching
                       combined_text = title.upper() + " " + container_text.upper()
                       if container:
                           for img in container.find_all('img'):
                               alt = img.get('alt')
                               if alt: combined_text += " " + alt.upper()
                               
+                      # Guess the ticker
                       ticker = "BSE"
                       for key, sym in ticker_map.items():
                           if key in combined_text:
                               ticker = sym
                               break
                               
+                      # Make absolute URL
                       if href.startswith('/'): href = "https://www.bse.co.bw" + href
                           
                       news_payload.append({
@@ -135,13 +140,19 @@ jobs:
                           "pdf_url": href
                       })
               
+              # Remove duplicates based on the PDF URL
               unique_news = list({v['pdf_url']:v for v in news_payload}.values())
               
               if unique_news:
                   r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
                   print(f"Supabase News Push Status: {r.status_code}")
+                  if r.status_code >= 400: print(f"Error: {r.text}")
                   print(f"Found {len(unique_news)} news items.")
-                  for n in unique_news[:3]: print(f"- {n['published_at'][:10]} | {n['raw_headline']}")
+                  
+                  # Print the top 3 newest items as a sanity check
+                  unique_news.sort(key=lambda x: x['published_at'], reverse=True)
+                  for n in unique_news[:3]: 
+                      print(f"- {n['published_at'][:10]} | {n['ticker']} | {n['raw_headline']}")
               else:
                   print("No news links found on the page.")
                   
