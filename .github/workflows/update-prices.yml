@@ -64,7 +64,7 @@ jobs:
           except Exception as e:
               print("Price Sync Error:", e)
 
-          # 2. SYNC NEWS
+          # 2. SYNC NEWS (Aggressive Table Scraper)
           print("\nStarting News Sync...")
           
           ticker_map = {
@@ -88,42 +88,43 @@ jobs:
               soup = BeautifulSoup(res.text, 'html.parser')
               
               news_payload = []
-              links = soup.find_all('a')
               
-              for link in links:
+              # Find all links that look like news
+              for link in soup.find_all('a'):
                   title = link.get_text(" ", strip=True)
                   href = link.get('href', '')
                   
-                  if ('.pdf' in href.lower() or 'disclosure' in href.lower()) and len(title) > 15:
+                  if len(title) > 15 and ('disclosure' in href.lower() or '.pdf' in href.lower()):
                       
-                      # Find the parent container to grab the logo alt text
-                      row_text = ""
-                      row = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
-                      if row:
-                          row_text = row.get_text(" ", strip=True).upper()
-                          for img in row.find_all('img'):
+                      # Find the container (row or list item) to grab the date and logo
+                      container = link.find_parent('tr') or link.find_parent('div', class_=re.compile('row|item|list'))
+                      if not container:
+                          container = link.parent.parent
+                          
+                      container_text = container.get_text(" ", strip=True) if container else ""
+                      
+                      # Find date via Regex (YYYY-MM-DD HH:MM AM/PM GMT+2)
+                      date_match = re.search(r'(\d{4}-\d{2}-\d{2})', container_text)
+                      if not date_match:
+                          # If no date in container, try the text immediately following the link
+                          next_text = link.next_sibling
+                          if next_text and isinstance(next_text, str):
+                              date_match = re.search(r'(\d{4}-\d{2}-\d{2})', next_text)
+                      
+                      date_str = date_match.group(1) if date_match else datetime.today().strftime('%Y-%m-%d')
+                      
+                      # Extract company from image logo alt text or text
+                      combined_text = title.upper() + " " + container_text.upper()
+                      if container:
+                          for img in container.find_all('img'):
                               alt = img.get('alt')
-                              if alt: row_text += " " + alt.upper()
-                      
-                      # Combine Title + Logo Alt Text + URL to find the ticker
-                      combined_text = title.upper() + " " + row_text + " " + href.upper()
-                      
-                      ticker = "BSE" # Default fallback
+                              if alt: combined_text += " " + alt.upper()
+                              
+                      ticker = "BSE"
                       for key, sym in ticker_map.items():
                           if key in combined_text:
                               ticker = sym
                               break
-                              
-                      # Find Date
-                      date_str = datetime.today().strftime('%Y-%m-%d') # Default to today
-                      parent = link.parent
-                      for _ in range(4):
-                          if not parent: break
-                          match = re.search(r'(\d{4}-\d{2}-\d{2})', parent.get_text())
-                          if match:
-                              date_str = match.group(1)
-                              break
-                          parent = parent.parent
                               
                       if href.startswith('/'): href = "https://www.bse.co.bw" + href
                           
@@ -139,8 +140,8 @@ jobs:
               if unique_news:
                   r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
                   print(f"Supabase News Push Status: {r.status_code}")
-                  if r.status_code >= 400: print(f"Error details: {r.text}")
                   print(f"Found {len(unique_news)} news items.")
+                  for n in unique_news[:3]: print(f"- {n['published_at'][:10]} | {n['raw_headline']}")
               else:
                   print("No news links found on the page.")
                   
