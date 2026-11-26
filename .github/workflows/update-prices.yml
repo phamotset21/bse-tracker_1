@@ -63,12 +63,11 @@ jobs:
                   if payload:
                       r = requests.post(f"{SUPABASE_URL}/rest/v1/bse_tickers?on_conflict=ticker", headers=headers, json=payload)
                       print(f"Supabase Prices Push Status: {r.status_code}")
-                      if r.status_code >= 400: print(f"Error: {r.text}")
           except Exception as e:
               print("Price Sync Error:", e)
 
           # ==========================================
-          # 2. SYNC NEWS (Deep Table Scraper)
+          # 2. SYNC NEWS (Targeting X-News)
           # ==========================================
           print("\nStarting News Sync...")
           
@@ -90,71 +89,64 @@ jobs:
           }
 
           try:
-              res = requests.get("https://www.bse.co.bw/company-disclosures/", headers={'User-Agent': 'Mozilla/5.0'})
+              # Use the specific X-News URL
+              res = requests.get("https://www.bse.co.bw/xnews/", headers={'User-Agent': 'Mozilla/5.0'})
               soup = BeautifulSoup(res.text, 'html.parser')
               
               news_payload = []
               
-              # Look for all links that could be disclosures
+              # Junk keywords to ignore (Footer links)
+              junk_keywords = ["customer feedback", "complaints form", "daily market report", "customer complaints"]
+              
               for link in soup.find_all('a'):
                   title = link.get_text(" ", strip=True)
                   href = link.get('href', '')
                   
-                  # Filter out menu links and tiny text
-                  if len(title) > 15 and ('disclosure' in href.lower() or '.pdf' in href.lower() or 'storage' in href.lower()):
-                      
-                      # Find the closest table row or list item container
-                      container = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
-                      
-                      # Fallback to 2 levels up if no strict container is found
-                      if not container:
-                          container = link.parent.parent if link.parent else link
+                  # Must be a real headline, not in junk list, and contain a valid link
+                  if len(title) > 15 and not any(junk in title.lower() for junk in junk_keywords):
+                      if '.pdf' in href.lower() or 'disclosure' in href.lower() or 'storage' in href.lower() or 'xnews' in href.lower():
                           
-                      container_text = container.get_text(" ", strip=True) if container else ""
-                      
-                      # Find the date (YYYY-MM-DD) inside the container
-                      date_match = re.search(r'(\d{4}-\d{2}-\d{2})', container_text)
-                      date_str = date_match.group(1) if date_match else datetime.today().strftime('%Y-%m-%d')
-                      
-                      # Combine title + container text + image alt text for ticker matching
-                      combined_text = title.upper() + " " + container_text.upper()
-                      if container:
-                          for img in container.find_all('img'):
-                              alt = img.get('alt')
-                              if alt: combined_text += " " + alt.upper()
+                          container = link.find_parent('tr') or link.find_parent('li') or link.find_parent('div', class_=re.compile('row|item|list'))
+                          if not container: container = link.parent.parent if link.parent else link
                               
-                      # Guess the ticker
-                      ticker = "BSE"
-                      for key, sym in ticker_map.items():
-                          if key in combined_text:
-                              ticker = sym
-                              break
-                              
-                      # Make absolute URL
-                      if href.startswith('/'): href = "https://www.bse.co.bw" + href
+                          container_text = container.get_text(" ", strip=True) if container else ""
                           
-                      news_payload.append({
-                          "ticker": ticker,
-                          "published_at": date_str + "T00:00:00Z",
-                          "raw_headline": title,
-                          "pdf_url": href
-                      })
+                          date_match = re.search(r'(\d{4}-\d{2}-\d{2})', container_text)
+                          date_str = date_match.group(1) if date_match else datetime.today().strftime('%Y-%m-%d')
+                          
+                          combined_text = title.upper() + " " + container_text.upper()
+                          if container:
+                              for img in container.find_all('img'):
+                                  alt = img.get('alt')
+                                  if alt: combined_text += " " + alt.upper()
+                                  
+                          ticker = "BSE"
+                          for key, sym in ticker_map.items():
+                              if key in combined_text:
+                                  ticker = sym
+                                  break
+                                  
+                          if href.startswith('/'): href = "https://www.bse.co.bw" + href
+                              
+                          news_payload.append({
+                              "ticker": ticker,
+                              "published_at": date_str + "T00:00:00Z",
+                              "raw_headline": title,
+                              "pdf_url": href
+                          })
               
-              # Remove duplicates based on the PDF URL
               unique_news = list({v['pdf_url']:v for v in news_payload}.values())
               
               if unique_news:
                   r = requests.post(f"{SUPABASE_URL}/rest/v1/xnews_disclosures?on_conflict=pdf_url", headers=headers, json=unique_news)
                   print(f"Supabase News Push Status: {r.status_code}")
-                  if r.status_code >= 400: print(f"Error: {r.text}")
                   print(f"Found {len(unique_news)} news items.")
                   
-                  # Print the top 3 newest items as a sanity check
                   unique_news.sort(key=lambda x: x['published_at'], reverse=True)
                   for n in unique_news[:3]: 
                       print(f"- {n['published_at'][:10]} | {n['ticker']} | {n['raw_headline']}")
               else:
-                  print("No news links found on the page.")
+                  print("No valid news links found on the page.")
                   
           except Exception as e:
               print("News Sync Error:", e)
