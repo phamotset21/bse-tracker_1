@@ -32,7 +32,20 @@ try {
     Chart.register(ChartDataLabels);
 } catch (e) { console.warn("Chart.js missing"); }
 
-// --- FULL LOCAL FALLBACK DATA ---
+// --- TICKER ALIAS NORMALIZATION ---
+const TICKER_ALIASES = {
+    "TURN": "TURNSTAR",
+    "LUCARA": "LUC",
+    "RDC": "RDCP",
+    "STANBIC": "STANCHART"
+};
+
+function normalizeTicker(sym) {
+    const clean = (sym || '').trim().toUpperCase().replace(/\s+/g, ' ');
+    return TICKER_ALIASES[clean] || clean;
+}
+
+// --- FULL LOCAL FALLBACK & DIVIDEND REFERENCE DATA ---
 const STOCKS = [
     { symbol: "ACCESS", name: "Access Bank Botswana Limited", type: "Domestic Equity", price: 2.15, divYield: 0.028, divAmount: 0.059, divDate: "2025-04-22", exDate: "2026-11-12", recordDate: "2026-11-14", payDate: "2026-11-28", payMonth: 10 },
     { symbol: "ABSA", name: "ABSA Bank of Botswana Limited", type: "Domestic Equity", price: 6.85, divYield: 0.074, divAmount: 0.5774, divDate: "2026-06-29", exDate: "2026-10-14", recordDate: "2026-10-16", payDate: "2026-10-28", payMonth: 9 },
@@ -56,7 +69,7 @@ const STOCKS = [
     { symbol: "SEEDCO", name: "Seedco International Limited", type: "Domestic Equity", price: 3.20, divYield: 0.035, divAmount: 0.1120, divDate: "2025-08-20", exDate: "2026-08-05", recordDate: "2026-08-07", payDate: "2026-08-20", payMonth: 7 },
     { symbol: "SEFALANA", name: "Sefalana Holding Company Limited", type: "Domestic Equity", price: 16.00, divYield: 0.031, divAmount: 0.50, divDate: "2025-10-09", exDate: "2026-08-26", recordDate: "2026-08-28", payDate: "2026-09-11", payMonth: 8 },
     { symbol: "STANCHART", name: "Standard Chartered Bank Botswana", type: "Domestic Equity", price: 3.10, divYield: 0.060, divAmount: 0.1860, divDate: "2025-07-25", exDate: "2026-07-10", recordDate: "2026-07-12", payDate: "2026-07-25", payMonth: 6 },
-    { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.034, divAmount: 0.10, divDate: "2026-05-28", exDate: "2026-11-18", recordDate: "2026-11-20", payDate: "2026-12-04", payMonth: 11 },
+    { symbol: "TURNSTAR", name: "Turnstar Holdings Limited", type: "Domestic Equity", price: 2.06, divYield: 0.0971, divAmount: 0.10, divDate: "2026-10-29", exDate: "2026-11-26", recordDate: "2026-11-30", payDate: "2026-12-10", payMonth: 11 },
     { symbol: "ANGLO", name: "Anglo American Plc", type: "Foreign Equity", price: 769.95, divYield: 0.035, divAmount: 26.9483, divDate: "2025-09-10", exDate: "2026-08-18", recordDate: "2026-08-20", payDate: "2026-09-10", payMonth: 8 },
     { symbol: "BOTALA", name: "Botala Energy Limited", type: "Foreign Equity", price: 0.95, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
     { symbol: "BMIN-EQO", name: "Botswana Minerals Plc", type: "Foreign Equity", price: 1.10, divYield: 0.000, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1 },
@@ -75,6 +88,8 @@ const STOCKS = [
     { symbol: "SATRIXWDM", name: "SATRIXWDM ETF", type: "ETF", price: 85.30, divYield: 0.015, divAmount: 1.2795, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 },
     { symbol: "VGE-ETF", name: "VGEPFAM ETF", type: "ETF", price: 32.10, divYield: 0.018, divAmount: 0.5778, divDate: "2025-07-20", exDate: "2026-07-05", recordDate: "2026-07-07", payDate: "2026-07-20", payMonth: 6 }
 ];
+
+const REFERENCE_STOCKS_MAP = new Map(STOCKS.map(s => [normalizeTicker(s.symbol), s]));
 
 let activeNews = [
     { symbol: "STANBIC", title: "Stanbic Bank Botswana Opens Landmark IPO", date: "2026-11-02", summary: "Stanbic Africa Holdings offers 319,362,050 shares (20% of capital). Offer closes Nov 27, 2026; listing Dec 7, 2026.", link: "#" },
@@ -329,7 +344,7 @@ async function syncPortfolioToSupabase() {
         if (holdings.length > 0) {
             const payload = holdings.map(h => ({
                 user_id: currentUser.id,
-                ticker: h.symbol,
+                ticker: normalizeTicker(h.symbol),
                 shares_owned: h.qty,
                 avg_buy_price: h.buyPrice
             }));
@@ -352,7 +367,7 @@ async function syncPortfolioFromSupabase() {
 
         if (data && data.length > 0) {
             holdings = data.map(row => ({
-                symbol: row.ticker,
+                symbol: normalizeTicker(row.ticker),
                 qty: row.shares_owned,
                 buyPrice: row.avg_buy_price,
                 price: row.avg_buy_price
@@ -558,7 +573,7 @@ window.changeChartPalette = function(palette) {
     saveAndRender();
 };
 window.changeChartLegend = function(pos) { chartLegendPosition = pos; localStorage.setItem('bse_chart_legend', pos); saveAndRender(); };
-window.setCustomColor = function(symbol, color) { customColors[symbol] = color; localStorage.setItem('bse_custom_colors', JSON.stringify(customColors)); saveAndRender(); };
+window.setCustomColor = function(symbol, color) { customColors[normalizeTicker(symbol)] = color; localStorage.setItem('bse_custom_colors', JSON.stringify(customColors)); saveAndRender(); };
 
 // --- DATA FETCHING ---
 window.fetchLiveMarketData = async function(manual = false) {
@@ -574,7 +589,7 @@ window.fetchLiveMarketData = async function(manual = false) {
     let syncedTickers = 0;
     let syncedNews = 0;
 
-    // 1. Fetch Live Prices from bse_tickers
+    // 1. Fetch Live Prices from bse_tickers while preserving dividend schedules
     try {
         const { data: tickers, error } = await supabaseClient
             .from('bse_tickers')
@@ -587,31 +602,58 @@ window.fetchLiveMarketData = async function(manual = false) {
         } else if (tickers && tickers.length > 0) {
             const activeTickers = tickers.filter(t => t.is_active !== false);
             if (activeTickers.length > 0) {
-                const fallbackMap = new Map(STOCKS.map(s => [s.symbol, s]));
-                const nextStocks = activeTickers.map(t => {
-                    const sym = (t.ticker || '').trim().toUpperCase();
-                    const prev = fallbackMap.get(sym);
-                    return {
+                const currentMap = new Map(STOCKS.map(s => [normalizeTicker(s.symbol), s]));
+                const mergedMap = new Map();
+
+                activeTickers.forEach(t => {
+                    const sym = normalizeTicker(t.ticker);
+                    if (!sym) return;
+
+                    const ref = REFERENCE_STOCKS_MAP.get(sym) || currentMap.get(sym);
+                    const price = (t.current_price !== null && t.current_price !== undefined && !isNaN(Number(t.current_price)))
+                        ? Number(t.current_price)
+                        : (ref ? ref.price : 0);
+
+                    const dbDivAmount = (t.dividend_amount !== null && t.dividend_amount !== undefined)
+                        ? Number(t.dividend_amount)
+                        : (t.div_amount !== null && t.div_amount !== undefined ? Number(t.div_amount) : null);
+
+                    const divAmount = (dbDivAmount !== null && !isNaN(dbDivAmount) && dbDivAmount > 0)
+                        ? dbDivAmount
+                        : (ref ? ref.divAmount : 0);
+
+                    const divYield = (t.annual_dividend_yield !== null && t.annual_dividend_yield !== undefined && Number(t.annual_dividend_yield) > 0)
+                        ? Number(t.annual_dividend_yield) / 100
+                        : (ref ? ref.divYield : 0);
+
+                    mergedMap.set(sym, {
                         symbol: sym,
-                        name: t.company_name || (prev ? prev.name : sym),
-                        type: t.board || (prev ? prev.type : "Domestic Equity"),
-                        price: t.current_price !== null && t.current_price !== undefined
-                            ? Number(t.current_price)
-                            : (prev ? prev.price : 0),
-                        divYield: t.annual_dividend_yield !== null && t.annual_dividend_yield !== undefined
-                            ? Number(t.annual_dividend_yield) / 100
-                            : (prev ? prev.divYield : 0),
-                        divAmount: prev ? prev.divAmount : 0,
-                        divDate: prev ? prev.divDate : "-",
-                        exDate: prev ? prev.exDate : "-",
-                        recordDate: prev ? prev.recordDate : "-",
-                        payDate: prev ? prev.payDate : "-",
-                        payMonth: prev ? prev.payMonth : -1
-                    };
+                        name: t.company_name || (ref ? ref.name : sym),
+                        type: t.board || (ref ? ref.type : "Domestic Equity"),
+                        price: price,
+                        divYield: divYield,
+                        divAmount: divAmount,
+                        divDate: t.div_date || (ref ? ref.divDate : "-"),
+                        exDate: t.ex_dividend_date || t.ex_date || (ref ? ref.exDate : "-"),
+                        recordDate: t.record_date || (ref ? ref.recordDate : "-"),
+                        payDate: t.payment_date || t.pay_date || (ref ? ref.payDate : "-"),
+                        payMonth: (t.pay_month !== null && t.pay_month !== undefined)
+                            ? Number(t.pay_month)
+                            : (ref ? ref.payMonth : -1)
+                    });
                 });
+
+                // Ensure any reference dividend-paying tickers not present in bse_tickers remain available
+                REFERENCE_STOCKS_MAP.forEach((refStock, sym) => {
+                    if (!mergedMap.has(sym)) {
+                        mergedMap.set(sym, { ...refStock });
+                    }
+                });
+
+                const nextStocks = Array.from(mergedMap.values());
                 STOCKS.length = 0;
                 STOCKS.push(...nextStocks);
-                syncedTickers = nextStocks.length;
+                syncedTickers = activeTickers.length;
             }
         }
     } catch (error) {
@@ -634,7 +676,7 @@ window.fetchLiveMarketData = async function(manual = false) {
             const cleaned = news
                 .filter(n => (n.raw_headline || n.title || '').trim().toLowerCase() !== 'skip to main content')
                 .map(n => ({
-                    symbol: (n.ticker || 'BSE').trim().toUpperCase(),
+                    symbol: normalizeTicker(n.ticker || 'BSE') || 'BSE',
                     title: n.raw_headline || n.title || 'BSE Market Disclosure',
                     date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
                     summary: n.ai_summary || n.raw_headline || n.title || "Click to view the official BSE disclosure document.",
@@ -679,7 +721,21 @@ function formatCurrency(val) {
 }
 
 function getStockMeta(sym) {
-    return STOCKS.find(s => s.symbol === sym) || { price: 1.0, divYield: 0, divAmount: 0, divDate: "-", exDate: "-", recordDate: "-", payDate: "-", payMonth: -1, name: sym };
+    const normalized = normalizeTicker(sym);
+    return (
+        STOCKS.find(s => normalizeTicker(s.symbol) === normalized) ||
+        REFERENCE_STOCKS_MAP.get(normalized) || {
+            price: 1.0,
+            divYield: 0,
+            divAmount: 0,
+            divDate: "-",
+            exDate: "-",
+            recordDate: "-",
+            payDate: "-",
+            payMonth: -1,
+            name: normalized
+        }
+    );
 }
 
 window.saveAndRender = function() {
@@ -699,7 +755,8 @@ window.saveAndRender = function() {
         });
 
         holdings.forEach((item, i) => {
-            const meta = getStockMeta(item.symbol);
+            const displaySym = normalizeTicker(item.symbol);
+            const meta = getStockMeta(displaySym);
             const curPrice = meta.price || item.price;
             const isWatchlist = item.qty === 0;
 
@@ -709,11 +766,11 @@ window.saveAndRender = function() {
             const netDiv = (itemVal * meta.divYield) * (1 - (taxRate / 100));
 
             totalVal += itemVal; totalCost += itemCost; totalNetDiv += netDiv;
-            if (itemVal > maxVal) { maxVal = itemVal; maxAsset = item.symbol; }
+            if (itemVal > maxVal) { maxVal = itemVal; maxAsset = displaySym; }
 
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><strong>${item.symbol}</strong> ${isWatchlist ? '<br><span style="font-size:0.6rem; color:var(--text-muted);">WATCHLIST</span>' : ''}</td>
+                <td><strong>${displaySym}</strong> ${isWatchlist ? '<br><span style="font-size:0.6rem; color:var(--text-muted);">WATCHLIST</span>' : ''}</td>
                 <td>${isWatchlist ? '-' : item.qty}</td>
                 <td>${isWatchlist ? '-' : formatCurrency(item.buyPrice || curPrice)}<br><span style="color:var(--text-muted);">${formatCurrency(curPrice)}</span></td>
                 <td><strong>${isWatchlist ? 'P0.00' : formatCurrency(itemVal)}</strong></td>
@@ -768,14 +825,15 @@ function updateAllocationChart() {
     let totalVal = activeHoldings.reduce((acc, h) => acc + (h.qty * getStockMeta(h.symbol).price), 0);
 
     activeHoldings.forEach((h, i) => {
-        const meta = getStockMeta(h.symbol);
+        const displaySym = normalizeTicker(h.symbol);
+        const meta = getStockMeta(displaySym);
         const val = h.qty * meta.price;
         const pct = totalVal > 0 ? ((val / totalVal) * 100).toFixed(1) : 0;
-        labels.push(`${h.symbol} (${pct}%)`);
+        labels.push(`${displaySym} (${pct}%)`);
         data.push(val);
 
         const paletteColors = PALETTES[chartPalette] || PALETTES.vivid;
-        bgColors.push(chartPalette === 'custom' ? (customColors[h.symbol] || paletteColors[i % paletteColors.length]) : paletteColors[i % paletteColors.length]);
+        bgColors.push(chartPalette === 'custom' ? (customColors[displaySym] || paletteColors[i % paletteColors.length]) : paletteColors[i % paletteColors.length]);
     });
 
     if (labels.length === 0) {
@@ -823,13 +881,14 @@ function updateDividendSection() {
     today.setHours(0, 0, 0, 0);
 
     activeHoldings.forEach(h => {
-        const meta = getStockMeta(h.symbol);
+        const displaySym = normalizeTicker(h.symbol);
+        const meta = getStockMeta(displaySym);
         const netAnnual = (h.qty * meta.price * meta.divYield) * (1 - (taxRate / 100));
         const card = document.createElement('div');
         card.className = 'div-card';
 
-        if (meta.divAmount === 0 || meta.payDate === '-') {
-            card.innerHTML = `<div class="div-header"><div><strong>${h.symbol}</strong></div><div class="div-amount" style="color:var(--text-muted);">No Dividend</div></div><div style="font-size:0.75rem; color:var(--text-muted);">This asset does not distribute dividends.</div>`;
+        if (!meta.divAmount || meta.divAmount <= 0 || !meta.payDate || meta.payDate === '-') {
+            card.innerHTML = `<div class="div-header"><div><strong>${displaySym}</strong></div><div class="div-amount" style="color:var(--text-muted);">No Dividend</div></div><div style="font-size:0.75rem; color:var(--text-muted);">This asset does not distribute dividends.</div>`;
         } else {
             const payDateObj = new Date(meta.payDate);
             payDateObj.setHours(0, 0, 0, 0);
@@ -840,7 +899,7 @@ function updateDividendSection() {
             if (isSoon) card.classList.add('amber-alert');
 
             card.innerHTML = `
-                <div class="div-header"><div><strong>${h.symbol}</strong></div><div class="div-amount">+${formatCurrency(netAnnual)}/yr (Net)</div></div>
+                <div class="div-header"><div><strong>${displaySym}</strong></div><div class="div-amount">+${formatCurrency(netAnnual)}/yr (Net)</div></div>
                 <div class="div-dates-grid">
                     <div class="div-date-box"><span>Ex-Dividend</span><strong>${meta.exDate}</strong></div>
                     <div class="div-date-box"><span>Payment</span><strong>${meta.payDate}</strong></div>
@@ -888,22 +947,25 @@ function renderPinnedNews() {
     if (!container) return;
     container.innerHTML = '';
 
-    const holdingSymbols = holdings.filter(h => h.qty > 0).map(h => h.symbol);
+    const holdingSymbols = holdings.filter(h => h.qty > 0).map(h => normalizeTicker(h.symbol));
     const sortedNews = [...activeNews].sort((a, b) => {
-        const aOwned = holdingSymbols.includes(a.symbol);
-        const bOwned = holdingSymbols.includes(b.symbol);
+        const aSym = normalizeTicker(a.symbol);
+        const bSym = normalizeTicker(b.symbol);
+        const aOwned = holdingSymbols.includes(aSym);
+        const bOwned = holdingSymbols.includes(bSym);
         if (aOwned && !bOwned) return -1;
         if (!aOwned && bOwned) return 1;
         return new Date(b.date) - new Date(a.date);
     });
 
     sortedNews.forEach(n => {
-        const isOwned = holdingSymbols.includes(n.symbol);
+        const displaySym = normalizeTicker(n.symbol) || 'BSE';
+        const isOwned = holdingSymbols.includes(displaySym);
         const item = document.createElement('div');
         item.className = 'news-item';
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="news-tag">${n.symbol || 'BSE'}</span>
+                <span class="news-tag">${displaySym}</span>
                 ${isOwned ? '<span style="font-size:0.65rem; background:var(--accent-glow); color:var(--accent-orange); padding:2px 6px; border-radius:4px; font-weight:bold;">PORTFOLIO</span>' : ''}
             </div>
             <div><a href="${n.link || '#'}" target="_blank" class="news-link"><strong>${n.title || 'Market Update'} ↗</strong></a></div>
@@ -948,14 +1010,15 @@ window.filterMarketGrid = function() {
 };
 
 window.addHolding = function() {
-    const sym = document.getElementById('asset-search').value.trim().toUpperCase();
+    const sym = normalizeTicker(document.getElementById('asset-search').value);
     const qty = parseFloat(document.getElementById('asset-qty').value);
     const buyPrice = parseFloat(document.getElementById('asset-buy-price').value) || 0;
     const curPrice = parseFloat(document.getElementById('asset-price').value) || 0;
     if (!sym || isNaN(qty) || qty <= 0) return alert("Please enter a valid ticker and quantity.");
 
-    const idx = holdings.findIndex(h => h.symbol === sym);
+    const idx = holdings.findIndex(h => normalizeTicker(h.symbol) === sym);
     if (idx !== -1) {
+        holdings[idx].symbol = sym;
         holdings[idx].qty += qty;
         holdings[idx].buyPrice = buyPrice || holdings[idx].buyPrice;
         holdings[idx].price = curPrice || holdings[idx].price;
@@ -970,14 +1033,16 @@ window.addHolding = function() {
 };
 
 window.quickToggleHolding = function(sym, price) {
+    const normSym = normalizeTicker(sym);
     const val = parseFloat(document.getElementById(`qty-${sym}`).value);
     if (isNaN(val) || val <= 0) return alert("Enter valid share quantity.");
-    const idx = holdings.findIndex(h => h.symbol === sym);
+    const idx = holdings.findIndex(h => normalizeTicker(h.symbol) === normSym);
     if (idx !== -1) {
+        holdings[idx].symbol = normSym;
         holdings[idx].qty = val;
         holdings[idx].price = price;
     } else {
-        holdings.push({ symbol: sym, qty: val, buyPrice: price, price: price });
+        holdings.push({ symbol: normSym, qty: val, buyPrice: price, price: price });
     }
     saveAndRender();
 };
@@ -986,7 +1051,7 @@ window.deleteHolding = function(index) {
     lastDeleted = { data: holdings[index], index: index };
     holdings.splice(index, 1);
     saveAndRender();
-    showUndoToast(`${lastDeleted.data.symbol} removed`);
+    showUndoToast(`${normalizeTicker(lastDeleted.data.symbol)} removed`);
 };
 
 window.undoDelete = function() {
@@ -1007,10 +1072,11 @@ function updateCustomColorsUI() {
     if (!list) return;
     list.innerHTML = '';
     holdings.filter(h => h.qty > 0).forEach(h => {
-        const color = customColors[h.symbol] || '#888888';
+        const sym = normalizeTicker(h.symbol);
+        const color = customColors[sym] || '#888888';
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:4px 8px; background:var(--input-bg); border-radius:8px; border:1px solid var(--card-border);';
-        row.innerHTML = `<span style="font-size: 0.8rem; font-weight: bold;">${h.symbol}</span><input type="color" value="${color}" onchange="setCustomColor('${h.symbol}', this.value)">`;
+        row.innerHTML = `<span style="font-size: 0.8rem; font-weight: bold;">${sym}</span><input type="color" value="${color}" onchange="setCustomColor('${sym}', this.value)">`;
         list.appendChild(row);
     });
 }
@@ -1054,8 +1120,8 @@ function loadPreferences() {
 
 // --- CHART MODAL ---
 window.openChartModal = function(symbol, price) {
-    currentChartSymbol = symbol; currentChartPrice = price; currentChartPeriod = "1M";
-    document.getElementById('modal-chart-title').innerText = `${symbol} Price History`;
+    currentChartSymbol = normalizeTicker(symbol); currentChartPrice = price; currentChartPeriod = "1M";
+    document.getElementById('modal-chart-title').innerText = `${currentChartSymbol} Price History`;
     document.querySelectorAll('#modal-periods button').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.querySelector(`#modal-periods button[onclick="updateChartPeriod('1M')"]`);
     if (activeBtn) activeBtn.classList.add('active');
@@ -1114,23 +1180,24 @@ function renderModalChart() {
 
 // --- WATCHLIST & TRADE LOGIC ---
 window.addToWatchlist = function(symbol, price) {
-    const idx = holdings.findIndex(h => h.symbol === symbol);
+    const normSym = normalizeTicker(symbol);
+    const idx = holdings.findIndex(h => normalizeTicker(h.symbol) === normSym);
     if (idx !== -1) {
         if (holdings[idx].qty === 0) alert("Already in your Watchlist!");
         else alert("You already own this stock!");
         return;
     }
-    holdings.push({ symbol: symbol, qty: 0, buyPrice: price, price: price });
+    holdings.push({ symbol: normSym, qty: 0, buyPrice: price, price: price });
     saveAndRender();
-    alert(`${symbol} added to Watchlist!`);
+    alert(`${normSym} added to Watchlist!`);
 };
 
 window.openTradeModal = function(symbol, price) {
-    currentTradeSymbol = symbol;
+    currentTradeSymbol = normalizeTicker(symbol);
     currentTradePrice = price;
     setTradeMode('shares');
 
-    document.getElementById('trade-symbol').innerText = symbol;
+    document.getElementById('trade-symbol').innerText = currentTradeSymbol;
     document.getElementById('trade-price').innerText = formatCurrency(price);
     document.getElementById('trade-input').value = '';
 
@@ -1287,7 +1354,7 @@ window.generateTradeEmail = function() {
     const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
 
-    const idx = holdings.findIndex(h => h.symbol === currentTradeSymbol);
+    const idx = holdings.findIndex(h => normalizeTicker(h.symbol) === currentTradeSymbol);
     if (idx === -1) {
         holdings.push({ symbol: currentTradeSymbol, qty: finalQty, buyPrice: currentTradePrice, price: currentTradePrice });
         saveAndRender();
@@ -1303,7 +1370,7 @@ window.copyCSV = function() {
     holdings.forEach(h => {
         const meta = getStockMeta(h.symbol);
         const cur = meta.price || h.price;
-        csv += `${h.symbol},${h.qty},${h.buyPrice || cur},${cur},${(h.qty * cur).toFixed(2)}\n`;
+        csv += `${normalizeTicker(h.symbol)},${h.qty},${h.buyPrice || cur},${cur},${(h.qty * cur).toFixed(2)}\n`;
     });
     navigator.clipboard.writeText(csv).then(() => alert("CSV copied!"));
 };
@@ -1323,8 +1390,8 @@ window.resetAllData = function() {
     if (confirm("Reset all data? This cannot be undone.")) { localStorage.clear(); location.reload(); }
 };
 window.autoFillPrice = function() {
-    const sym = document.getElementById('asset-search').value.trim().toUpperCase();
-    const s = STOCKS.find(x => x.symbol === sym);
+    const sym = normalizeTicker(document.getElementById('asset-search').value);
+    const s = STOCKS.find(x => normalizeTicker(x.symbol) === sym);
     if (s) {
         document.getElementById('asset-price').value = s.price;
         if (!document.getElementById('asset-buy-price').value) document.getElementById('asset-buy-price').value = s.price;
