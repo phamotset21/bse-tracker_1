@@ -121,6 +121,24 @@ let currentTradePrice = 0;
 let tradeMode = 'shares';
 let uploadedProofName = "";
 
+// --- VISIBLE SYNC BANNER ---
+function showSyncStatus(msg, isError = false) {
+    let banner = document.getElementById('sync-debug-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'sync-debug-banner';
+        banner.style.cssText = 'position:fixed; bottom:75px; left:12px; right:12px; padding:10px 14px; border-radius:10px; font-size:12px; z-index:9998; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 12px rgba(0,0,0,0.4);';
+        document.body.appendChild(banner);
+    }
+    banner.style.background = isError ? '#b91c1c' : '#0f172a';
+    banner.style.color = '#fff';
+    banner.style.border = isError ? '1px solid #fca5a5' : '1px solid var(--accent-orange)';
+    banner.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()" style="background:transparent; color:#fff; border:none; font-weight:bold; margin-left:10px;">✕</button>`;
+    if (!isError) {
+        setTimeout(() => { if (banner && banner.parentElement) banner.remove(); }, 4000);
+    }
+}
+
 // --- AUTHENTICATION LOGIC ---
 let isSignUpMode = false;
 
@@ -547,83 +565,103 @@ window.fetchLiveMarketData = async function(manual = false) {
     const btn = document.getElementById('refresh-news-btn');
     if (btn && manual) btn.innerText = '↻ Syncing...';
 
-    // 1. Fetch Live Prices from bse_tickers
-    if (supabaseClient) {
-        try {
-            const { data: tickers, error } = await supabaseClient
-                .from('bse_tickers')
-                .select('*')
-                .order('ticker', { ascending: true });
-
-            if (error) throw error;
-
-            if (tickers && tickers.length > 0) {
-                const activeTickers = tickers.filter(t => t.is_active !== false);
-                if (activeTickers.length > 0) {
-                    const fallbackMap = new Map(STOCKS.map(s => [s.symbol, s]));
-                    const nextStocks = activeTickers.map(t => {
-                        const sym = (t.ticker || '').trim().toUpperCase();
-                        const prev = fallbackMap.get(sym);
-                        return {
-                            symbol: sym,
-                            name: t.company_name || (prev ? prev.name : sym),
-                            type: t.board || (prev ? prev.type : "Domestic Equity"),
-                            price: t.current_price !== null && t.current_price !== undefined
-                                ? Number(t.current_price)
-                                : (prev ? prev.price : 0),
-                            divYield: t.annual_dividend_yield !== null && t.annual_dividend_yield !== undefined
-                                ? Number(t.annual_dividend_yield) / 100
-                                : (prev ? prev.divYield : 0),
-                            divAmount: prev ? prev.divAmount : 0,
-                            divDate: prev ? prev.divDate : "-",
-                            exDate: prev ? prev.exDate : "-",
-                            recordDate: prev ? prev.recordDate : "-",
-                            payDate: prev ? prev.payDate : "-",
-                            payMonth: prev ? prev.payMonth : -1
-                        };
-                    });
-                    STOCKS.length = 0;
-                    STOCKS.push(...nextStocks);
-                }
-            }
-        } catch (error) {
-            console.error('Supabase price fetch error:', error);
-        }
+    if (!supabaseClient) {
+        showSyncStatus("Supabase client not initialized.", true);
+        if (btn && manual) btn.innerText = '↻ Refresh';
+        return;
     }
 
-    // 2. Fetch Live News directly from xnews_disclosures (no stale news.json override)
-    if (supabaseClient) {
-        try {
-            const { data: news, error } = await supabaseClient
-                .from('xnews_disclosures')
-                .select('id,ticker,published_at,raw_headline,pdf_url,ai_summary')
-                .order('published_at', { ascending: false })
-                .limit(50);
+    let syncedTickers = 0;
+    let syncedNews = 0;
 
-            if (error) throw error;
+    // 1. Fetch Live Prices from bse_tickers
+    try {
+        const { data: tickers, error } = await supabaseClient
+            .from('bse_tickers')
+            .select('*')
+            .order('ticker', { ascending: true });
 
-            if (news && news.length > 0) {
-                activeNews = news
-                    .filter(n => (n.raw_headline || '').trim().toLowerCase() !== 'skip to main content')
-                    .map(n => ({
-                        symbol: (n.ticker || 'BSE').trim().toUpperCase(),
-                        title: n.raw_headline,
-                        date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
-                        summary: n.ai_summary || n.raw_headline || "Click to view the official BSE disclosure document.",
-                        link: n.pdf_url || "#"
-                    }));
-            } else {
-                console.warn("xnews_disclosures returned 0 rows — verify RLS SELECT policy is applied.");
+        if (error) {
+            console.error('Supabase price fetch error:', error);
+            showSyncStatus(`Price sync error: ${error.message}`, true);
+        } else if (tickers && tickers.length > 0) {
+            const activeTickers = tickers.filter(t => t.is_active !== false);
+            if (activeTickers.length > 0) {
+                const fallbackMap = new Map(STOCKS.map(s => [s.symbol, s]));
+                const nextStocks = activeTickers.map(t => {
+                    const sym = (t.ticker || '').trim().toUpperCase();
+                    const prev = fallbackMap.get(sym);
+                    return {
+                        symbol: sym,
+                        name: t.company_name || (prev ? prev.name : sym),
+                        type: t.board || (prev ? prev.type : "Domestic Equity"),
+                        price: t.current_price !== null && t.current_price !== undefined
+                            ? Number(t.current_price)
+                            : (prev ? prev.price : 0),
+                        divYield: t.annual_dividend_yield !== null && t.annual_dividend_yield !== undefined
+                            ? Number(t.annual_dividend_yield) / 100
+                            : (prev ? prev.divYield : 0),
+                        divAmount: prev ? prev.divAmount : 0,
+                        divDate: prev ? prev.divDate : "-",
+                        exDate: prev ? prev.exDate : "-",
+                        recordDate: prev ? prev.recordDate : "-",
+                        payDate: prev ? prev.payDate : "-",
+                        payMonth: prev ? prev.payMonth : -1
+                    };
+                });
+                STOCKS.length = 0;
+                STOCKS.push(...nextStocks);
+                syncedTickers = nextStocks.length;
             }
-        } catch (error) {
-            console.error('Supabase news fetch error:', error);
         }
+    } catch (error) {
+        console.error('Supabase price fetch exception:', error);
+        showSyncStatus(`Price sync exception: ${error.message}`, true);
+    }
+
+    // 2. Fetch Live News directly from xnews_disclosures
+    try {
+        const { data: news, error } = await supabaseClient
+            .from('xnews_disclosures')
+            .select('*')
+            .order('published_at', { ascending: false })
+            .limit(50);
+
+        if (error) {
+            console.error('Supabase news fetch error:', error);
+            showSyncStatus(`News sync error: ${error.message}`, true);
+        } else if (news && news.length > 0) {
+            const cleaned = news
+                .filter(n => (n.raw_headline || n.title || '').trim().toLowerCase() !== 'skip to main content')
+                .map(n => ({
+                    symbol: (n.ticker || 'BSE').trim().toUpperCase(),
+                    title: n.raw_headline || n.title || 'BSE Market Disclosure',
+                    date: n.published_at ? new Date(n.published_at).toISOString().split('T')[0] : '',
+                    summary: n.ai_summary || n.raw_headline || n.title || "Click to view the official BSE disclosure document.",
+                    link: n.pdf_url || n.link || "#"
+                }));
+
+            if (cleaned.length > 0) {
+                activeNews = cleaned;
+                syncedNews = cleaned.length;
+            }
+        } else {
+            showSyncStatus("News query returned 0 rows (check RLS SELECT policy on xnews_disclosures).", true);
+        }
+    } catch (error) {
+        console.error('Supabase news fetch exception:', error);
+        showSyncStatus(`News sync exception: ${error.message}`, true);
     }
 
     populateTickerDatalist();
     saveAndRender();
+
+    if (manual && (syncedTickers > 0 || syncedNews > 0)) {
+        showSyncStatus(`Synced ${syncedTickers} tickers & ${syncedNews} news items.`);
+    }
+
     if (btn && manual) {
-        btn.innerText = '✓ Updated';
+        btn.innerText = syncedNews > 0 ? '✓ Updated' : '↻ Refresh';
         setTimeout(() => { if (btn) btn.innerText = '↻ Refresh'; }, 1500);
     }
 };
